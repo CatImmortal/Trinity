@@ -1,0 +1,13 @@
+{
+    "name": "Trinity.Editor",
+    "references": [
+        "UnityGameFramework.Editor",
+        "Trinity.GameMain"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
+}

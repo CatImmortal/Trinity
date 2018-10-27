@@ -1,0 +1,6 @@
+﻿#	实体表		
+#	Id		AssetName
+#	int		string
+#	实体编号	策划备注	资源名称
+	1	热更新测试实体	TestEntity
+	2	热更新测试实体2	TestEntity2

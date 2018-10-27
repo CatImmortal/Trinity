@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<UnityGameFramework>
+  <AssetBundleBuilder>
+    <Settings>
+      <InternalResourceVersion>42</InternalResourceVersion>
+      <Platforms>1</Platforms>
+      <ZipSelected>True</ZipSelected>
+      <RecordScatteredDependencyAssetsSelected>False</RecordScatteredDependencyAssetsSelected>
+      <UncompressedAssetBundleSelected>False</UncompressedAssetBundleSelected>
+      <DisableWriteTypeTreeSelected>False</DisableWriteTypeTreeSelected>
+      <DeterministicAssetBundleSelected>True</DeterministicAssetBundleSelected>
+      <ForceRebuildAssetBundleSelected>False</ForceRebuildAssetBundleSelected>
+      <IgnoreTypeTreeChangesSelected>False</IgnoreTypeTreeChangesSelected>
+      <AppendHashToAssetBundleNameSelected>False</AppendHashToAssetBundleNameSelected>
+      <ChunkBasedCompressionSelected>True</ChunkBasedCompressionSelected>
+      <BuildEventHandlerTypeName>
+      </BuildEventHandlerTypeName>
+      <OutputDirectory>D:/AssetBundleOutPut/Trinity</OutputDirectory>
+    </Settings>
+  </AssetBundleBuilder>
+</UnityGameFramework>

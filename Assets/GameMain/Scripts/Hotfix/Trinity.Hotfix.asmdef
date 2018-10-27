@@ -1,0 +1,11 @@
+{
+    "name": "Trinity.Hotfix",
+    "references": [
+        "UnityGameFramework.Runtime",
+        "Trinity.GameMain"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
+}

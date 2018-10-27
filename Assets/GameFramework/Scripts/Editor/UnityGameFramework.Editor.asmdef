@@ -1,0 +1,12 @@
+{
+    "name": "UnityGameFramework.Editor",
+    "references": [
+        "UnityGameFramework.Runtime"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
+}

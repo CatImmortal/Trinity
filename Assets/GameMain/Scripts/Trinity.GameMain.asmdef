@@ -1,0 +1,10 @@
+{
+    "name": "Trinity.GameMain",
+    "references": [
+        "UnityGameFramework.Runtime"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true
+}
