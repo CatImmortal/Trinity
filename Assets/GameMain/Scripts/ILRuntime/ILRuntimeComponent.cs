@@ -127,6 +127,9 @@ namespace Trinity
                         AppDomain.LoadAssembly(fs, p, new Mono.Cecil.Pdb.PdbReaderProvider());
                     }
                 }
+
+                GameEntry.Resource.UnloadAsset(m_DLL);
+                GameEntry.Resource.UnloadAsset(m_PDB);
             }
         }
 

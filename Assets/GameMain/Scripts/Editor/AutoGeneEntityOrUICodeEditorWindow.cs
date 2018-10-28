@@ -448,7 +448,7 @@ public class AutoGeneEntityOrUICodeEditorWindow : EditorWindow{
         Dictionary<string, string> entityDict = new Dictionary<string, string>();
 
         
-        if (m_GameObjectList.Count > 1)
+        if (m_GameObjectList.Count >= 1)
         {
             foreach (GameObject gameObject in m_GameObjectList)
             {
