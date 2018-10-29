@@ -1,7 +1,8 @@
 {
     "name": "Trinity.GameMain",
     "references": [
-        "UnityGameFramework.Runtime"
+        "UnityGameFramework.Runtime",
+        "Trinity.Libraries"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

@@ -1,0 +1,8 @@
+{
+    "name": "Trinity.Libraries",
+    "references": [],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true
+}
