@@ -571,6 +571,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40704bb635772f24ea16cf7937100d14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ServerIP: 127.0.0.1:10002
 --- !u!1001 &1712180841
 Prefab:
   m_ObjectHideFlags: 0

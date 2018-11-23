@@ -11,8 +11,19 @@ namespace Trinity
 {
     public partial class ProcedureChangeScene : ProcedureBase
     {
+        /// <summary>
+        /// 是否切换场景完毕
+        /// </summary>
         private bool m_IsChangeSceneComplete = false;
+
+        /// <summary>
+        /// 背景音乐ID
+        /// </summary>
         private int m_BackgroundMusicId = 0;
+
+        /// <summary>
+        /// 要切换目标场景ID
+        /// </summary>
         private int m_TargetSceneId = 0;
 
         /// <summary>
@@ -91,7 +102,7 @@ namespace Trinity
                 return;
             }
 
-            //根据切换到的场景ID进行对应的流程切换
+            //根据切换到的目标场景ID进行对应的流程切换
             m_TargetProcedureChange[m_TargetSceneId]();
         }
 
@@ -105,6 +116,7 @@ namespace Trinity
 
             Log.Info("Load scene '{0}' OK.", ne.SceneAssetName);
 
+            //场景加载完毕后播放背景音乐
             if (m_BackgroundMusicId > 0)
             {
                 GameEntry.Sound.PlayMusic(m_BackgroundMusicId);

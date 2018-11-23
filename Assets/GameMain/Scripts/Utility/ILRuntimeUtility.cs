@@ -1,6 +1,11 @@
-﻿using ILRuntime.Runtime.Enviorment;
+﻿using ETModel;
+using Google.Protobuf;
+using ILRuntime.Runtime.Enviorment;
 using ILRuntime.Runtime.Generated;
+using ILRuntime.Runtime.Intepreter;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using UnityEngine.Events;
 using AppDomain = ILRuntime.Runtime.Enviorment.AppDomain;
 
@@ -15,6 +20,18 @@ namespace Trinity
             //TODO:适配委托
             appDomain.DelegateManager.RegisterMethodDelegate<float>();
             appDomain.DelegateManager.RegisterMethodDelegate<object, GameFramework.Event.GameEventArgs>();
+
+            appDomain.DelegateManager.RegisterMethodDelegate<List<object>>();
+            appDomain.DelegateManager.RegisterMethodDelegate<AChannel, System.Net.Sockets.SocketError>();
+            appDomain.DelegateManager.RegisterMethodDelegate<byte[], int, int>();
+            appDomain.DelegateManager.RegisterMethodDelegate<IResponse>();
+            appDomain.DelegateManager.RegisterMethodDelegate<Session, object>();
+            appDomain.DelegateManager.RegisterMethodDelegate<Session, byte, ushort, MemoryStream>();
+            appDomain.DelegateManager.RegisterMethodDelegate<Session>();
+            appDomain.DelegateManager.RegisterMethodDelegate<ILTypeInstance>();
+
+            appDomain.DelegateManager.RegisterFunctionDelegate<IMessageAdaptor.Adaptor>();
+            appDomain.DelegateManager.RegisterMethodDelegate<IMessageAdaptor.Adaptor>();
 
             //TODO:注册委托
             appDomain.DelegateManager.RegisterDelegateConvertor<UnityAction>((action) =>
@@ -45,9 +62,13 @@ namespace Trinity
             //注册CLR绑定代码
             CLRBindings.Initialize(appDomain);
 
-            //TODO:注册适配器
+            //TODO:注册跨域继承适配器
             appDomain.RegisterCrossBindingAdaptor(new GameEventArgsAdaptor());
             appDomain.RegisterCrossBindingAdaptor(new IReferenceAdaptor());
+            appDomain.RegisterCrossBindingAdaptor(new IMessageAdaptor());
+            appDomain.RegisterCrossBindingAdaptor(new IDisposableAdaptor());
+            appDomain.RegisterCrossBindingAdaptor(new IAsyncStateMachineAdaptor());
+
 
             //注册LitJson
             LitJson.JsonMapper.RegisterILRuntimeCLRRedirection(appDomain);

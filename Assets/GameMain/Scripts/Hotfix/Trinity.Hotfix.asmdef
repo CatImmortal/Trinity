@@ -2,7 +2,8 @@
     "name": "Trinity.Hotfix",
     "references": [
         "UnityGameFramework.Runtime",
-        "Trinity.GameMain"
+        "Trinity.GameMain",
+        "Trinity.Libraries"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

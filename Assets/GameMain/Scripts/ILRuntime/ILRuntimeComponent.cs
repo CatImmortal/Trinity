@@ -1,7 +1,9 @@
 ﻿using GameFramework.Resource;
 using ILRuntime.CLR.TypeSystem;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityGameFramework.Runtime;
 using AppDomain = ILRuntime.Runtime.Enviorment.AppDomain;
@@ -65,12 +67,31 @@ namespace Trinity
         private ILInstanceMethod m_Update;
         private ILInstanceMethod m_ShutDown;
 
+        private void Update()
+        {
+            m_Update?.Invoke(Time.deltaTime, Time.unscaledDeltaTime);
+        }
+
+        private void OnDestroy()
+        {
+            m_ShutDown?.Invoke();
+        }
+
         /// <summary>
         /// 获取热更新层类的Type对象
         /// </summary>
         public Type GetHotfixType(string hotfixTypeFullName)
         {
             return AppDomain.LoadedTypes[hotfixTypeFullName].ReflectionType;
+        }
+
+        /// <summary>
+        /// 获取所有热更新层类的Type对象
+        /// </summary>
+        /// <returns></returns>
+        public List<Type> GetHotfixTypes()
+        {
+            return AppDomain.LoadedTypes.Values.Select(x => x.ReflectionType).ToList();
         }
 
         /// <summary>
@@ -163,15 +184,7 @@ namespace Trinity
             m_ShutDown = new ILInstanceMethod(hotfixInstance, typeFullName, "ShutDown", 0);
         }
 
-        private void Update()
-        {
-            m_Update?.Invoke(Time.deltaTime, Time.unscaledDeltaTime);
-        }
 
-        private void OnDestroy()
-        {
-            m_ShutDown?.Invoke();
-        }
     }
 
 }

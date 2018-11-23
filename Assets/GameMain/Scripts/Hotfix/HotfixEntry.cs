@@ -27,18 +27,21 @@ namespace Trinity.Hotfix
 
             m_ProcedureManager.StartProcedure<ProcedureHotfixEntry>();
 
-           
+            //初始化ET网络
+            ETNetwork.Init();
         }
 
         public void Update(float elapseSeconds, float realElapseSeconds)
         {
             m_FsmManager.Update(elapseSeconds, realElapseSeconds);
+            ETNetwork.Update();
         }
 
         public void ShutDown()
         {
             m_ProcedureManager.Shutdown();
             m_FsmManager.Shutdown();
+            ETNetwork.Shutdown();
         }
     }
 }
