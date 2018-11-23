@@ -303,7 +303,8 @@ namespace Trinity.Editor
                         foreach (KeyValuePair<string, string> result in resultDict)
                         {
                             string name = Utility.Text.Format("m_{0}_{1}", result.Value, result.Key);
-                            sw.WriteLine(Utility.Text.Format("\t\t\t{0} = rc.Get<{1}>(\"{2}\");", name, result.Value, name));
+                            string param = Utility.Text.Format("{0}_{1}", result.Value, result.Key);
+                            sw.WriteLine(Utility.Text.Format("\t\t\t{0} = rc.Get<{1}>(\"{2}\");", name, result.Value, param));
                         }
 
                         sw.WriteLine("\t\t}");
@@ -424,7 +425,8 @@ namespace Trinity.Editor
                         foreach (KeyValuePair<string, string> result in resultDict)
                         {
                             string name = Utility.Text.Format("m_{0}_{1}", result.Value, result.Key);
-                            sw.WriteLine(Utility.Text.Format("\t\t\t{0} = rc.Get<{1}>(\"{2}\");", name, result.Value, name));
+                            string param = Utility.Text.Format("{0}_{1}", result.Value, result.Key);
+                            sw.WriteLine(Utility.Text.Format("\t\t\t{0} = rc.Get<{1}>(\"{2}\");", name, result.Value, param));
                         }
 
                         sw.WriteLine("\t\t}");
