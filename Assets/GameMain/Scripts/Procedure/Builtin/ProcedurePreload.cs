@@ -60,8 +60,8 @@ namespace Trinity
             //不使用ILRuntime模式 或者热更新DLL已加载完成时，进入下一个场景
             if (!GameEntry.ILRuntime.IsILRuntimeMode)
             {
-                //TODO:在这里切换到游戏的正式开始场景，场景编号可在DefaultConfig中配置
-                procedureOwner.SetData<VarInt>(Constant.ProcedureData.NextSceneId, GameEntry.Config.GetInt("Scene.Test"));
+                //TODO:在这里切换到游戏的正式开始场景
+                procedureOwner.SetData<VarInt>(Constant.ProcedureData.NextSceneId, (int)SceneId.TestScene);
                 ChangeState<ProcedureChangeScene>(procedureOwner);
             }
             else if (GameEntry.ILRuntime.HotfixLoaded)
