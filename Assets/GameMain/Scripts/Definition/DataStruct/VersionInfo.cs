@@ -5,7 +5,7 @@
     /// </summary>
     public class VersionInfo
     {
-        public bool GameUpdate
+        public bool ForceGameUpdate
         {
             get;
             set;

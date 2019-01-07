@@ -1,3 +1,7 @@
 {
-  "CheckVersionUrl": "http://127.0.0.1/version.txt"
+  "CheckVersionUrl": "http://127.0.0.1/version.txt",
+  "StandaloneAppUrl": "http://???",
+  "IosAppUrl": "http://???",
+  "AndroidAppUrl": "http://???",
+  "END_OF_JSON": ""
 }
