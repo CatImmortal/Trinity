@@ -264,4 +264,6 @@ __pycache__/
 *.meta
 /Library
 /Packages
-Temp
+/Temp
+*.csproj
+*.sln
