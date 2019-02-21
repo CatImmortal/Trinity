@@ -261,4 +261,4 @@ __pycache__/
 *.pyc
 
 # My configurations:
-.meta
+*.meta
