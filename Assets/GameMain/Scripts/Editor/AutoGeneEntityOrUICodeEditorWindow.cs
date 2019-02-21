@@ -205,7 +205,7 @@ namespace Trinity.Editor
                     sw.WriteLine(Utility.Text.Format("\t\tpublic {0} Fill(int typeId)", entityDataName));
                     sw.WriteLine("\t\t{");
 
-                    sw.WriteLine("\t\t\t Fill(GameEntry.Entity.GenerateSerialId(),typeId);");
+                    sw.WriteLine("\t\t\tFill(GameEntry.Entity.GenerateSerialId(),typeId);");
                     sw.WriteLine("\t\t\treturn this;");
 
                     sw.WriteLine("\t\t}");
@@ -287,7 +287,7 @@ namespace Trinity.Editor
                         //定义RC引用到的Object的字段
                         foreach (KeyValuePair<string, string> result in resultDict)
                         {
-                            sw.WriteLine("\t\tprivate {0} m_{1}_{2};", result.Value, result.Value, result.Key);
+                            sw.WriteLine("\t\tprivate {0} m_{1};", result.Value, result.Key);
                         }
 
                         sw.WriteLine(Utility.Text.Format("\t\t{0} override void OnInit({1})", accessModifier, OnInitParams));
@@ -302,7 +302,7 @@ namespace Trinity.Editor
                         sw.WriteLine("");
                         foreach (KeyValuePair<string, string> result in resultDict)
                         {
-                            string name = Utility.Text.Format("m_{0}_{1}", result.Value, result.Key);
+                            string name = Utility.Text.Format("m_{0}", result.Key);
                             string param = Utility.Text.Format("{0}_{1}", result.Value, result.Key);
                             sw.WriteLine(Utility.Text.Format("\t\t\t{0} = rc.Get<{1}>(\"{2}\");", name, result.Value, param));
                         }
@@ -408,7 +408,7 @@ namespace Trinity.Editor
                         //定义RC引用到的Object的字段
                         foreach (KeyValuePair<string, string> result in resultDict)
                         {
-                            sw.WriteLine("\t\tprivate {0} m_{1}_{2};", result.Value, result.Value, result.Key);
+                            sw.WriteLine("\t\tprivate {0} m_{1};", result.Value, result.Key);
                         }
 
                         //OnInit方法
@@ -424,7 +424,7 @@ namespace Trinity.Editor
                         sw.WriteLine("");
                         foreach (KeyValuePair<string, string> result in resultDict)
                         {
-                            string name = Utility.Text.Format("m_{0}_{1}", result.Value, result.Key);
+                            string name = Utility.Text.Format("m_{0}", result.Key);
                             string param = Utility.Text.Format("{0}_{1}", result.Value, result.Key);
                             sw.WriteLine(Utility.Text.Format("\t\t\t{0} = rc.Get<{1}>(\"{2}\");", name, result.Value, param));
                         }
