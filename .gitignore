@@ -261,7 +261,6 @@ __pycache__/
 *.pyc
 
 # My configurations:
-*.meta
 /Library
 /Packages
 /Temp
