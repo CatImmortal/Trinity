@@ -142,7 +142,7 @@ namespace UnityGameFramework.Runtime
                 return;
             }
 
-            m_UIFormLogic.OnInit(userData);
+            m_UIFormLogic?.OnInit(userData);
         }
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace UnityGameFramework.Runtime
         /// <param name="userData">用户自定义数据。</param>
         public void OnOpen(object userData)
         {
-            m_UIFormLogic.OnOpen(userData);
+            m_UIFormLogic?.OnOpen(userData);
         }
 
         /// <summary>
@@ -170,7 +170,7 @@ namespace UnityGameFramework.Runtime
         /// <param name="userData">用户自定义数据。</param>
         public void OnClose(object userData)
         {
-            m_UIFormLogic.OnClose(userData);
+            m_UIFormLogic?.OnClose(userData);
         }
 
         /// <summary>
@@ -178,7 +178,7 @@ namespace UnityGameFramework.Runtime
         /// </summary>
         public void OnPause()
         {
-            m_UIFormLogic.OnPause();
+            m_UIFormLogic?.OnPause();
         }
 
         /// <summary>
@@ -186,7 +186,7 @@ namespace UnityGameFramework.Runtime
         /// </summary>
         public void OnResume()
         {
-            m_UIFormLogic.OnResume();
+            m_UIFormLogic?.OnResume();
         }
 
         /// <summary>
@@ -194,7 +194,7 @@ namespace UnityGameFramework.Runtime
         /// </summary>
         public void OnCover()
         {
-            m_UIFormLogic.OnCover();
+            m_UIFormLogic?.OnCover();
         }
 
         /// <summary>
@@ -202,7 +202,7 @@ namespace UnityGameFramework.Runtime
         /// </summary>
         public void OnReveal()
         {
-            m_UIFormLogic.OnReveal();
+            m_UIFormLogic?.OnReveal();
         }
 
         /// <summary>
@@ -211,7 +211,7 @@ namespace UnityGameFramework.Runtime
         /// <param name="userData">用户自定义数据。</param>
         public void OnRefocus(object userData)
         {
-            m_UIFormLogic.OnRefocus(userData);
+            m_UIFormLogic?.OnRefocus(userData);
         }
 
         /// <summary>
@@ -221,7 +221,7 @@ namespace UnityGameFramework.Runtime
         /// <param name="realElapseSeconds">真实流逝时间，以秒为单位。</param>
         public void OnUpdate(float elapseSeconds, float realElapseSeconds)
         {
-            m_UIFormLogic.OnUpdate(elapseSeconds, realElapseSeconds);
+            m_UIFormLogic?.OnUpdate(elapseSeconds, realElapseSeconds);
         }
 
         /// <summary>
@@ -232,7 +232,7 @@ namespace UnityGameFramework.Runtime
         public void OnDepthChanged(int uiGroupDepth, int depthInUIGroup)
         {
             m_DepthInUIGroup = depthInUIGroup;
-            m_UIFormLogic.OnDepthChanged(uiGroupDepth, depthInUIGroup);
+            m_UIFormLogic?.OnDepthChanged(uiGroupDepth, depthInUIGroup);
         }
     }
 }
