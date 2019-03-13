@@ -308,9 +308,9 @@ namespace Trinity.Editor
                         }
 
                         sw.WriteLine("\t\t}");
-                        sw.WriteLine("");
+                        
                     }
-
+                    sw.WriteLine("");
                     //OnShow方法 获取实体数据
                     sw.WriteLine(Utility.Text.Format("\t\t{0} override void OnShow(object userData)", accessModifier));
                     sw.WriteLine("\t\t{");
@@ -501,7 +501,7 @@ namespace Trinity.Editor
                         sw.WriteLine("\t\t\ttData.Rotation = data.Rotation;");
                         sw.WriteLine("");
 
-                        sw.WriteLine(Utility.Text.Format("\t\t\tentityComponent.ShowHotfixEntity(\"{0}\", 0, tData);", item.Key));
+                        sw.WriteLine(Utility.Text.Format("\t\t\tentityComponent.ShowHotfixEntity(0, tData);"));
 
                         sw.WriteLine("\t\t}");
 
@@ -539,7 +539,7 @@ namespace Trinity.Editor
                         sw.WriteLine(Utility.Text.Format("\t\tpublic static void Show{0}(this EntityComponent entityComponent,{1} data)", item.Key, item.Value));
                         sw.WriteLine("\t\t{");
 
-                        sw.WriteLine("\t\t\tentityComponent.ShowEntity(typeof({0}), \"{1}\", 0, data);", item.Key, item.Key, item.Value);
+                        sw.WriteLine("\t\t\tentityComponent.ShowEntity(typeof({0}), 0, data);", item.Key);
 
                         sw.WriteLine("\t\t}");
 

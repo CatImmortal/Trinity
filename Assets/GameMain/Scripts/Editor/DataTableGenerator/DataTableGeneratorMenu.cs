@@ -14,7 +14,7 @@ namespace Trinity.Editor
 {
     public sealed class DataTableGeneratorMenu
     {
-        [MenuItem("Star Force/Generate DataTables")]
+        [MenuItem("Trinity/Generate DataTables")]
         private static void GenerateDataTables()
         {
             foreach (string dataTableName in ProcedurePreload.DataTableNames)

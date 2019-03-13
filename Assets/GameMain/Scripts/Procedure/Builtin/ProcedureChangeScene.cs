@@ -35,7 +35,7 @@ namespace Trinity
         {
             base.OnInit(procedureOwner);
 
-            //TODO:在这里配置场景ID与要切换到的对应流程
+            //TODO:在这里配置场景ID与要切换到的对应流程的方法
             m_TargetProcedureChange.Add(1, () => ChangeState<ProcedureTest>(procedureOwner));
         }
 

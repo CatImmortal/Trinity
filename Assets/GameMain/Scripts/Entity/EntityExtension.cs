@@ -38,15 +38,15 @@ namespace Trinity
         /// <summary>
         /// 显示热更新层实体
         /// </summary>
-        public static void ShowHotfixEntity(this EntityComponent entityComponent, string groupName,int priority, HotfixEntityData data)
+        public static void ShowHotfixEntity(this EntityComponent entityComponent,int priority, HotfixEntityData data)
         {
-            entityComponent.ShowEntity(typeof(HotfixEntity), groupName,priority, data);
+            entityComponent.ShowEntity(typeof(HotfixEntity),priority, data);
         }
         
         /// <summary>
         /// 显示实体
         /// </summary>
-        public static void ShowEntity(this EntityComponent entityComponent, Type logicType, string entityGroup, int priority, EntityData data)
+        public static void ShowEntity(this EntityComponent entityComponent, Type logicType, int priority, EntityData data)
         {
             if (data == null)
             {
@@ -62,7 +62,7 @@ namespace Trinity
                 return;
             }
 
-            entityComponent.ShowEntity(data.Id, logicType, AssetUtility.GetEntityAsset(drEntity.AssetName), entityGroup, priority, data);
+            entityComponent.ShowEntity(data.Id, logicType, AssetUtility.GetEntityAsset(drEntity.AssetName), "", priority, data);
         }
 
         

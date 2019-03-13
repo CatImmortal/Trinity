@@ -106,7 +106,7 @@ namespace Trinity
             string screenHeight = Screen.height.ToString();
             string screenDpi = Screen.dpi.ToString();
             string screenOrientation = Screen.orientation.ToString();
-            string screenResolution = string.Format("{0} x {1} @ {2}Hz", Screen.currentResolution.width.ToString(), Screen.currentResolution.height.ToString(), Screen.currentResolution.refreshRate.ToString());
+            string screenResolution = Utility.Text.Format("{0} x {1} @ {2}Hz", Screen.currentResolution.width.ToString(), Screen.currentResolution.height.ToString(), Screen.currentResolution.refreshRate.ToString());
             string useWifi = (Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork).ToString();
 
             WWWForm wwwForm = new WWWForm();
@@ -179,29 +179,8 @@ namespace Trinity
             GameEntry.Resource.UpdatePrefixUri = Utility.Path.GetCombinePath(m_VersionInfo.GameUpdateUrl, GetResourceVersionName(), GetPlatformPath());
 
 
-            //更新版本资源礼包
+            //更新版本资源列表
             UpdateVersion();
-
-            //if (m_VersionInfo.ForceGameUpdate)
-            //{
-            //    //是否需要更新版本资源列表
-            //    CheckVersionListResult result = GameEntry.Resource.CheckVersionList(m_VersionInfo.InternalResourceVersion);
-            //    if (result == CheckVersionListResult.NeedUpdate)
-            //    {
-            //        Log.Info("最新内部资源版本号为{0}，需要更新版本资源列表", m_VersionInfo.InternalResourceVersion);
-
-            //        //更新版本资源列表
-            //        GameEntry.Resource.UpdatePrefixUri = m_VersionInfo.GameUpdateUrl;
-            //        GameEntry.Resource.UpdateVersionList(m_VersionInfo.VersionListLength, m_VersionInfo.VersionListHashCode, m_VersionInfo.VersionListZipLength, m_VersionInfo.VersionListZipHashCode, m_UpdateVersionListCallbacks);
-            //    }
-            //    else
-            //    {
-            //        //检查资源
-            //        Log.Info("最新内部资源版本号为{0}，不需要更新版本资源列表，开始检查需要更新的资源", m_VersionInfo.InternalResourceVersion);
-            //        GameEntry.Resource.CheckResources(OnCheckResourcesComplete);
-            //    }
-
-            //}
 
         }
 
@@ -235,7 +214,7 @@ namespace Trinity
                 return string.Empty;
             }
 
-            return string.Format("{0}_{1}_{2}_{3}", splitApplicableGameVersion[0], splitApplicableGameVersion[1], splitApplicableGameVersion[2], m_VersionInfo.InternalResourceVersion.ToString());
+            return Utility.Text.Format("{0}_{1}_{2}_{3}", splitApplicableGameVersion[0], splitApplicableGameVersion[1], splitApplicableGameVersion[2], m_VersionInfo.InternalResourceVersion.ToString());
         }
 
         /// <summary>

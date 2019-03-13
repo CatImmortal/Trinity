@@ -68,7 +68,7 @@ namespace Trinity.Editor
             string dataTableName = (string)userData;
 
             codeContent.Replace("__DATA_TABLE_CREATE_TIME__", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-            codeContent.Replace("__DATA_TABLE_NAME_SPACE__", "Trinity.GameMain");
+            codeContent.Replace("__DATA_TABLE_NAME_SPACE__", "Trinity");
             codeContent.Replace("__DATA_TABLE_CLASS_NAME__", "DR" + dataTableName);
             codeContent.Replace("__DATA_TABLE_COMMENT__", dataTableProcessor.GetValue(0, 1) + "。");
             codeContent.Replace("__DATA_TABLE_ID_COMMENT__", "获取" + dataTableProcessor.GetComment(dataTableProcessor.IdColumn) + "。");
@@ -126,7 +126,7 @@ namespace Trinity.Editor
             stringBuilder
                 .AppendLine("        public override bool ParseDataRow(GameFrameworkSegment<string> dataRowSegment)")
                 .AppendLine("        {")
-                .AppendLine("            // 示例代码，正式项目使用时请调整此处的生成代码，以处理 GCAlloc 问题！")
+                .AppendLine("            //示例代码，正式项目使用时请调整此处的生成代码，以处理 GCAlloc 问题！")
                 .AppendLine("            string[] columnTexts = dataRowSegment.Source.Substring(dataRowSegment.Offset, dataRowSegment.Length).Split(DataTableExtension.DataSplitSeparators);")
                 .AppendLine("            for (int i = 0; i < columnTexts.Length; i++)")
                 .AppendLine("            {")

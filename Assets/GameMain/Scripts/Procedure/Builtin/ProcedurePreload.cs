@@ -105,7 +105,7 @@ namespace Trinity
         private void LoadConfig(string configName)
         {
             m_LoadedFlag.Add(Utility.Text.Format("Config.{0}", configName), false);
-            GameEntry.Config.LoadConfig(configName, LoadType.Bytes, this);
+            GameEntry.Config.LoadConfig(configName, LoadType.Text, this);
         }
 
         private void LoadDataTable(string dataTableName)

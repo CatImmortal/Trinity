@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using GameFramework.Event;
 using UnityEngine;
 using UnityGameFramework.Runtime;
 
@@ -14,8 +16,9 @@ namespace Trinity.Hotfix
             base.OnEnter(procedureOwner);
 
             Log.Info("进入了热更新测试流程");
-
         }
+
+
 
         protected internal override void OnUpdate(IFsm procedureOwner, float elapseSeconds, float realElapseSeconds)
         {

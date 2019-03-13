@@ -1,26 +1,38 @@
-﻿using GameFramework;
-using GameFramework.DataTable;
+﻿//------------------------------------------------------------
+// 此文件由工具自动生成，请勿直接修改。
+// 生成时间：2019-03-13 17:02:41.395
+//------------------------------------------------------------
+
+using GameFramework;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using UnityEngine;
+using UnityGameFramework.Runtime;
 
 namespace Trinity
 {
     /// <summary>
     /// 音乐配置表。
     /// </summary>
-    public class DRMusic : IDataRow
+    public class DRMusic : DataRowBase
     {
+        private int m_Id = 0;
+
         /// <summary>
-        /// 音乐编号。
+        /// 获取音乐编号。
         /// </summary>
-        public int Id
+        public override int Id
         {
-            get;
-            protected set;
+            get
+            {
+                return m_Id;
+            }
         }
 
         /// <summary>
-        /// 资源名称。
+        /// 获取资源名称。
         /// </summary>
         public string AssetName
         {
@@ -28,34 +40,50 @@ namespace Trinity
             private set;
         }
 
-        public void ParseDataRow(string dataRowText)
+        public override bool ParseDataRow(GameFrameworkSegment<string> dataRowSegment)
         {
-            string[] text = DataTableExtension.SplitDataRow(dataRowText);
+            //示例代码，正式项目使用时请调整此处的生成代码，以处理 GCAlloc 问题！
+            string[] columnTexts = dataRowSegment.Source.Substring(dataRowSegment.Offset, dataRowSegment.Length).Split(DataTableExtension.DataSplitSeparators);
+            for (int i = 0; i < columnTexts.Length; i++)
+            {
+                columnTexts[i] = columnTexts[i].Trim(DataTableExtension.DataTrimSeparators);
+            }
+
             int index = 0;
             index++;
-            Id = int.Parse(text[index++]);
+            m_Id = int.Parse(columnTexts[index++]);
             index++;
-            AssetName = text[index++];
+            AssetName = columnTexts[index++];
+
+            GeneratePropertyArray();
+            return true;
         }
 
-        public bool ParseDataRow(GameFrameworkSegment<string> dataRowSegment)
+        public override bool ParseDataRow(GameFrameworkSegment<byte[]> dataRowSegment)
         {
-            throw new System.NotImplementedException();
+            //示例代码，正式项目使用时请调整此处的生成代码，以处理 GCAlloc 问题！
+            using (MemoryStream memoryStream = new MemoryStream(dataRowSegment.Source, dataRowSegment.Offset, dataRowSegment.Length, false))
+            {
+                using (BinaryReader binaryReader = new BinaryReader(memoryStream, Encoding.UTF8))
+                {
+                    m_Id = binaryReader.ReadInt32();
+                    AssetName = binaryReader.ReadString();
+                }
+            }
+
+            GeneratePropertyArray();
+            return true;
         }
 
-        public bool ParseDataRow(GameFrameworkSegment<byte[]> dataRowSegment)
+        public override bool ParseDataRow(GameFrameworkSegment<Stream> dataRowSegment)
         {
-            throw new System.NotImplementedException();
+            Log.Warning("Not implemented ParseDataRow(GameFrameworkSegment<Stream>)");
+            return false;
         }
 
-        public bool ParseDataRow(GameFrameworkSegment<Stream> dataRowSegment)
+        private void GeneratePropertyArray()
         {
-            throw new System.NotImplementedException();
-        }
 
-        private void AvoidJIT()
-        {
-            new Dictionary<int, DRMusic>();
         }
     }
 }

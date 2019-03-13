@@ -1,5 +1,14 @@
-﻿using GameFramework.DataTable;
+﻿//------------------------------------------------------------
+// 此文件由工具自动生成，请勿直接修改。
+// 生成时间：2019-03-13 17:02:41.372
+//------------------------------------------------------------
+
+using GameFramework;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using UnityEngine;
 using UnityGameFramework.Runtime;
 
 namespace Trinity
@@ -9,18 +18,21 @@ namespace Trinity
     /// </summary>
     public class DREntity : DataRowBase
     {
+        private int m_Id = 0;
 
-
+        /// <summary>
+        /// 获取实体编号。
+        /// </summary>
         public override int Id
         {
             get
             {
-                throw new System.NotImplementedException();
+                return m_Id;
             }
         }
 
         /// <summary>
-        /// 资源名称。
+        /// 获取资源名称。
         /// </summary>
         public string AssetName
         {
@@ -28,19 +40,61 @@ namespace Trinity
             private set;
         }
 
-        public void ParseDataRow(string dataRowText)
+        /// <summary>
+        /// 获取实体组名称。
+        /// </summary>
+        public string EntityGroupName
         {
-            string[] text = DataTableExtension.SplitDataRow(dataRowText);
-            int index = 0;
-            index++;
-            //Id = int.Parse(text[index++]);
-            index++;
-            AssetName = text[index++];
+            get;
+            private set;
         }
 
-        private void AvoidJIT()
+        public override bool ParseDataRow(GameFrameworkSegment<string> dataRowSegment)
         {
-            new Dictionary<int, DREntity>();
+            //示例代码，正式项目使用时请调整此处的生成代码，以处理 GCAlloc 问题！
+            string[] columnTexts = dataRowSegment.Source.Substring(dataRowSegment.Offset, dataRowSegment.Length).Split(DataTableExtension.DataSplitSeparators);
+            for (int i = 0; i < columnTexts.Length; i++)
+            {
+                columnTexts[i] = columnTexts[i].Trim(DataTableExtension.DataTrimSeparators);
+            }
+
+            int index = 0;
+            index++;
+            m_Id = int.Parse(columnTexts[index++]);
+            index++;
+            AssetName = columnTexts[index++];
+            EntityGroupName = columnTexts[index++];
+
+            GeneratePropertyArray();
+            return true;
+        }
+
+        public override bool ParseDataRow(GameFrameworkSegment<byte[]> dataRowSegment)
+        {
+            //示例代码，正式项目使用时请调整此处的生成代码，以处理 GCAlloc 问题！
+            using (MemoryStream memoryStream = new MemoryStream(dataRowSegment.Source, dataRowSegment.Offset, dataRowSegment.Length, false))
+            {
+                using (BinaryReader binaryReader = new BinaryReader(memoryStream, Encoding.UTF8))
+                {
+                    m_Id = binaryReader.ReadInt32();
+                    AssetName = binaryReader.ReadString();
+                    EntityGroupName = binaryReader.ReadString();
+                }
+            }
+
+            GeneratePropertyArray();
+            return true;
+        }
+
+        public override bool ParseDataRow(GameFrameworkSegment<Stream> dataRowSegment)
+        {
+            Log.Warning("Not implemented ParseDataRow(GameFrameworkSegment<Stream>)");
+            return false;
+        }
+
+        private void GeneratePropertyArray()
+        {
+
         }
     }
 }
