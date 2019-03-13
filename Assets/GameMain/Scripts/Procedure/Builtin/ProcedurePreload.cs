@@ -12,6 +12,16 @@ namespace Trinity
 {
     public class ProcedurePreload : ProcedureBase
     {
+        public static readonly string[] DataTableNames = new string[]
+       {
+            "Entity",
+            "Music",
+            "Scene",
+            "Sound",
+            "UIForm",
+            "UISound",
+       };
+
         private Dictionary<string, bool> m_LoadedFlag = new Dictionary<string, bool>();
 
         
@@ -57,7 +67,7 @@ namespace Trinity
                 }
             }
 
-            //不使用ILRuntime模式 或者热更新DLL已加载完成时，进入下一个场景
+            //不使用ILRuntime模式 或者 使用ILRuntime模式并且热更新DLL已加载完成时，进入下一个场景
             if (!GameEntry.ILRuntime.IsILRuntimeMode)
             {
                 //TODO:在这里切换到游戏的正式开始场景
@@ -77,14 +87,10 @@ namespace Trinity
         {
             LoadConfig("DefaultConfig");
 
-            LoadDataTable("Entity");
-            LoadDataTable("Music");
-            LoadDataTable("Scene");
-            LoadDataTable("Sound");
-            LoadDataTable("UIForm");
-            LoadDataTable("UISound");
-
-            //TODO: 继续加载你的自定义数据表
+            foreach (string dataTableName in DataTableNames)
+            {
+                LoadDataTable(dataTableName);
+            }
 
             //TODO:根据需求选择是否加载语言的默认字典，字体
 
@@ -98,29 +104,29 @@ namespace Trinity
 
         private void LoadConfig(string configName)
         {
-            m_LoadedFlag.Add(string.Format("Config.{0}", configName), false);
-            GameEntry.Config.LoadConfig(configName, this);
+            m_LoadedFlag.Add(Utility.Text.Format("Config.{0}", configName), false);
+            GameEntry.Config.LoadConfig(configName, LoadType.Bytes, this);
         }
 
         private void LoadDataTable(string dataTableName)
         {
-            m_LoadedFlag.Add(string.Format("DataTable.{0}", dataTableName), false);
-            GameEntry.DataTable.LoadDataTable(dataTableName, this);
+            m_LoadedFlag.Add(Utility.Text.Format("DataTable.{0}", dataTableName), false);
+            GameEntry.DataTable.LoadDataTable(dataTableName, LoadType.Bytes, this);
         }
 
         private void LoadDictionary(string dictionaryName)
         {
-            m_LoadedFlag.Add(string.Format("Dictionary.{0}", dictionaryName), false);
-            GameEntry.Localization.LoadDictionary(dictionaryName, this);
+            m_LoadedFlag.Add(Utility.Text.Format("Dictionary.{0}", dictionaryName), false);
+            GameEntry.Localization.LoadDictionary(dictionaryName, LoadType.Text, this);
         }
 
         private void LoadFont(string fontName)
         {
-            m_LoadedFlag.Add(string.Format("Font.{0}", fontName), false);
+            m_LoadedFlag.Add(Utility.Text.Format("Font.{0}", fontName), false);
             GameEntry.Resource.LoadAsset(AssetUtility.GetFontAsset(fontName), Constant.AssetPriority.FontAsset, new LoadAssetCallbacks(
                 (assetName, asset, duration, userData) =>
                 {
-                    m_LoadedFlag[string.Format("Font.{0}", fontName)] = true;
+                    m_LoadedFlag[Utility.Text.Format("Font.{0}", fontName)] = true;
                     UGuiForm.SetMainFont((Font)asset);
                     Log.Info("Load font '{0}' OK.", fontName);
                 },
@@ -139,7 +145,7 @@ namespace Trinity
                 return;
             }
 
-            m_LoadedFlag[string.Format("Config.{0}", ne.ConfigName)] = true;
+            m_LoadedFlag[Utility.Text.Format("Config.{0}", ne.ConfigName)] = true;
             Log.Info("Load config '{0}' OK.", ne.ConfigName);
         }
 
@@ -162,7 +168,7 @@ namespace Trinity
                 return;
             }
 
-            m_LoadedFlag[string.Format("DataTable.{0}", ne.DataTableName)] = true;
+            m_LoadedFlag[Utility.Text.Format("DataTable.{0}", ne.DataTableName)] = true;
             Log.Info("Load data table '{0}' OK.", ne.DataTableName);
         }
 
@@ -185,7 +191,7 @@ namespace Trinity
                 return;
             }
 
-            m_LoadedFlag[string.Format("Dictionary.{0}", ne.DictionaryName)] = true;
+            m_LoadedFlag[Utility.Text.Format("Dictionary.{0}", ne.DictionaryName)] = true;
             Log.Info("Load dictionary '{0}' OK.", ne.DictionaryName);
         }
 

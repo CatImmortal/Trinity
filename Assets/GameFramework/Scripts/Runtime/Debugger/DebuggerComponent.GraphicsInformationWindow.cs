@@ -1,6 +1,6 @@
 ﻿//------------------------------------------------------------
-// Game Framework v3.x
-// Copyright © 2013-2018 Jiang Yin. All rights reserved.
+// Game Framework
+// Copyright © 2013-2019 Jiang Yin. All rights reserved.
 // Homepage: http://gameframework.cn/
 // Feedback: mailto:jiangyin@gameframework.cn
 //------------------------------------------------------------
@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace UnityGameFramework.Runtime
 {
-    public partial class DebuggerComponent
+    public sealed partial class DebuggerComponent : GameFrameworkComponent
     {
         private sealed class GraphicsInformationWindow : ScrollableDebuggerWindowBase
         {
@@ -40,6 +40,10 @@ namespace UnityGameFramework.Runtime
 #if UNITY_5_6_OR_NEWER
                     DrawItem("Max Cubemap Size:", SystemInfo.maxCubemapSize.ToString());
                     DrawItem("Graphics UV Starts At Top:", SystemInfo.graphicsUVStartsAtTop.ToString());
+#endif
+#if UNITY_2018_3_OR_NEWER
+                    DrawItem("Has Hidden Surface Removal On GPU:", SystemInfo.hasHiddenSurfaceRemovalOnGPU.ToString());
+                    DrawItem("Has Dynamic Uniform Array Indexing In Fragment Shaders:", SystemInfo.hasDynamicUniformArrayIndexingInFragmentShaders.ToString());
 #endif
 #if UNITY_5_3 || UNITY_5_4
                     DrawItem("Supports Stencil:", SystemInfo.supportsStencil.ToString());
@@ -79,6 +83,9 @@ namespace UnityGameFramework.Runtime
 #if UNITY_2018_2_OR_NEWER
                     DrawItem("Supports Mip Streaming", SystemInfo.supportsMipStreaming.ToString());
                     DrawItem("Supports Multisample Auto Resolve", SystemInfo.supportsMultisampleAutoResolve.ToString());
+#endif
+#if UNITY_2018_3_OR_NEWER
+                    DrawItem("Supports Separated Render Targets Blend:", SystemInfo.supportsSeparatedRenderTargetsBlend.ToString());
 #endif
                 }
                 GUILayout.EndVertical();

@@ -1,6 +1,6 @@
 ﻿//------------------------------------------------------------
-// Game Framework v3.x
-// Copyright © 2013-2018 Jiang Yin. All rights reserved.
+// Game Framework
+// Copyright © 2013-2019 Jiang Yin. All rights reserved.
 // Homepage: http://gameframework.cn/
 // Feedback: mailto:jiangyin@gameframework.cn
 //------------------------------------------------------------
@@ -32,6 +32,17 @@ namespace UnityGameFramework.Runtime
             get
             {
                 return m_AudioSource.isPlaying;
+            }
+        }
+
+        /// <summary>
+        /// 获取声音长度。
+        /// </summary>
+        public override float Length
+        {
+            get
+            {
+                return m_AudioSource.clip != null ? m_AudioSource.clip.length : 0f;
             }
         }
 
@@ -304,7 +315,7 @@ namespace UnityGameFramework.Runtime
         /// 设置声音资源。
         /// </summary>
         /// <param name="soundAsset">声音资源。</param>
-        /// <returns>设置声音资源是否成功。</returns>
+        /// <returns>是否设置声音资源成功。</returns>
         public override bool SetSoundAsset(object soundAsset)
         {
             AudioClip audioClip = soundAsset as AudioClip;
@@ -369,7 +380,7 @@ namespace UnityGameFramework.Runtime
 
         private void UpdateAgentPosition()
         {
-            if (m_BindingEntityLogic.IsAvailable)
+            if (m_BindingEntityLogic.Available)
             {
                 m_CachedTransform.position = m_BindingEntityLogic.CachedTransform.position;
                 return;

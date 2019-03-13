@@ -1,6 +1,6 @@
 ﻿//------------------------------------------------------------
-// Game Framework v3.x
-// Copyright © 2013-2018 Jiang Yin. All rights reserved.
+// Game Framework
+// Copyright © 2013-2019 Jiang Yin. All rights reserved.
 // Homepage: http://gameframework.cn/
 // Feedback: mailto:jiangyin@gameframework.cn
 //------------------------------------------------------------
@@ -98,7 +98,6 @@ namespace UnityGameFramework.Runtime
                 return;
             }
 
-            //从显示实体信息中获取到实体逻辑的Type对象
             ShowEntityInfo showEntityInfo = (ShowEntityInfo)userData;
             Type entityLogicType = showEntityInfo.EntityLogicType;
             if (entityLogicType == null)
@@ -111,7 +110,6 @@ namespace UnityGameFramework.Runtime
             {
                 if (m_EntityLogic.GetType() == entityLogicType)
                 {
-                    //已经添加了相同的实体逻辑脚本时，显示实体
                     m_EntityLogic.enabled = true;
                     return;
                 }
@@ -120,7 +118,6 @@ namespace UnityGameFramework.Runtime
                 m_EntityLogic = null;
             }
 
-            //为实体的GameObject添加实体逻辑脚本
             m_EntityLogic = gameObject.AddComponent(entityLogicType) as EntityLogic;
             if (m_EntityLogic == null)
             {
@@ -128,7 +125,6 @@ namespace UnityGameFramework.Runtime
                 return;
             }
 
-            //新添加的实体逻辑脚本才会执行OnInit方法
             m_EntityLogic.OnInit(showEntityInfo.UserData);
         }
 

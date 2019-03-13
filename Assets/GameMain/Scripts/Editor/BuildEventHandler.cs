@@ -18,7 +18,7 @@ namespace Trinity.Editor
 
         public void PreprocessAllPlatforms(string productName, string companyName, string gameIdentifier,
             string applicableGameVersion, int internalResourceVersion, string unityVersion, BuildAssetBundleOptions buildOptions, bool zip,
-            string outputDirectory, string workingPath, string outputPackagePath, string outputFullPath, string outputPackedPath, string buildReportPath)
+            string outputDirectory, string workingPath, bool outputPackageSelected, string outputPackagePath, bool outputFullSelected, string outputFullPath, bool outputPackedSelected, string outputPackedPath, string buildReportPath)
         {
             string streamingAssetsPath = Utility.Path.GetCombinePath(Application.dataPath, "StreamingAssets");
             string[] fileNames = Directory.GetFiles(streamingAssetsPath, "*", SearchOption.AllDirectories);
@@ -37,18 +37,23 @@ namespace Trinity.Editor
 
         public void PostprocessAllPlatforms(string productName, string companyName, string gameIdentifier,
             string applicableGameVersion, int internalResourceVersion, string unityVersion, BuildAssetBundleOptions buildOptions, bool zip,
-            string outputDirectory, string workingPath, string outputPackagePath, string outputFullPath, string outputPackedPath, string buildReportPath)
+            string outputDirectory, string workingPath, bool outputPackageSelected, string outputPackagePath, bool outputFullSelected, string outputFullPath, bool outputPackedSelected, string outputPackedPath, string buildReportPath)
         {
 
         }
 
-        public void PreprocessPlatform(Platform platform, string workingPath, string outputPackagePath, string outputFullPath, string outputPackedPath)
+        public void PreprocessPlatform(Platform platform, string workingPath, bool outputPackageSelected, string outputPackagePath, bool outputFullSelected, string outputFullPath, bool outputPackedSelected, string outputPackedPath)
         {
 
         }
 
-        public void PostprocessPlatform(Platform platform, string workingPath, string outputPackagePath, string outputFullPath, string outputPackedPath, bool isSuccess)
+        public void PostprocessPlatform(Platform platform, string workingPath, bool outputPackageSelected, string outputPackagePath, bool outputFullSelected, string outputFullPath, bool outputPackedSelected, string outputPackedPath, bool isSuccess)
         {
+            if (!outputPackageSelected)
+            {
+                return;
+            }
+
             if (platform != Platform.Windows)
             {
                 return;

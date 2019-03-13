@@ -1,6 +1,6 @@
 ﻿//------------------------------------------------------------
-// Game Framework v3.x
-// Copyright © 2013-2018 Jiang Yin. All rights reserved.
+// Game Framework
+// Copyright © 2013-2019 Jiang Yin. All rights reserved.
 // Homepage: http://gameframework.cn/
 // Feedback: mailto:jiangyin@gameframework.cn
 //------------------------------------------------------------
@@ -11,8 +11,11 @@ using UnityEngine;
 
 namespace UnityGameFramework.Runtime
 {
-    public partial class DebuggerComponent
+    public sealed partial class DebuggerComponent : GameFrameworkComponent
     {
+        /// <summary>
+        /// 日志记录结点。
+        /// </summary>
         public sealed class LogNode : IReference
         {
             private DateTime m_LogTime;
@@ -20,6 +23,13 @@ namespace UnityGameFramework.Runtime
             private string m_LogMessage;
             private string m_StackTrack;
 
+            /// <summary>
+            /// 填充日志记录结点。
+            /// </summary>
+            /// <param name="logType">日志类型。</param>
+            /// <param name="logMessage">日志内容。</param>
+            /// <param name="stackTrack">日志堆栈信息。</param>
+            /// <returns></returns>
             public LogNode Fill(LogType logType, string logMessage, string stackTrack)
             {
                 m_LogTime = DateTime.Now;
@@ -30,6 +40,9 @@ namespace UnityGameFramework.Runtime
                 return this;
             }
 
+            /// <summary>
+            /// 获取日志时间。
+            /// </summary>
             public DateTime LogTime
             {
                 get
@@ -38,6 +51,9 @@ namespace UnityGameFramework.Runtime
                 }
             }
 
+            /// <summary>
+            /// 获取日志类型。
+            /// </summary>
             public LogType LogType
             {
                 get
@@ -46,6 +62,9 @@ namespace UnityGameFramework.Runtime
                 }
             }
 
+            /// <summary>
+            /// 获取日志内容。
+            /// </summary>
             public string LogMessage
             {
                 get
@@ -54,6 +73,9 @@ namespace UnityGameFramework.Runtime
                 }
             }
 
+            /// <summary>
+            /// 获取日志堆栈信息。
+            /// </summary>
             public string StackTrack
             {
                 get
@@ -62,6 +84,9 @@ namespace UnityGameFramework.Runtime
                 }
             }
 
+            /// <summary>
+            /// 清理日志记录结点。
+            /// </summary>
             public void Clear()
             {
                 m_LogTime = default(DateTime);

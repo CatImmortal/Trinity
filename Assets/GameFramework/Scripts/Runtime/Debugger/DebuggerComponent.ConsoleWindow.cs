@@ -1,6 +1,6 @@
 ﻿//------------------------------------------------------------
-// Game Framework v3.x
-// Copyright © 2013-2018 Jiang Yin. All rights reserved.
+// Game Framework
+// Copyright © 2013-2019 Jiang Yin. All rights reserved.
 // Homepage: http://gameframework.cn/
 // Feedback: mailto:jiangyin@gameframework.cn
 //------------------------------------------------------------
@@ -13,10 +13,10 @@ using UnityEngine;
 
 namespace UnityGameFramework.Runtime
 {
-    public partial class DebuggerComponent
+    public sealed partial class DebuggerComponent : GameFrameworkComponent
     {
         [Serializable]
-        private partial class ConsoleWindow : IDebuggerWindow
+        private sealed class ConsoleWindow : IDebuggerWindow
         {
             private SettingComponent m_SettingComponent = null;
             private Queue<LogNode> m_LogNodes = new Queue<LogNode>();
@@ -384,8 +384,11 @@ namespace UnityGameFramework.Runtime
                             GUILayout.Label(Utility.Text.Format("<color=#{0}{1}{2}{3}><b>{4}</b></color>", color.r.ToString("x2"), color.g.ToString("x2"), color.b.ToString("x2"), color.a.ToString("x2"), m_SelectedNode.LogMessage));
                             if (GUILayout.Button("COPY", GUILayout.Width(60f), GUILayout.Height(30f)))
                             {
-                                TextEditor textEditor = new TextEditor();
-                                textEditor.text = Utility.Text.Format("{0}\n\n{1}", m_SelectedNode.LogMessage, m_SelectedNode.StackTrack);
+                                TextEditor textEditor = new TextEditor
+                                {
+                                    text = Utility.Text.Format("{0}\n\n{1}", m_SelectedNode.LogMessage, m_SelectedNode.StackTrack)
+                                };
+
                                 textEditor.OnFocus();
                                 textEditor.Copy();
                             }

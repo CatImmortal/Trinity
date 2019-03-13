@@ -1,6 +1,6 @@
 ﻿//------------------------------------------------------------
-// Game Framework v3.x
-// Copyright © 2013-2018 Jiang Yin. All rights reserved.
+// Game Framework
+// Copyright © 2013-2019 Jiang Yin. All rights reserved.
 // Homepage: http://gameframework.cn/
 // Feedback: mailto:jiangyin@gameframework.cn
 //------------------------------------------------------------
@@ -13,6 +13,7 @@ using UnityEngine.Networking;
 #else
 using UnityEngine.Experimental.Networking;
 #endif
+using Utility = GameFramework.Utility;
 
 namespace UnityGameFramework.Runtime
 {
@@ -109,8 +110,11 @@ namespace UnityGameFramework.Runtime
                 return;
             }
 
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("Range", GameFramework.Utility.Text.Format("bytes={0}-", fromPosition.ToString()));
+            Dictionary<string, string> header = new Dictionary<string, string>
+            {
+                { "Range", Utility.Text.Format("bytes={0}-", fromPosition.ToString()) }
+            };
+
             m_UnityWebRequest = UnityWebRequest.Post(downloadUri, header);
 #if UNITY_2017_2_OR_NEWER
             m_UnityWebRequest.SendWebRequest();
@@ -134,8 +138,11 @@ namespace UnityGameFramework.Runtime
                 return;
             }
 
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("Range", GameFramework.Utility.Text.Format("bytes={0}-{1}", fromPosition.ToString(), toPosition.ToString()));
+            Dictionary<string, string> header = new Dictionary<string, string>
+            {
+                { "Range", Utility.Text.Format("bytes={0}-{1}", fromPosition.ToString(), toPosition.ToString()) }
+            };
+
             m_UnityWebRequest = UnityWebRequest.Post(downloadUri, header);
 #if UNITY_2017_2_OR_NEWER
             m_UnityWebRequest.SendWebRequest();

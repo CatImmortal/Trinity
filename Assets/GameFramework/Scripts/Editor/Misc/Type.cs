@@ -1,6 +1,6 @@
 ﻿//------------------------------------------------------------
-// Game Framework v3.x
-// Copyright © 2013-2018 Jiang Yin. All rights reserved.
+// Game Framework
+// Copyright © 2013-2019 Jiang Yin. All rights reserved.
 // Homepage: http://gameframework.cn/
 // Feedback: mailto:jiangyin@gameframework.cn
 //------------------------------------------------------------
@@ -21,8 +21,8 @@ namespace UnityGameFramework.Editor
 #if UNITY_2017_3_OR_NEWER
             "UnityGameFramework.Runtime",
 #endif
-            //TODO:如果使用了Asmdef修改了程序集名称，那么这里也需要进行同步修改
-            "Trinity.GameMain",
+            "Assembly-CSharp",
+            "Trinity.GameMain"
         };
 
         private static readonly string[] EditorAssemblyNames =
@@ -30,7 +30,7 @@ namespace UnityGameFramework.Editor
 #if UNITY_2017_3_OR_NEWER
             "UnityGameFramework.Editor",
 #endif
-            //TODO:如果使用了Asmdef修改了程序集名称，那么这里也需要进行同步修改
+            "Assembly-CSharp-Editor",
             "Trinity.Editor"
         };
 

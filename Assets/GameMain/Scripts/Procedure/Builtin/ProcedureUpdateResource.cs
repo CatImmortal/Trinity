@@ -1,6 +1,7 @@
 ﻿using GameFramework;
 using GameFramework.Event;
 using GameFramework.Procedure;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityGameFramework.Runtime;
@@ -15,7 +16,7 @@ namespace Trinity
     {
         private bool m_UpdateAllComplete = false;
         private int m_UpdateCount = 0;
-        private int m_UpdateTotalZipLength = 0;
+        private long m_UpdateTotalZipLength = 0;
         private int m_UpdateSuccessCount = 0;
         private List<UpdateLengthData> m_UpdateLengthData = new List<UpdateLengthData>();
 
@@ -36,6 +37,8 @@ namespace Trinity
 
             GameEntry.Resource.CheckResources(OnCheckResourcesComplete);
         }
+
+
 
         protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
         {
@@ -59,8 +62,7 @@ namespace Trinity
 
             ChangeState<ProcedurePreload>(procedureOwner);
         }
-
-        private void OnCheckResourcesComplete(bool needUpdateResources, int removedCount, int updateCount, int updateTotalLength, int updateTotalZipLength)
+        private void OnCheckResourcesComplete(bool needUpdateResources, int removedCount, int updateCount, long updateTotalLength, long updateTotalZipLength)
         {
             Log.Info("Check resources complete, '{0}' resources need to update, zip length is '{1}', unzip length is '{2}'.", updateCount.ToString(), updateTotalZipLength.ToString(), updateTotalLength.ToString());
 
@@ -196,24 +198,24 @@ namespace Trinity
         /// <summary>
         /// 获取长度字符串
         /// </summary>
-        private string GetLengthString(int length)
+        private string GetLengthString(long length)
         {
             if (length < 1024)
             {
-                return string.Format("{0} Bytes", length.ToString());
+                return Utility.Text.Format("{0} Bytes", length.ToString());
             }
 
             if (length < 1024 * 1024)
             {
-                return string.Format("{0} KB", (length / 1024f).ToString("F2"));
+                return Utility.Text.Format("{0} KB", (length / 1024f).ToString("F2"));
             }
 
             if (length < 1024 * 1024 * 1024)
             {
-                return string.Format("{0} MB", (length / 1024f / 1024f).ToString("F2"));
+                return Utility.Text.Format("{0} MB", (length / 1024f / 1024f).ToString("F2"));
             }
 
-            return string.Format("{0} GB", (length / 1024f / 1024f / 1024f).ToString("F2"));
+            return Utility.Text.Format("{0} GB", (length / 1024f / 1024f / 1024f).ToString("F2"));
         }
 
        

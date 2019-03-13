@@ -1,6 +1,6 @@
 ﻿//------------------------------------------------------------
-// Game Framework v3.x
-// Copyright © 2013-2018 Jiang Yin. All rights reserved.
+// Game Framework
+// Copyright © 2013-2019 Jiang Yin. All rights reserved.
 // Homepage: http://gameframework.cn/
 // Feedback: mailto:jiangyin@gameframework.cn
 //------------------------------------------------------------
@@ -24,13 +24,16 @@ namespace UnityGameFramework.Runtime
     public sealed class EditorResourceComponent : MonoBehaviour, IResourceManager
     {
         private const int DefaultPriority = 0;
-        private static readonly int AssetsSubstringLength = "Assets/".Length;
+        private static readonly int AssetsStringLength = "Assets".Length;
+
+        [SerializeField]
+        private int m_LoadAssetCountPerFrame = 1;
 
         [SerializeField]
         private float m_MinLoadAssetRandomDelaySeconds = 0f;
 
         [SerializeField]
-        private float m_MaxLoadAssetRandomDelaySeconds = 1f;
+        private float m_MaxLoadAssetRandomDelaySeconds = 0f;
 
         private string m_ReadOnlyPath = null;
         private string m_ReadWritePath = null;
@@ -149,6 +152,36 @@ namespace UnityGameFramework.Runtime
             set
             {
                 throw new NotSupportedException("UpdatePrefixUri");
+            }
+        }
+
+        /// <summary>
+        /// 获取或设置更新文件缓存大小。
+        /// </summary>
+        public int UpdateFileCacheLength
+        {
+            get
+            {
+                throw new NotSupportedException("UpdateFileCacheLength");
+            }
+            set
+            {
+                throw new NotSupportedException("UpdateFileCacheLength");
+            }
+        }
+
+        /// <summary>
+        /// 获取或设置每下载多少字节的资源，刷新一次资源列表。
+        /// </summary>
+        public int GenerateReadWriteListLength
+        {
+            get
+            {
+                throw new NotSupportedException("GenerateReadWriteListLength");
+            }
+            set
+            {
+                throw new NotSupportedException("GenerateReadWriteListLength");
             }
         }
 
@@ -407,8 +440,9 @@ namespace UnityGameFramework.Runtime
         {
             if (m_LoadAssetInfos.Count > 0)
             {
+                int count = 0;
                 LinkedListNode<LoadAssetInfo> current = m_LoadAssetInfos.First;
-                while (current != null)
+                while (current != null && count < m_LoadAssetCountPerFrame)
                 {
                     LoadAssetInfo loadAssetInfo = current.Value;
                     float elapseSeconds = (float)(DateTime.Now - loadAssetInfo.StartTime).TotalSeconds;
@@ -444,6 +478,7 @@ namespace UnityGameFramework.Runtime
                         LinkedListNode<LoadAssetInfo> next = current.Next;
                         m_LoadAssetInfos.Remove(loadAssetInfo);
                         current = next;
+                        count++;
                     }
                     else
                     {
@@ -784,6 +819,12 @@ namespace UnityGameFramework.Runtime
                 return;
             }
 
+            if (!assetName.StartsWith("Assets/"))
+            {
+                Log.Error("Asset name '{0}' is invalid.", assetName);
+                return;
+            }
+
             if (loadAssetCallbacks == null)
             {
                 Log.Error("Load asset callbacks is invalid.");
@@ -855,6 +896,12 @@ namespace UnityGameFramework.Runtime
                 return;
             }
 
+            if (!sceneAssetName.StartsWith("Assets/") || !sceneAssetName.EndsWith(".unity"))
+            {
+                Log.Error("Scene asset name '{0}' is invalid.", sceneAssetName);
+                return;
+            }
+
             if (loadSceneCallbacks == null)
             {
                 Log.Error("Load scene callbacks is invalid.");
@@ -901,6 +948,12 @@ namespace UnityGameFramework.Runtime
             if (string.IsNullOrEmpty(sceneAssetName))
             {
                 Log.Error("Scene asset name is invalid.");
+                return;
+            }
+
+            if (!sceneAssetName.StartsWith("Assets/") || !sceneAssetName.EndsWith(".unity"))
+            {
+                Log.Error("Scene asset name '{0}' is invalid.", sceneAssetName);
                 return;
             }
 
@@ -1003,17 +1056,17 @@ namespace UnityGameFramework.Runtime
                 return false;
             }
 
-            string assetFullName = Utility.Path.GetCombinePath(Application.dataPath, assetName.Substring(AssetsSubstringLength));
+            string assetFullName = Application.dataPath.Substring(0, Application.dataPath.Length - AssetsStringLength) + assetName;
             if (string.IsNullOrEmpty(assetFullName))
             {
                 return false;
             }
 
-            string[] splitedAssetFullName = assetFullName.Split('/');
+            string[] splitAssetFullName = assetFullName.Split('/');
             string currentPath = Path.GetPathRoot(assetFullName);
-            for (int i = 1; i < splitedAssetFullName.Length - 1; i++)
+            for (int i = 1; i < splitAssetFullName.Length - 1; i++)
             {
-                string[] directoryNames = Directory.GetDirectories(currentPath, splitedAssetFullName[i]);
+                string[] directoryNames = Directory.GetDirectories(currentPath, splitAssetFullName[i]);
                 if (directoryNames.Length != 1)
                 {
                     return false;
@@ -1022,7 +1075,7 @@ namespace UnityGameFramework.Runtime
                 currentPath = directoryNames[0];
             }
 
-            string[] fileNames = Directory.GetFiles(currentPath, splitedAssetFullName[splitedAssetFullName.Length - 1]);
+            string[] fileNames = Directory.GetFiles(currentPath, splitAssetFullName[splitAssetFullName.Length - 1]);
             if (fileNames.Length != 1)
             {
                 return false;

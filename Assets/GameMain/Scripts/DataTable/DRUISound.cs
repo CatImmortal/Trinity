@@ -1,5 +1,7 @@
-﻿using GameFramework.DataTable;
+﻿using GameFramework;
+using GameFramework.DataTable;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Trinity
 {
@@ -54,6 +56,21 @@ namespace Trinity
             AssetName = text[index++];
             Priority = int.Parse(text[index++]);
             Volume = float.Parse(text[index++]);
+        }
+
+        public bool ParseDataRow(GameFrameworkSegment<string> dataRowSegment)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public bool ParseDataRow(GameFrameworkSegment<byte[]> dataRowSegment)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public bool ParseDataRow(GameFrameworkSegment<Stream> dataRowSegment)
+        {
+            throw new System.NotImplementedException();
         }
 
         private void AvoidJIT()

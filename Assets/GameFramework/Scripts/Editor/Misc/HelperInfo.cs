@@ -1,12 +1,13 @@
 ﻿//------------------------------------------------------------
-// Game Framework v3.x
-// Copyright © 2013-2018 Jiang Yin. All rights reserved.
+// Game Framework
+// Copyright © 2013-2019 Jiang Yin. All rights reserved.
 // Homepage: http://gameframework.cn/
 // Feedback: mailto:jiangyin@gameframework.cn
 //------------------------------------------------------------
 
 using GameFramework;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
@@ -41,7 +42,7 @@ namespace UnityGameFramework.Editor
 
         public void Draw()
         {
-            string displayName = Utility.Text.FieldNameForDisplay(m_Name);
+            string displayName = FieldNameForDisplay(m_Name);
             int selectedIndex = EditorGUILayout.Popup(Utility.Text.Format("{0} Helper", displayName), m_HelperTypeNameIndex, m_HelperTypeNames);
             if (selectedIndex != m_HelperTypeNameIndex)
             {
@@ -61,8 +62,11 @@ namespace UnityGameFramework.Editor
 
         public void Refresh()
         {
-            List<string> helperTypeNameList = new List<string>();
-            helperTypeNameList.Add(CustomOptionName);
+            List<string> helperTypeNameList = new List<string>
+            {
+                CustomOptionName
+            };
+
             helperTypeNameList.AddRange(Type.GetTypeNames(typeof(T)));
             m_HelperTypeNames = helperTypeNameList.ToArray();
 
@@ -76,6 +80,18 @@ namespace UnityGameFramework.Editor
                     m_HelperTypeName.stringValue = null;
                 }
             }
+        }
+
+        private string FieldNameForDisplay(string fieldName)
+        {
+            if (string.IsNullOrEmpty(fieldName))
+            {
+                return string.Empty;
+            }
+
+            string str = Regex.Replace(fieldName, @"^m_", string.Empty);
+            str = Regex.Replace(str, @"((?<=[a-z])[A-Z]|[A-Z](?=[a-z]))", @" $1").TrimStart();
+            return str;
         }
     }
 }

@@ -9,8 +9,6 @@ namespace Trinity
     /// </summary>
     public class BuiltinDataComponent : GameFrameworkComponent
     {
-        [SerializeField]
-        private DeviceModelConfig m_DeviceModelConfig = null;
 
         [SerializeField]
         private TextAsset m_BuildInfoTextAsset = null;
@@ -18,23 +16,7 @@ namespace Trinity
         [SerializeField]
         private TextAsset m_DefaultDictionaryTextAsset = null;
 
-        private BuildInfo m_BuildInfo = null;
-
-        public DeviceModelConfig DeviceModelConfig
-        {
-            get
-            {
-                return m_DeviceModelConfig;
-            }
-        }
-
-        public BuildInfo BuildInfo
-        {
-            get
-            {
-                return m_BuildInfo;
-            }
-        }
+        public BuildInfo BuildInfo { get; private set; } = null;
 
         public void InitBuildInfo()
         {
@@ -44,8 +26,8 @@ namespace Trinity
                 return;
             }
 
-            m_BuildInfo = Utility.Json.ToObject<BuildInfo>(m_BuildInfoTextAsset.text);
-            if (m_BuildInfo == null)
+            BuildInfo = Utility.Json.ToObject<BuildInfo>(m_BuildInfoTextAsset.text);
+            if (BuildInfo == null)
             {
                 Log.Warning("Parse build info failure.");
                 return;

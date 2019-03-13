@@ -1,6 +1,6 @@
 ﻿//------------------------------------------------------------
-// Game Framework v3.x
-// Copyright © 2013-2018 Jiang Yin. All rights reserved.
+// Game Framework
+// Copyright © 2013-2019 Jiang Yin. All rights reserved.
 // Homepage: http://gameframework.cn/
 // Feedback: mailto:jiangyin@gameframework.cn
 //------------------------------------------------------------
@@ -47,16 +47,23 @@ namespace UnityGameFramework.Editor
                 return false;
             }
 
-            // 跳过第一次匹配的堆栈
             match = match.NextMatch();
             if (!match.Success)
             {
                 return false;
             }
 
+            if (match.Groups[1].Value.Contains("GameFrameworkLog.cs"))
+            {
+                match = match.NextMatch();
+                if (!match.Success)
+                {
+                    return false;
+                }
+            }
+
             if (match.Groups[1].Value.Contains("Log.cs"))
             {
-                // 直接使用 GameFramework.dll 源码而非 dll 的工程会多一次匹配的堆栈
                 match = match.NextMatch();
                 if (!match.Success)
                 {

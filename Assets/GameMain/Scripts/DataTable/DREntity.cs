@@ -1,20 +1,22 @@
 ﻿using GameFramework.DataTable;
 using System.Collections.Generic;
+using UnityGameFramework.Runtime;
 
 namespace Trinity
 {
     /// <summary>
     /// 实体表。
     /// </summary>
-    public class DREntity : IDataRow
+    public class DREntity : DataRowBase
     {
-        /// <summary>
-        /// 实体编号。
-        /// </summary>
-        public int Id
+
+
+        public override int Id
         {
-            get;
-            private set;
+            get
+            {
+                throw new System.NotImplementedException();
+            }
         }
 
         /// <summary>
@@ -31,7 +33,7 @@ namespace Trinity
             string[] text = DataTableExtension.SplitDataRow(dataRowText);
             int index = 0;
             index++;
-            Id = int.Parse(text[index++]);
+            //Id = int.Parse(text[index++]);
             index++;
             AssetName = text[index++];
         }
