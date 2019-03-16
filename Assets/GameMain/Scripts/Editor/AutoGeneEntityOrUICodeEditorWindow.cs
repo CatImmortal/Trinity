@@ -262,14 +262,14 @@ namespace Trinity.Editor
                             //RC引用的组件命名规则为：类型_名称，如：Text_HeroLevel
                             string[] key = obj.Key.Split('_');
 
-                            if (key.Length >= 3)
+                            if (key.Length >= 2)
                             {
-                                Debug.Log(obj.Key + "分割线超过2个");
+                                Debug.Log(obj.Key + "分割线超过1个");
                             }
 
-                            if (key.Length < 2)
+                            if (key.Length < 1)
                             {
-                                Debug.Log("注意: " + obj.Key + " 分割线不足2个");
+                                Debug.Log("注意: " + obj.Key + " 分割线不足1个");
                             }
                             else
                             {
@@ -289,7 +289,7 @@ namespace Trinity.Editor
                         {
                             sw.WriteLine("\t\tprivate {0} m_{1};", result.Value, result.Key);
                         }
-
+                        sw.WriteLine("");
                         sw.WriteLine(Utility.Text.Format("\t\t{0} override void OnInit({1})", accessModifier, OnInitParams));
                         sw.WriteLine("\t\t{");
 
@@ -383,14 +383,14 @@ namespace Trinity.Editor
                             //RC引用的组件命名规则为：类型_名称，如：Text_HeroLevel
                             string[] key = obj.Key.Split('_');
 
-                            if (key.Length >= 3)
+                            if (key.Length >= 2)
                             {
-                                Debug.Log(obj.Key + "分割线超过2个");
+                                Debug.Log(obj.Key + "分割线超过1个");
                             }
 
-                            if (key.Length < 2)
+                            if (key.Length < 1)
                             {
-                                Debug.Log("注意: " + obj.Key + " 分割线不足2个");
+                                Debug.Log("注意: " + obj.Key + " 分割线不足1个");
                             }
                             else
                             {
@@ -410,7 +410,7 @@ namespace Trinity.Editor
                         {
                             sw.WriteLine("\t\tprivate {0} m_{1};", result.Value, result.Key);
                         }
-
+                        sw.WriteLine("");
                         //OnInit方法
                         sw.WriteLine(Utility.Text.Format("\t\t{0} override void OnInit({1})", accessModifier, OnInitParams));
                         sw.WriteLine("\t\t{");
