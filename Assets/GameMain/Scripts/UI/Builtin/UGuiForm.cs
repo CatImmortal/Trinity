@@ -69,6 +69,14 @@ namespace Trinity
             GameEntry.Sound.PlayUISound(uiSoundId);
         }
 
+        /// <summary>
+        /// 播放UI音效
+        /// </summary>
+        public void PlayUISound(UISoundId uiSoundId)
+        {
+            GameEntry.Sound.PlayUISound((int)uiSoundId);
+        }
+
         public static void SetMainFont(Font mainFont)
         {
             if (mainFont == null)
