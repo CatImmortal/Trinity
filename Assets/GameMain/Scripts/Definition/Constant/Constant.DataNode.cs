@@ -1,4 +1,4 @@
-﻿namespace Trinity.Hotfix
+﻿namespace Trinity
 {
     public static partial class Constant
     {
