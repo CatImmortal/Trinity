@@ -36,7 +36,7 @@ namespace Trinity
             base.OnInit(procedureOwner);
 
             //TODO:在这里配置场景ID与要切换到的对应流程的方法
-            m_TargetProcedureChange.Add(1, () => ChangeState<ProcedureTest>(procedureOwner));
+            m_TargetProcedureChange.Add((int)SceneId.TestScene, () => ChangeState<ProcedureTest>(procedureOwner));
         }
 
         protected override void OnEnter(ProcedureOwner procedureOwner)
@@ -49,14 +49,6 @@ namespace Trinity
             GameEntry.Event.Subscribe(LoadSceneFailureEventArgs.EventId, OnLoadSceneFailure);
             GameEntry.Event.Subscribe(LoadSceneUpdateEventArgs.EventId, OnLoadSceneUpdate);
             GameEntry.Event.Subscribe(LoadSceneDependencyAssetEventArgs.EventId, OnLoadSceneDependencyAsset);
-
-            // 停止所有声音
-            GameEntry.Sound.StopAllLoadingSounds();
-            GameEntry.Sound.StopAllLoadedSounds();
-
-            // 隐藏所有实体
-            GameEntry.Entity.HideAllLoadingEntities();
-            GameEntry.Entity.HideAllLoadedEntities();
 
             // 卸载所有场景
             string[] loadedSceneAssetNames = GameEntry.Scene.GetLoadedSceneAssetNames();
@@ -103,7 +95,10 @@ namespace Trinity
             }
 
             //根据切换到的目标场景ID进行对应的流程切换
-            m_TargetProcedureChange[m_TargetSceneId]();
+            if (m_TargetProcedureChange.ContainsKey(m_TargetSceneId))
+            {
+                m_TargetProcedureChange[m_TargetSceneId]?.Invoke();
+            }
         }
 
         private void OnLoadSceneSuccess(object sender, GameEventArgs e)
