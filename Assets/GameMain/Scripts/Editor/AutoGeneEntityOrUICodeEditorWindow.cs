@@ -262,12 +262,12 @@ namespace Trinity.Editor
                             //RC引用的组件命名规则为：类型_名称，如：Text_HeroLevel
                             string[] key = obj.Key.Split('_');
 
-                            if (key.Length >= 2)
+                            if (key.Length > 2)
                             {
                                 Debug.Log(obj.Key + "分割线超过1个");
                             }
 
-                            if (key.Length < 1)
+                            if (key.Length < 2)
                             {
                                 Debug.Log("注意: " + obj.Key + " 分割线不足1个");
                             }
@@ -383,12 +383,12 @@ namespace Trinity.Editor
                             //RC引用的组件命名规则为：类型_名称，如：Text_HeroLevel
                             string[] key = obj.Key.Split('_');
 
-                            if (key.Length >= 2)
+                            if (key.Length > 2)
                             {
                                 Debug.Log(obj.Key + "分割线超过1个");
                             }
 
-                            if (key.Length < 1)
+                            if (key.Length < 2)
                             {
                                 Debug.Log("注意: " + obj.Key + " 分割线不足1个");
                             }
