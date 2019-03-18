@@ -263,5 +263,6 @@ __pycache__/
 /Library
 /Packages
 /Temp
+/UnityPackageManager
 *.csproj
 *.sln
