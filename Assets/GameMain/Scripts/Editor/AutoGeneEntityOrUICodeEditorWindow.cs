@@ -495,7 +495,7 @@ namespace Trinity.Editor
                         sw.WriteLine(Utility.Text.Format("\t\tpublic static void Show{0}(this EntityComponent entityComponent,{1} data)", item.Key, item.Value));
                         sw.WriteLine("\t\t{");
 
-                        sw.WriteLine("\t\t\tTrinity.HotfixEntityData tData = ReferencePool.Acquire<Trinity.HotfixEntityData>();");
+                        sw.WriteLine("\t\t\tTrinity.HotfixEntityData tData = GameFramework.ReferencePool.Acquire<Trinity.HotfixEntityData>();");
                         sw.WriteLine(Utility.Text.Format("\t\t\ttData.Fill(data.Id,data.TypeId,\"{0}\",data);", item.Key));
                         sw.WriteLine("\t\t\ttData.Position = data.Position;");
                         sw.WriteLine("\t\t\ttData.Rotation = data.Rotation;");

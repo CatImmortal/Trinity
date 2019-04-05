@@ -64,7 +64,6 @@ namespace Trinity
 
             //TODO:注册跨域继承适配器
             appDomain.RegisterCrossBindingAdaptor(new GameEventArgsAdaptor());
-            appDomain.RegisterCrossBindingAdaptor(new IReferenceAdaptor());
             appDomain.RegisterCrossBindingAdaptor(new IMessageAdaptor());
             appDomain.RegisterCrossBindingAdaptor(new IDisposableAdaptor());
             appDomain.RegisterCrossBindingAdaptor(new IAsyncStateMachineAdaptor());
