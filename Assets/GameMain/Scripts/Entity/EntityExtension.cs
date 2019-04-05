@@ -62,7 +62,7 @@ namespace Trinity
                 return;
             }
 
-            entityComponent.ShowEntity(data.Id, logicType, AssetUtility.GetEntityAsset(drEntity.AssetName), "", priority, data);
+            entityComponent.ShowEntity(data.Id, logicType, AssetUtility.GetEntityAsset(drEntity.AssetName), drEntity.EntityGroupName, priority, data);
         }
 
         

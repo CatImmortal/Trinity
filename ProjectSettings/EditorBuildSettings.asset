@@ -8,3 +8,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/GameFramework.unity
     guid: b2237889eb948174782e2155d7881c2d
+  - enabled: 1
+    path: Assets/GameMain/Scenes/Test.unity
+    guid: f3db2cfb8cdfd9b41a6f0826529665cb

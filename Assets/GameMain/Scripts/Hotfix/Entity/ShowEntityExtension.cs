@@ -7,7 +7,7 @@ namespace Trinity.Hotfix
 	{
 		public static void ShowTestEntity2(this EntityComponent entityComponent,TestEntity2Data data)
 		{
-			Trinity.HotfixEntityData tData = ReferencePool.Acquire<Trinity.HotfixEntityData>();
+			Trinity.HotfixEntityData tData = GameFramework.ReferencePool.Acquire<Trinity.HotfixEntityData>();
 			tData.Fill(data.Id,data.TypeId,"TestEntity2",data);
 			tData.Position = data.Position;
 			tData.Rotation = data.Rotation;

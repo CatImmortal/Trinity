@@ -34,15 +34,15 @@ namespace ILRuntime.Runtime.Generated
             args = new Type[]{typeof(System.Type)};
             method = type.GetMethod("IsAssignableFrom", flag, null, args, null);
             app.RegisterCLRMethodRedirection(method, IsAssignableFrom_3);
-            args = new Type[]{typeof(System.Type), typeof(System.Type)};
-            method = type.GetMethod("op_Inequality", flag, null, args, null);
-            app.RegisterCLRMethodRedirection(method, op_Inequality_4);
             args = new Type[]{};
             method = type.GetMethod("get_IsClass", flag, null, args, null);
-            app.RegisterCLRMethodRedirection(method, get_IsClass_5);
+            app.RegisterCLRMethodRedirection(method, get_IsClass_4);
             args = new Type[]{};
             method = type.GetMethod("get_IsAbstract", flag, null, args, null);
-            app.RegisterCLRMethodRedirection(method, get_IsAbstract_6);
+            app.RegisterCLRMethodRedirection(method, get_IsAbstract_5);
+            args = new Type[]{typeof(System.Type), typeof(System.Type)};
+            method = type.GetMethod("op_Inequality", flag, null, args, null);
+            app.RegisterCLRMethodRedirection(method, op_Inequality_6);
 
 
         }
@@ -122,29 +122,7 @@ namespace ILRuntime.Runtime.Generated
             return __ret + 1;
         }
 
-        static StackObject* op_Inequality_4(ILIntepreter __intp, StackObject* __esp, IList<object> __mStack, CLRMethod __method, bool isNewObj)
-        {
-            ILRuntime.Runtime.Enviorment.AppDomain __domain = __intp.AppDomain;
-            StackObject* ptr_of_this_method;
-            StackObject* __ret = ILIntepreter.Minus(__esp, 2);
-
-            ptr_of_this_method = ILIntepreter.Minus(__esp, 1);
-            System.Type @right = (System.Type)typeof(System.Type).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, __mStack));
-            __intp.Free(ptr_of_this_method);
-
-            ptr_of_this_method = ILIntepreter.Minus(__esp, 2);
-            System.Type @left = (System.Type)typeof(System.Type).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, __mStack));
-            __intp.Free(ptr_of_this_method);
-
-
-            var result_of_this_method = left != right;
-
-            __ret->ObjectType = ObjectTypes.Integer;
-            __ret->Value = result_of_this_method ? 1 : 0;
-            return __ret + 1;
-        }
-
-        static StackObject* get_IsClass_5(ILIntepreter __intp, StackObject* __esp, IList<object> __mStack, CLRMethod __method, bool isNewObj)
+        static StackObject* get_IsClass_4(ILIntepreter __intp, StackObject* __esp, IList<object> __mStack, CLRMethod __method, bool isNewObj)
         {
             ILRuntime.Runtime.Enviorment.AppDomain __domain = __intp.AppDomain;
             StackObject* ptr_of_this_method;
@@ -161,7 +139,7 @@ namespace ILRuntime.Runtime.Generated
             return __ret + 1;
         }
 
-        static StackObject* get_IsAbstract_6(ILIntepreter __intp, StackObject* __esp, IList<object> __mStack, CLRMethod __method, bool isNewObj)
+        static StackObject* get_IsAbstract_5(ILIntepreter __intp, StackObject* __esp, IList<object> __mStack, CLRMethod __method, bool isNewObj)
         {
             ILRuntime.Runtime.Enviorment.AppDomain __domain = __intp.AppDomain;
             StackObject* ptr_of_this_method;
@@ -172,6 +150,28 @@ namespace ILRuntime.Runtime.Generated
             __intp.Free(ptr_of_this_method);
 
             var result_of_this_method = instance_of_this_method.IsAbstract;
+
+            __ret->ObjectType = ObjectTypes.Integer;
+            __ret->Value = result_of_this_method ? 1 : 0;
+            return __ret + 1;
+        }
+
+        static StackObject* op_Inequality_6(ILIntepreter __intp, StackObject* __esp, IList<object> __mStack, CLRMethod __method, bool isNewObj)
+        {
+            ILRuntime.Runtime.Enviorment.AppDomain __domain = __intp.AppDomain;
+            StackObject* ptr_of_this_method;
+            StackObject* __ret = ILIntepreter.Minus(__esp, 2);
+
+            ptr_of_this_method = ILIntepreter.Minus(__esp, 1);
+            System.Type @right = (System.Type)typeof(System.Type).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, __mStack));
+            __intp.Free(ptr_of_this_method);
+
+            ptr_of_this_method = ILIntepreter.Minus(__esp, 2);
+            System.Type @left = (System.Type)typeof(System.Type).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, __mStack));
+            __intp.Free(ptr_of_this_method);
+
+
+            var result_of_this_method = left != right;
 
             __ret->ObjectType = ObjectTypes.Integer;
             __ret->Value = result_of_this_method ? 1 : 0;

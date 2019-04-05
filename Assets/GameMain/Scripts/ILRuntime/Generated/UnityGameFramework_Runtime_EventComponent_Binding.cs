@@ -28,6 +28,9 @@ namespace ILRuntime.Runtime.Generated
             args = new Type[]{typeof(System.Int32), typeof(System.EventHandler<GameFramework.Event.GameEventArgs>)};
             method = type.GetMethod("Unsubscribe", flag, null, args, null);
             app.RegisterCLRMethodRedirection(method, Unsubscribe_1);
+            args = new Type[]{typeof(System.Object), typeof(GameFramework.Event.GameEventArgs)};
+            method = type.GetMethod("Fire", flag, null, args, null);
+            app.RegisterCLRMethodRedirection(method, Fire_2);
 
 
         }
@@ -73,6 +76,29 @@ namespace ILRuntime.Runtime.Generated
             __intp.Free(ptr_of_this_method);
 
             instance_of_this_method.Unsubscribe(@id, @handler);
+
+            return __ret;
+        }
+
+        static StackObject* Fire_2(ILIntepreter __intp, StackObject* __esp, IList<object> __mStack, CLRMethod __method, bool isNewObj)
+        {
+            ILRuntime.Runtime.Enviorment.AppDomain __domain = __intp.AppDomain;
+            StackObject* ptr_of_this_method;
+            StackObject* __ret = ILIntepreter.Minus(__esp, 3);
+
+            ptr_of_this_method = ILIntepreter.Minus(__esp, 1);
+            GameFramework.Event.GameEventArgs @e = (GameFramework.Event.GameEventArgs)typeof(GameFramework.Event.GameEventArgs).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, __mStack));
+            __intp.Free(ptr_of_this_method);
+
+            ptr_of_this_method = ILIntepreter.Minus(__esp, 2);
+            System.Object @sender = (System.Object)typeof(System.Object).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, __mStack));
+            __intp.Free(ptr_of_this_method);
+
+            ptr_of_this_method = ILIntepreter.Minus(__esp, 3);
+            UnityGameFramework.Runtime.EventComponent instance_of_this_method = (UnityGameFramework.Runtime.EventComponent)typeof(UnityGameFramework.Runtime.EventComponent).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, __mStack));
+            __intp.Free(ptr_of_this_method);
+
+            instance_of_this_method.Fire(@sender, @e);
 
             return __ret;
         }

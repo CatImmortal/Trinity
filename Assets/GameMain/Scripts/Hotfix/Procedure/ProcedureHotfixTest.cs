@@ -16,9 +16,17 @@ namespace Trinity.Hotfix
             base.OnEnter(procedureOwner);
 
             Log.Info("进入了热更新测试流程");
+
+            GameEntry.Entity.ShowTestEntity2(ReferencePool.Acquire<TestEntity2Data>().Fill(2));
+
+            GameEntry.Event.Subscribe(HotfixTestEventArgs.EventId, OnHotfixTest);
         }
 
-
+        private void OnHotfixTest(object sender, GameEventArgs e)
+        {
+            HotfixTestEventArgs ne = (HotfixTestEventArgs)e;
+            Log.Info(ne.Str);
+        }
 
         protected internal override void OnUpdate(IFsm procedureOwner, float elapseSeconds, float realElapseSeconds)
         {
@@ -26,7 +34,7 @@ namespace Trinity.Hotfix
 
             if (Input.GetMouseButtonDown(0))
             {
-                RPCTest();
+                GameEntry.Event.Fire(this, ReferencePool.Acquire<HotfixTestEventArgs>().Fill("热更新事件测试"));
             }
         }
 

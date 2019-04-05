@@ -29,11 +29,14 @@ namespace ILRuntime.Runtime.Generated
             method = type.GetMethod("Dequeue", flag, null, args, null);
             app.RegisterCLRMethodRedirection(method, Dequeue_1);
             args = new Type[]{typeof(GameFramework.IReference)};
+            method = type.GetMethod("Contains", flag, null, args, null);
+            app.RegisterCLRMethodRedirection(method, Contains_2);
+            args = new Type[]{typeof(GameFramework.IReference)};
             method = type.GetMethod("Enqueue", flag, null, args, null);
-            app.RegisterCLRMethodRedirection(method, Enqueue_2);
+            app.RegisterCLRMethodRedirection(method, Enqueue_3);
             args = new Type[]{};
             method = type.GetMethod("Clear", flag, null, args, null);
-            app.RegisterCLRMethodRedirection(method, Clear_3);
+            app.RegisterCLRMethodRedirection(method, Clear_4);
 
             args = new Type[]{};
             method = type.GetConstructor(flag, null, args, null);
@@ -79,7 +82,28 @@ namespace ILRuntime.Runtime.Generated
             return ILIntepreter.PushObject(__ret, __mStack, result_of_this_method);
         }
 
-        static StackObject* Enqueue_2(ILIntepreter __intp, StackObject* __esp, IList<object> __mStack, CLRMethod __method, bool isNewObj)
+        static StackObject* Contains_2(ILIntepreter __intp, StackObject* __esp, IList<object> __mStack, CLRMethod __method, bool isNewObj)
+        {
+            ILRuntime.Runtime.Enviorment.AppDomain __domain = __intp.AppDomain;
+            StackObject* ptr_of_this_method;
+            StackObject* __ret = ILIntepreter.Minus(__esp, 2);
+
+            ptr_of_this_method = ILIntepreter.Minus(__esp, 1);
+            GameFramework.IReference @item = (GameFramework.IReference)typeof(GameFramework.IReference).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, __mStack));
+            __intp.Free(ptr_of_this_method);
+
+            ptr_of_this_method = ILIntepreter.Minus(__esp, 2);
+            System.Collections.Generic.Queue<GameFramework.IReference> instance_of_this_method = (System.Collections.Generic.Queue<GameFramework.IReference>)typeof(System.Collections.Generic.Queue<GameFramework.IReference>).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, __mStack));
+            __intp.Free(ptr_of_this_method);
+
+            var result_of_this_method = instance_of_this_method.Contains(@item);
+
+            __ret->ObjectType = ObjectTypes.Integer;
+            __ret->Value = result_of_this_method ? 1 : 0;
+            return __ret + 1;
+        }
+
+        static StackObject* Enqueue_3(ILIntepreter __intp, StackObject* __esp, IList<object> __mStack, CLRMethod __method, bool isNewObj)
         {
             ILRuntime.Runtime.Enviorment.AppDomain __domain = __intp.AppDomain;
             StackObject* ptr_of_this_method;
@@ -98,7 +122,7 @@ namespace ILRuntime.Runtime.Generated
             return __ret;
         }
 
-        static StackObject* Clear_3(ILIntepreter __intp, StackObject* __esp, IList<object> __mStack, CLRMethod __method, bool isNewObj)
+        static StackObject* Clear_4(ILIntepreter __intp, StackObject* __esp, IList<object> __mStack, CLRMethod __method, bool isNewObj)
         {
             ILRuntime.Runtime.Enviorment.AppDomain __domain = __intp.AppDomain;
             StackObject* ptr_of_this_method;
