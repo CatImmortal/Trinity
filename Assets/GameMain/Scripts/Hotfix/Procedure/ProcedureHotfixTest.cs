@@ -16,8 +16,6 @@ namespace Trinity.Hotfix
             base.OnEnter(procedureOwner);
 
             Log.Info("进入了热更新测试流程");
-
-            GameEntry.Entity.ShowTestEntity2(ReferencePool.Acquire<TestEntity2Data>().Fill(2));
         }
 
 
@@ -26,10 +24,10 @@ namespace Trinity.Hotfix
         {
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
 
-            //if (Input.GetMouseButtonDown(0))
-            //{
-            //    RPCTest();
-            //}
+            if (Input.GetMouseButtonDown(0))
+            {
+                RPCTest();
+            }
         }
 
         private async void RPCTest()

@@ -151,8 +151,6 @@ namespace Trinity
 
                 GameEntry.Resource.UnloadAsset(m_DLL);
                 GameEntry.Resource.UnloadAsset(m_PDB);
-
-
             }
         }
 
