@@ -27,7 +27,7 @@ namespace Trinity.Editor
         private SerializedObject m_SerializedObject;
         private SerializedProperty m_SerializedProperty;
 
-        private AutoGeneType targetType = AutoGeneType.Entity;
+        private AutoGeneType m_TargetType = AutoGeneType.Entity;
 
         //各种类型的代码生成后的路径
         private const string m_EntityCodePath = "Assets/GameMain/Scripts/Entity";
@@ -51,7 +51,7 @@ namespace Trinity.Editor
 
         private void OnGUI()
         {
-            //绘制GameObject数组
+            //绘制GameObject列表
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(m_SerializedProperty, true);
             if (EditorGUI.EndChangeCheck())
@@ -62,12 +62,12 @@ namespace Trinity.Editor
             //绘制自动生成代码类型的弹窗
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("自动生成的代码类型：", GUILayout.Width(140f));
-            targetType = (AutoGeneType)EditorGUILayout.EnumPopup(targetType, GUILayout.Width(100f));
+            m_TargetType = (AutoGeneType)EditorGUILayout.EnumPopup(m_TargetType, GUILayout.Width(100f));
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("自动生成的代码路径：", GUILayout.Width(140f));
-            switch (targetType)
+            switch (m_TargetType)
             {
                 case AutoGeneType.Entity:
                     EditorGUILayout.LabelField(m_EntityCodePath);
@@ -100,7 +100,7 @@ namespace Trinity.Editor
                     return;
                 }
 
-                switch (targetType)
+                switch (m_TargetType)
                 {
                     case AutoGeneType.Entity:
                         AutoGeneEntityCode(false);
@@ -130,13 +130,13 @@ namespace Trinity.Editor
 
             if (GUILayout.Button("生成简便显示实体方法的代码", GUILayout.Width(200f)))
             {
-                if (targetType != AutoGeneType.Entity && targetType != AutoGeneType.HotfixEntity)
+                if (m_TargetType != AutoGeneType.Entity && m_TargetType != AutoGeneType.HotfixEntity)
                 {
                     EditorUtility.DisplayDialog("警告", "请选择生成类型为实体类型", "OK");
                     return;
                 }
 
-                if (targetType == AutoGeneType.Entity)
+                if (m_TargetType == AutoGeneType.Entity)
                 {
                     AutoGeneShowEntityCode(false);
                 }
