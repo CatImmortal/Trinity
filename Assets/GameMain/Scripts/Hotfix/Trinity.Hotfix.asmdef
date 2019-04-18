@@ -5,8 +5,8 @@
         "Trinity.GameMain",
         "Trinity.Libraries"
     ],
-    "optionalUnityReferences": [],
-    "includePlatforms": [],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
 }
