@@ -9,12 +9,14 @@ namespace Trinity
 {
     public class ProcedureTest : ProcedureBase
     {
-        protected override void OnEnter(IFsm<IProcedureManager> procedureOwner)
+        protected override async void OnEnter(IFsm<IProcedureManager> procedureOwner)
         {
             base.OnEnter(procedureOwner);
 
             Log.Info("进入了测试流程");
 
+            UIForm uiForm = await GameEntry.UI.AwaitOpenUIForm(UIFormId.TestForm);
+            Log.Info("打开了测试界面");
         }
 
     }
