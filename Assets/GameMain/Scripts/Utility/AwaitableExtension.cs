@@ -48,7 +48,7 @@ namespace Trinity
         /// <summary>
         /// 加载资源（可等待）
         /// </summary>
-        private static Task<T> AwaitLoadAsset<T>(this ResourceComponent resourceComponent,string assetName) where T:class
+        public static Task<T> AwaitLoadAsset<T>(this ResourceComponent resourceComponent,string assetName) where T:class
         {
             TaskCompletionSource<T> assetTcs = new TaskCompletionSource<T>();
             GameEntry.Resource.LoadAsset(assetName,new LoadAssetCallbacks((tempAssetName, asset, duration, userData) => {
@@ -60,10 +60,10 @@ namespace Trinity
         /// <summary>
         /// 增加Web请求任务（可等待）
         /// </summary>
-        private static Task<byte[]> AwaitAddWebRequest(string webRequestUri,byte[] postData = null)
+        public static Task<byte[]> AwaitAddWebRequest(this WebRequestComponent webRequestComponent, string webRequestUri,byte[] postData = null)
         {
             m_WebRequestTcs = new TaskCompletionSource<byte[]>();
-            m_WebRequestSerialId = GameEntry.WebRequest.AddWebRequest(webRequestUri, postData);
+            m_WebRequestSerialId = webRequestComponent.AddWebRequest(webRequestUri, postData);
             GameEntry.Event.Subscribe(WebRequestSuccessEventArgs.EventId, OnWebRequestSuccess);
             return m_WebRequestTcs.Task;
         }
