@@ -15,11 +15,12 @@ namespace Trinity
     public static class AwaitableExtension
     {
         private static TaskCompletionSource<UIForm> m_UIFormTcs;
-        private static TaskCompletionSource<object> m_AssetTcs;
         private static TaskCompletionSource<EntityLogic> m_EntityTcs;
+        private static TaskCompletionSource<byte[]> m_WebRequestTcs;
 
         private static int? m_UIFormSerialId;
-        private static Type m_LogicType;
+        private static int m_EntitySerialId;
+        private static int m_WebRequestSerialId;
 
         /// <summary>
         /// 打开界面（可等待）
@@ -35,13 +36,12 @@ namespace Trinity
         /// <summary>
         /// 显示实体（可等待）
         /// </summary>
-        /// <returns></returns>
         public static Task<EntityLogic> AwaitShowEntity(this EntityComponent entityComponent, Type logicType, int priority, EntityData data)
         {
             m_EntityTcs = new TaskCompletionSource<EntityLogic>();
-            m_LogicType = logicType;
-            entityComponent.ShowEntity(logicType, priority, data);
+            m_EntitySerialId = data.Id;
             GameEntry.Event.Subscribe(ShowEntitySuccessEventArgs.EventId, OnShowEntitySuccess);
+            entityComponent.ShowEntity(logicType, priority, data);
             return m_EntityTcs.Task;
         }
 
@@ -50,13 +50,23 @@ namespace Trinity
         /// </summary>
         private static Task<T> AwaitLoadAsset<T>(this ResourceComponent resourceComponent,string assetName) where T:class
         {
-            m_AssetTcs = new TaskCompletionSource<object>();
+            TaskCompletionSource<T> assetTcs = new TaskCompletionSource<T>();
             GameEntry.Resource.LoadAsset(assetName,new LoadAssetCallbacks((tempAssetName, asset, duration, userData) => {
-                m_AssetTcs.SetResult(asset);
+                assetTcs.SetResult(asset as T);
             }));
-            return m_AssetTcs.Task as Task<T>;
+            return assetTcs.Task;
         }
 
+        /// <summary>
+        /// 增加Web请求任务（可等待）
+        /// </summary>
+        private static Task<byte[]> AwaitAddWebRequest(string webRequestUri,byte[] postData = null)
+        {
+            m_WebRequestTcs = new TaskCompletionSource<byte[]>();
+            m_WebRequestSerialId = GameEntry.WebRequest.AddWebRequest(webRequestUri, postData);
+            GameEntry.Event.Subscribe(WebRequestSuccessEventArgs.EventId, OnWebRequestSuccess);
+            return m_WebRequestTcs.Task;
+        }
 
         private static void OnOpenUIFormSuccess(object sender, GameEventArgs e)
         {
@@ -72,10 +82,21 @@ namespace Trinity
         private static void OnShowEntitySuccess(object sender, GameEventArgs e)
         {
             ShowEntitySuccessEventArgs ne = e as ShowEntitySuccessEventArgs;
-
-            if (ne.EntityLogicType == m_LogicType)
+            EntityData data = ne.UserData as EntityData;
+            if (data.Id == m_EntitySerialId)
             {
+                GameEntry.Event.Unsubscribe(ShowEntitySuccessEventArgs.EventId, OnShowEntitySuccess);
                 m_EntityTcs.SetResult(ne.Entity.Logic);
+            }
+        }
+
+        private static void OnWebRequestSuccess(object sender, GameEventArgs e)
+        {
+            WebRequestSuccessEventArgs ne = e as WebRequestSuccessEventArgs;
+            if (ne.SerialId == m_WebRequestSerialId)
+            {
+                GameEntry.Event.Unsubscribe(WebRequestSuccessEventArgs.EventId, OnWebRequestSuccess);
+                m_WebRequestTcs.SetResult(ne.GetWebResponseBytes());
             }
         }
 
