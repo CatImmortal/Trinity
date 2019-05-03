@@ -220,7 +220,6 @@ namespace Trinity
         /// <summary>
         /// 获取平台路径
         /// </summary>
-        /// <returns></returns>
         private string GetPlatformPath()
         {
             switch (Application.platform)
@@ -256,12 +255,8 @@ namespace Trinity
             }
         }
 
-
-
         private void OnUpdateVersionListSuccess(string downloadPath, string downloadUri)
         {
-            //Log.Info("更新版本资源列表成功，开始检查需要更新的资源");
-            //GameEntry.Resource.CheckResources(OnCheckResourcesComplete);
 
             m_LatestVersionComplete = true;
             Log.Info("Update latest version list from '{0}' success.", downloadUri);
@@ -270,30 +265,8 @@ namespace Trinity
 
         private void OnUpdateVersionListFailure(string downloadUri, string errorMessage)
         {
-            //Log.Fatal("更新版本资源列表失败，url:{0},errorMessage{1}", downloadUri, errorMessage);
+          
             Log.Warning("Update latest version list from '{0}' failure, error message '{1}'.", downloadUri, errorMessage);
         }
-
-
-        //private void OnCheckResourcesComplete(bool needUpdateResources, int removedCount, int updateCount, int updateTotalLength, int updateTotalZipLength)
-        //{
-        //    if (needUpdateResources && updateCount > 0)
-        //    {
-        //        Log.Info("需要更新资源，更新数量：{0},更新压缩包大小：{1}", updateCount, updateTotalZipLength);
-        //        GameEntry.Resource.UpdateResources(UpdateResourcesComplete);
-        //    }
-        //    else
-        //    {
-        //        Log.Info("不需要更新资源");
-        //        m_InitResourcesComplete = true;
-        //    }
-        //}
-
-        //private void UpdateResourcesComplete()
-        //{
-        //    Log.Info("资源更新完毕");
-
-        //    m_InitResourcesComplete = true;
-        //}
     }
 }
