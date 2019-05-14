@@ -29,12 +29,12 @@ namespace ETModel
 
 		public override void Post(SendOrPostCallback callback, object state)
 		{
-			// 如果是主线程Post则直接执行回调，不需要进入队列
 			if (Thread.CurrentThread.ManagedThreadId == this.mainThreadId)
 			{
 				callback(state);
 				return;
 			}
+			
 			this.queue.Enqueue(() => { callback(state); });
 		}
 	}

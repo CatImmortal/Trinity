@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Net;
+﻿
 using ETModel;
 
-namespace Trinity.Hotfix
+namespace ETHotfix
 {
 	[ObjectSystem]
 	public class NetOuterComponentAwakeSystem : AwakeSystem<NetOuterComponent>

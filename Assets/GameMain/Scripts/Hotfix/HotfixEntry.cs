@@ -14,7 +14,7 @@ namespace Trinity.Hotfix
 
         public void Start()
         {
-            Debug.Log("热更新层启动!");
+            Log.Info("热更新层启动!");
             m_FsmManager = new FsmManager();
             m_ProcedureManager = new ProcedureManager();
 

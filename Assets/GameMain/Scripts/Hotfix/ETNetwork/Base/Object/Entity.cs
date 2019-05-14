@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using MongoDB.Bson.Serialization.Attributes;
-using UnityGameFramework.Runtime;
 
 namespace Trinity.Hotfix
 {
@@ -11,21 +10,17 @@ namespace Trinity.Hotfix
 	{
 		[BsonElement("C")]
 		[BsonIgnoreIfNull]
-		private HashSet<Component> components;
+		private HashSet<Component> components = new HashSet<Component>();
 
 		[BsonIgnore]
-		private Dictionary<Type, Component> componentDict;
+		private Dictionary<Type, Component> componentDict = new Dictionary<Type, Component>();
 
 		public Entity()
 		{
-			this.components = new HashSet<Component>();
-			this.componentDict = new Dictionary<Type, Component>();
 		}
 
 		protected Entity(long id): base(id)
 		{
-			this.components = new HashSet<Component>();
-			this.componentDict = new Dictionary<Type, Component>();
 		}
 
 		public override void Dispose()
@@ -45,15 +40,15 @@ namespace Trinity.Hotfix
 				}
 				catch (Exception e)
 				{
-					Log.Error(e);
+					ETLog.Error(e);
 				}
 			}
-
+			
 			this.components.Clear();
 			this.componentDict.Clear();
 		}
 		
-		public Component AddComponent(Component component)
+		public virtual Component AddComponent(Component component)
 		{
 			Type type = component.GetType();
 			if (this.componentDict.ContainsKey(type))
@@ -63,68 +58,36 @@ namespace Trinity.Hotfix
 			
 			component.Parent = this;
 
+			this.componentDict.Add(type, component);
+
 			if (component is ISerializeToEntity)
 			{
 				this.components.Add(component);
 			}
-			this.componentDict.Add(type, component);
+			
 			return component;
 		}
 
-		public Component AddComponent(Type type)
+		public virtual Component AddComponent(Type type)
 		{
 			if (this.componentDict.ContainsKey(type))
 			{
 				throw new Exception($"AddComponent, component already exist, id: {this.Id}, component: {type.Name}");
 			}
 
-			Component component = ComponentFactory.CreateWithParent(type, this);
+			Component component = ComponentFactory.CreateWithParent(type, this, this.IsFromPool);
 
-			if (component is ISerializeToEntity)
-			{
-				this.components.Add(component);
-			}
 			this.componentDict.Add(type, component);
-			return component;
-		}
-
-		public K AddComponent<K>() where K : Component, new()
-		{
-			Type type = typeof (K);
-			if (this.componentDict.ContainsKey(type))
-			{
-				throw new Exception($"AddComponent, component already exist, id: {this.Id}, component: {typeof(K).Name}");
-			}
-
-			K component = ComponentFactory.CreateWithParent<K>(this);
-
-			if (component is ISerializeToEntity)
-			{
-				this.components.Add(component);
-			}
-			this.componentDict.Add(type, component);
-			return component;
-		}
-
-		public K AddComponent<K, P1>(P1 p1) where K : Component, new()
-		{
-			Type type = typeof (K);
-			if (this.componentDict.ContainsKey(type))
-			{
-				throw new Exception($"AddComponent, component already exist, id: {this.Id}, component: {typeof(K).Name}");
-			}
-
-			K component = ComponentFactory.CreateWithParent<K, P1>(this, p1);
 			
 			if (component is ISerializeToEntity)
 			{
 				this.components.Add(component);
 			}
-			this.componentDict.Add(type, component);
+			
 			return component;
 		}
 
-		public K AddComponent<K, P1, P2>(P1 p1, P2 p2) where K : Component, new()
+		public virtual K AddComponent<K>() where K : Component, new()
 		{
 			Type type = typeof (K);
 			if (this.componentDict.ContainsKey(type))
@@ -132,17 +95,19 @@ namespace Trinity.Hotfix
 				throw new Exception($"AddComponent, component already exist, id: {this.Id}, component: {typeof(K).Name}");
 			}
 
-			K component = ComponentFactory.CreateWithParent<K, P1, P2>(this, p1, p2);
+			K component = ComponentFactory.CreateWithParent<K>(this, this.IsFromPool);
+
+			this.componentDict.Add(type, component);
 			
 			if (component is ISerializeToEntity)
 			{
 				this.components.Add(component);
 			}
-			this.componentDict.Add(type, component);
+			
 			return component;
 		}
 
-		public K AddComponent<K, P1, P2, P3>(P1 p1, P2 p2, P3 p3) where K : Component, new()
+		public virtual K AddComponent<K, P1>(P1 p1) where K : Component, new()
 		{
 			Type type = typeof (K);
 			if (this.componentDict.ContainsKey(type))
@@ -150,17 +115,59 @@ namespace Trinity.Hotfix
 				throw new Exception($"AddComponent, component already exist, id: {this.Id}, component: {typeof(K).Name}");
 			}
 
-			K component = ComponentFactory.CreateWithParent<K, P1, P2, P3>(this, p1, p2, p3);
+			K component = ComponentFactory.CreateWithParent<K, P1>(this, p1, this.IsFromPool);
+			
+			this.componentDict.Add(type, component);
 			
 			if (component is ISerializeToEntity)
 			{
 				this.components.Add(component);
 			}
-			this.componentDict.Add(type, component);
+			
 			return component;
 		}
 
-		public void RemoveComponent<K>() where K : Component
+		public virtual K AddComponent<K, P1, P2>(P1 p1, P2 p2) where K : Component, new()
+		{
+			Type type = typeof (K);
+			if (this.componentDict.ContainsKey(type))
+			{
+				throw new Exception($"AddComponent, component already exist, id: {this.Id}, component: {typeof(K).Name}");
+			}
+
+			K component = ComponentFactory.CreateWithParent<K, P1, P2>(this, p1, p2, this.IsFromPool);
+			
+			this.componentDict.Add(type, component);
+			
+			if (component is ISerializeToEntity)
+			{
+				this.components.Add(component);
+			}
+			
+			return component;
+		}
+
+		public virtual K AddComponent<K, P1, P2, P3>(P1 p1, P2 p2, P3 p3) where K : Component, new()
+		{
+			Type type = typeof (K);
+			if (this.componentDict.ContainsKey(type))
+			{
+				throw new Exception($"AddComponent, component already exist, id: {this.Id}, component: {typeof(K).Name}");
+			}
+
+			K component = ComponentFactory.CreateWithParent<K, P1, P2, P3>(this, p1, p2, p3, this.IsFromPool);
+			
+			this.componentDict.Add(type, component);
+			
+			if (component is ISerializeToEntity)
+			{
+				this.components.Add(component);
+			}
+			
+			return component;
+		}
+
+		public virtual void RemoveComponent<K>() where K : Component
 		{
 			if (this.IsDisposed)
 			{
@@ -173,13 +180,13 @@ namespace Trinity.Hotfix
 				return;
 			}
 
-			this.components.Remove(component);
 			this.componentDict.Remove(type);
+			this.components.Remove(component);
 
 			component.Dispose();
 		}
 
-		public void RemoveComponent(Type type)
+		public virtual void RemoveComponent(Type type)
 		{
 			if (this.IsDisposed)
 			{
@@ -191,8 +198,8 @@ namespace Trinity.Hotfix
 				return;
 			}
 
-			this.components?.Remove(component);
 			this.componentDict.Remove(type);
+			this.components.Remove(component);
 
 			component.Dispose();
 		}
@@ -221,7 +228,7 @@ namespace Trinity.Hotfix
 		{
 			return this.componentDict.Values.ToArray();
 		}
-
+		
 		public override void EndInit()
 		{
 			try
@@ -241,27 +248,7 @@ namespace Trinity.Hotfix
 			}
 			catch (Exception e)
 			{
-				Log.Error(e);
-			}
-		}
-
-		public override void BeginSerialize()
-		{
-			base.BeginSerialize();
-
-			foreach (Component component in this.components)
-			{
-				component.BeginSerialize();
-			}
-		}
-
-		public override void EndDeSerialize()
-		{
-			base.EndDeSerialize();
-			
-			foreach (Component component in this.components)
-			{
-				component.EndDeSerialize();
+				ETLog.Error(e);
 			}
 		}
 	}

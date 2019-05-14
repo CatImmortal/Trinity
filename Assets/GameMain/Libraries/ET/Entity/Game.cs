@@ -1,7 +1,19 @@
-﻿namespace ETModel
+﻿using UnityEngine;
+
+namespace ETModel
 {
 	public static class Game
 	{
+		private static EventSystem eventSystem;
+
+		public static EventSystem EventSystem
+		{
+			get
+			{
+				return eventSystem ?? (eventSystem = new EventSystem());
+			}
+		}
+		
 		private static Scene scene;
 
 		public static Scene Scene
@@ -12,18 +24,8 @@
 				{
 					return scene;
 				}
-				scene = new Scene();
+				scene = new Scene() { Name = "ClientM" };
 				return scene;
-			}
-		}
-
-		private static EventSystem eventSystem;
-
-		public static EventSystem EventSystem
-		{
-			get
-			{
-				return eventSystem ?? (eventSystem = new EventSystem());
 			}
 		}
 
@@ -33,16 +35,36 @@
 		{
 			get
 			{
-				return objectPool ?? (objectPool = new ObjectPool());
+				if (objectPool != null)
+				{
+					return objectPool;
+				}
+				objectPool = new ObjectPool() { Name = "ClientM" };
+				return objectPool;
+			}
+		}
+
+		private static Hotfix hotfix;
+
+		public static Hotfix Hotfix
+		{
+			get
+			{
+				return hotfix ?? (hotfix = new Hotfix());
 			}
 		}
 
 		public static void Close()
 		{
-			scene.Dispose();
-			eventSystem = null;
+			scene?.Dispose();
 			scene = null;
+			
+			objectPool?.Dispose();
 			objectPool = null;
+			
+			hotfix = null;
+			
+			eventSystem = null;
 		}
 	}
 }

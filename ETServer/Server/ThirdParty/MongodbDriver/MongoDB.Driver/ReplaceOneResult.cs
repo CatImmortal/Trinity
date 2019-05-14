@@ -1,4 +1,4 @@
-/* Copyright 2010-2017 MongoDB Inc.
+/* Copyright 2010-present MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -92,7 +92,7 @@ namespace MongoDB.Driver
             private readonly BsonValue _upsertedId;
 
             /// <summary>
-            /// Initializes a new instance of the <see cref="Acknowledged"/> class.
+            /// Initializes a new instance of the class.
             /// </summary>
             /// <param name="matchedCount">The matched count.</param>
             /// <param name="modifiedCount">The modified count.</param>

@@ -11,12 +11,12 @@ namespace ETModel
 			Message message = msg as Message;
 			if (message == null)
 			{
-				Log.Error($"消息类型转换错误: {msg.GetType().Name} to {typeof(Message).Name}");
+				ETLog.Error($"消息类型转换错误: {msg.GetType().Name} to {typeof(Message).Name}");
 				return;
 			}
 			if (session.IsDisposed)
 			{
-				Log.Error($"session disconnect {msg}");
+				ETLog.Error($"session disconnect {msg}");
 				return;
 			}
 			this.Run(session, message);

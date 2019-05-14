@@ -21,7 +21,7 @@ namespace ETModel
 		}
 	}
 
-	public class OpcodeTypeComponent : Component
+    public class OpcodeTypeComponent : Component
 	{
 		private readonly DoubleMap<ushort, Type> opcodeTypes = new DoubleMap<ushort, Type>();
 		

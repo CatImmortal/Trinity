@@ -1,4 +1,4 @@
-/* Copyright 2010-2016 MongoDB Inc.
+/* Copyright 2010-present MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-#if NET45
+#if NET452
 using System.Runtime.Serialization;
 #endif
 using MongoDB.Bson;
@@ -27,7 +27,7 @@ namespace MongoDB.Driver
     /// <summary>
     /// Represents the result of a bulk write operation.
     /// </summary>
-#if NET45
+#if NET452
     [Serializable]
 #endif
     public abstract class BulkWriteResult
@@ -97,7 +97,7 @@ namespace MongoDB.Driver
     /// Represents the result of a bulk write operation.
     /// </summary>
     /// <typeparam name="TDocument">The type of the document.</typeparam>
-#if NET45
+#if NET452
     [Serializable]
 #endif
     public abstract class BulkWriteResult<TDocument> : BulkWriteResult
@@ -171,7 +171,7 @@ namespace MongoDB.Driver
         /// <summary>
         /// Result from an acknowledged write concern.
         /// </summary>
-#if NET45
+#if NET452
     [Serializable]
 #endif
         public class Acknowledged : BulkWriteResult<TDocument>
@@ -185,7 +185,7 @@ namespace MongoDB.Driver
 
             // constructors
             /// <summary>
-            /// Initializes a new instance of the <see cref="Acknowledged" /> class.
+            /// Initializes a new instance of the class.
             /// </summary>
             /// <param name="requestCount">The request count.</param>
             /// <param name="matchedCount">The matched count.</param>
@@ -265,14 +265,14 @@ namespace MongoDB.Driver
         /// <summary>
         /// Result from an unacknowledged write concern.
         /// </summary>
-#if NET45
+#if NET452
     [Serializable]
 #endif
         public class Unacknowledged : BulkWriteResult<TDocument>
         {
             // constructors
             /// <summary>
-            /// Initializes a new instance of the <see cref="Unacknowledged"/> class.
+            /// Initializes a new instance of the class.
             /// </summary>
             /// <param name="requestCount">The request count.</param>
             /// <param name="processedRequests">The processed requests.</param>

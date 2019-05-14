@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 
 namespace ETModel
 {
@@ -13,9 +12,9 @@ namespace ETModel
 			reply(response);
 		}
 
-		protected abstract Task Run(E unit, Request message, Action<Response> reply);
+		protected abstract ETTask Run(E unit, Request message, Action<Response> reply);
 
-		public async Task Handle(Session session, Entity entity, object actorMessage)
+		public async ETTask Handle(Session session, Entity entity, object actorMessage)
 		{
 			try
 			{

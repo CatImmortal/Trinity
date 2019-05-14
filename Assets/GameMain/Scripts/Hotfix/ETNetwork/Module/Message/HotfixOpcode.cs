@@ -34,6 +34,12 @@ namespace Trinity.Hotfix
 	[Message(HotfixOpcode.HotfixTestMessage)]
 	public partial class HotfixTestMessage : IMessage {}
 
+	[Message(HotfixOpcode.RPCHotfixRequest)]
+	public partial class RPCHotfixRequest : IRequest {}
+
+	[Message(HotfixOpcode.RPCHotfixResponse)]
+	public partial class RPCHotfixResponse : IResponse {}
+
 }
 namespace Trinity.Hotfix
 {
@@ -50,5 +56,7 @@ namespace Trinity.Hotfix
 		 public const ushort C2G_PlayerInfo = 10009;
 		 public const ushort G2C_PlayerInfo = 10010;
 		 public const ushort HotfixTestMessage = 10011;
+		 public const ushort RPCHotfixRequest = 10012;
+		 public const ushort RPCHotfixResponse = 10013;
 	}
 }

@@ -1,7 +1,5 @@
 ﻿using ETModel;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Trinity.Hotfix;
 
 namespace ETHotfix
 {
@@ -10,7 +8,7 @@ namespace ETHotfix
     {
         protected override void Run(Session session, HotfixTestMessage message)
         {
-            Log.Info("收到了客户端发来的消息：" + message.Text);
+            Log.Info(message.Info);
         }
     }
 }

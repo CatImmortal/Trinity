@@ -132,7 +132,7 @@ namespace ETModel
 				}
 				catch (Exception e)
 				{
-					Log.Error(e);
+					ETLog.Error(e);
 					continue;
 				}
 
@@ -269,7 +269,7 @@ namespace ETModel
 			AChannel aChannel = Instance.GetChannel((uint)user);
 			if (aChannel == null)
 			{
-				Log.Error($"not found kchannel, {(uint)user}");
+				ETLog.Error($"not found kchannel, {(uint)user}");
 				return;
 			}
 

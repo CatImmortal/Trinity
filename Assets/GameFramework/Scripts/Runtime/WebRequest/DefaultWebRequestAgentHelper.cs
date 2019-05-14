@@ -5,6 +5,7 @@
 // Feedback: mailto:jiangyin@gameframework.cn
 //------------------------------------------------------------
 
+#if !UNITY_2018_3_OR_NEWER
 using GameFramework.WebRequest;
 using System;
 using UnityEngine;
@@ -155,3 +156,4 @@ namespace UnityGameFramework.Runtime
         }
     }
 }
+#endif

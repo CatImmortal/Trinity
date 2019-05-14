@@ -1,9 +1,10 @@
-﻿using GameFramework;
+﻿using ETModel;
+using GameFramework;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityGameFramework.Runtime;
 namespace Trinity.Hotfix
 {
     /// <summary>
@@ -16,10 +17,10 @@ namespace Trinity.Hotfix
         {
             try
             {
-                Game.Scene.ModelScene = ETModel.Game.Scene;
 
                 Game.Scene.AddComponent<OpcodeTypeComponent>();
-                Game.Scene.AddComponent<MessageDispatherComponent>();
+
+                Game.Scene.AddComponent<MessageDispatcherComponent>();
             }
             catch (Exception e)
             {

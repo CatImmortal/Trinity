@@ -41,7 +41,7 @@ namespace ETModel
 				StartProcess(startConfig.AppId);
 			}
 
-			this.WatchProcessAsync();
+			this.WatchProcessAsync().Coroutine();
 		}
 
 		private void StartProcess(int appId)
@@ -56,10 +56,7 @@ namespace ETModel
 			Log.Info($"{exe} {arguments}");
 			try
 			{
-				bool useShellExecute = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-				ProcessStartInfo info = new ProcessStartInfo { FileName = exe, Arguments = arguments, CreateNoWindow = true, UseShellExecute = useShellExecute };
-
-				Process process = Process.Start(info);
+				Process process = ProcessHelper.Run(exe, arguments);
 				this.processes.Add(startConfig.AppId, process);
 			}
 			catch (Exception e)
@@ -71,7 +68,7 @@ namespace ETModel
 		/// <summary>
 		/// 监控启动的进程,如果进程挂掉了,重新拉起
 		/// </summary>
-		private async void WatchProcessAsync()
+		private async ETVoid WatchProcessAsync()
 		{
 			long instanceId = this.InstanceId;
 			

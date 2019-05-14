@@ -132,7 +132,7 @@ namespace ETModel
 
 		private KService GetService()
 		{
-			return (KService)this.service;
+			return (KService)this.Service;
 		}
 
 		public void HandleConnnect(uint remoteConn)
@@ -178,7 +178,7 @@ namespace ETModel
 			}
 			catch (Exception e)
 			{
-				Log.Error(e);
+				ETLog.Error(e);
 				this.OnError(ErrorCode.ERR_SocketCantSend);
 			}
 		}
@@ -204,7 +204,7 @@ namespace ETModel
 			}
 			catch (Exception e)
 			{
-				Log.Error(e);
+				ETLog.Error(e);
 				this.OnError(ErrorCode.ERR_SocketCantSend);
 			}
 		}
@@ -226,7 +226,7 @@ namespace ETModel
 			}
 			catch (Exception e)
 			{
-				Log.Error(e);
+				ETLog.Error(e);
 				this.OnError(ErrorCode.ERR_SocketCantSend);
 			}
 		}
@@ -250,7 +250,7 @@ namespace ETModel
 					return;
 				}
 				
-				if (timeNow - this.lastRecvTime < 200)
+				if (timeNow - this.lastRecvTime < 500)
 				{
 					return;
 				}
@@ -281,7 +281,7 @@ namespace ETModel
 			}
 			catch (Exception e)
 			{
-				Log.Error(e);
+				ETLog.Error(e);
 				this.OnError(ErrorCode.ERR_SocketError);
 				return;
 			}
@@ -370,7 +370,7 @@ namespace ETModel
 			{
 				if (count == 0)
 				{
-					Log.Error($"output 0");
+					ETLog.Error($"output 0");
 					return;
 				}
 
@@ -383,24 +383,29 @@ namespace ETModel
 			}
 			catch (Exception e)
 			{
-				Log.Error(e);
+				ETLog.Error(e);
 				this.OnError(ErrorCode.ERR_SocketCantSend);
 			}
 		}
+		
+#if !ENABLE_IL2CPP
+		private KcpOutput kcpOutput;
+#endif
 
 		public void SetOutput()
 		{
 #if ENABLE_IL2CPP
 			Kcp.KcpSetoutput(this.kcp, KcpOutput);
 #else
-			// 跟上一行一样写法，pc跟linux会出错
-			Kcp.KcpSetoutput(this.kcp, (buf, i, ptr, user) => KcpOutput(buf, i, ptr, user));
+			// 跟上一行一样写法，pc跟linux会出错, 保存防止被GC
+			kcpOutput = KcpOutput;
+			Kcp.KcpSetoutput(this.kcp, kcpOutput);
 #endif
 		}
-		
+
 
 #if ENABLE_IL2CPP
-		[AOT.MonoPInvokeCallback(typeof(kcp_output))]
+		[AOT.MonoPInvokeCallback(typeof(KcpOutput))]
 #endif
 		public static int KcpOutput(IntPtr bytes, int len, IntPtr kcp, IntPtr user)
         {
