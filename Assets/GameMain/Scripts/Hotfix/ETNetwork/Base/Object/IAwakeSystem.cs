@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Trinity.Hotfix
+namespace ETHotfix
 {
 	public interface IAwakeSystem
 	{

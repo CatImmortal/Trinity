@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Sockets;
-using System.Threading.Tasks;
 
 namespace ETModel
 {
@@ -95,7 +93,7 @@ namespace ETModel
 		/// </summary>
 		/// <param name="stream"></param>
 		/// <returns></returns>
-		public async Task ReadAsync(Stream stream)
+		public async ETTask ReadAsync(Stream stream)
 	    {
 		    long buffLength = this.Length;
 			int sendSize = this.ChunkSize - this.FirstIndex;
@@ -178,7 +176,7 @@ namespace ETModel
 		/// </summary>
 		/// <param name="stream"></param>
 		/// <returns></returns>
-		public async Task<int> WriteAsync(Stream stream)
+		public async ETTask<int> WriteAsync(Stream stream)
 	    {
 		    int size = this.ChunkSize - this.LastIndex;
 		    

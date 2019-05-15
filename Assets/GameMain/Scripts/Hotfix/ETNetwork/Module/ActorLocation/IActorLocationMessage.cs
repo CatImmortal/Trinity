@@ -1,22 +1,15 @@
-﻿namespace Trinity.Hotfix
+﻿namespace ETHotfix
 {
-    /// <summary>
-    /// Actor消息
-    /// </summary>
+	// 客户端发送actor消息
 	public interface IActorLocationMessage : IActorRequest
 	{
 	}
 
-    /// <summary>
-    /// ActorRPC消息请求
-    /// </summary>
+	// 客户端发送actor rpc消息
 	public interface IActorLocationRequest : IActorRequest
 	{
 	}
 	
-    /// <summary>
-    /// ActorRPC消息响应
-    /// </summary>
 	public interface IActorLocationResponse : IActorResponse
 	{
 	}

@@ -53,12 +53,12 @@ namespace ILRuntime.Runtime.Generated
                     }
                 }
             }
-            args = new Type[]{typeof(System.Runtime.CompilerServices.TaskAwaiter<ETModel.IResponse>), typeof(Trinity.IAsyncStateMachineAdaptor.Adaptor)};
+            args = new Type[]{typeof(ETModel.ETTask<Google.Protobuf.IMessageAdaptor.Adaptor>.Awaiter), typeof(Trinity.IAsyncStateMachineAdaptor.Adaptor)};
             if (genericMethods.TryGetValue("AwaitUnsafeOnCompleted", out lst))
             {
                 foreach(var m in lst)
                 {
-                    if(m.MatchGenericParameters(args, typeof(void), typeof(System.Runtime.CompilerServices.TaskAwaiter<ETModel.IResponse>).MakeByRefType(), typeof(Trinity.IAsyncStateMachineAdaptor.Adaptor).MakeByRefType()))
+                    if(m.MatchGenericParameters(args, typeof(void), typeof(ETModel.ETTask<Google.Protobuf.IMessageAdaptor.Adaptor>.Awaiter).MakeByRefType(), typeof(Trinity.IAsyncStateMachineAdaptor.Adaptor).MakeByRefType()))
                     {
                         method = m.MakeGenericMethod(args);
                         app.RegisterCLRMethodRedirection(method, AwaitUnsafeOnCompleted_2);
@@ -156,7 +156,7 @@ namespace ILRuntime.Runtime.Generated
             {
                 case ObjectTypes.StackObjectReference:
                     {
-                        var ___dst = *(StackObject**)&ptr_of_this_method->Value;
+                        var ___dst = ILIntepreter.ResolveReference(ptr_of_this_method);
                         object ___obj = @stateMachine;
                         if (___dst->ObjectType >= ObjectTypes.Object)
                         {
@@ -223,20 +223,20 @@ namespace ILRuntime.Runtime.Generated
             Trinity.IAsyncStateMachineAdaptor.Adaptor @stateMachine = (Trinity.IAsyncStateMachineAdaptor.Adaptor)typeof(Trinity.IAsyncStateMachineAdaptor.Adaptor).CheckCLRTypes(__intp.RetriveObject(ptr_of_this_method, __mStack));
 
             ptr_of_this_method = ILIntepreter.Minus(__esp, 2);
-            System.Runtime.CompilerServices.TaskAwaiter<ETModel.IResponse> @awaiter = (System.Runtime.CompilerServices.TaskAwaiter<ETModel.IResponse>)typeof(System.Runtime.CompilerServices.TaskAwaiter<ETModel.IResponse>).CheckCLRTypes(__intp.RetriveObject(ptr_of_this_method, __mStack));
+            ETModel.ETTask<Google.Protobuf.IMessageAdaptor.Adaptor>.Awaiter @awaiter = (ETModel.ETTask<Google.Protobuf.IMessageAdaptor.Adaptor>.Awaiter)typeof(ETModel.ETTask<Google.Protobuf.IMessageAdaptor.Adaptor>.Awaiter).CheckCLRTypes(__intp.RetriveObject(ptr_of_this_method, __mStack));
 
             ptr_of_this_method = ILIntepreter.Minus(__esp, 3);
             ptr_of_this_method = ILIntepreter.GetObjectAndResolveReference(ptr_of_this_method);
             System.Runtime.CompilerServices.AsyncVoidMethodBuilder instance_of_this_method = (System.Runtime.CompilerServices.AsyncVoidMethodBuilder)typeof(System.Runtime.CompilerServices.AsyncVoidMethodBuilder).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, __mStack));
 
-            instance_of_this_method.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<ETModel.IResponse>, Trinity.IAsyncStateMachineAdaptor.Adaptor>(ref @awaiter, ref @stateMachine);
+            instance_of_this_method.AwaitUnsafeOnCompleted<ETModel.ETTask<Google.Protobuf.IMessageAdaptor.Adaptor>.Awaiter, Trinity.IAsyncStateMachineAdaptor.Adaptor>(ref @awaiter, ref @stateMachine);
 
             ptr_of_this_method = ILIntepreter.Minus(__esp, 1);
             switch(ptr_of_this_method->ObjectType)
             {
                 case ObjectTypes.StackObjectReference:
                     {
-                        var ___dst = *(StackObject**)&ptr_of_this_method->Value;
+                        var ___dst = ILIntepreter.ResolveReference(ptr_of_this_method);
                         object ___obj = @stateMachine;
                         if (___dst->ObjectType >= ObjectTypes.Object)
                         {
@@ -291,7 +291,7 @@ namespace ILRuntime.Runtime.Generated
             {
                 case ObjectTypes.StackObjectReference:
                     {
-                        var ___dst = *(StackObject**)&ptr_of_this_method->Value;
+                        var ___dst = ILIntepreter.ResolveReference(ptr_of_this_method);
                         object ___obj = @awaiter;
                         if (___dst->ObjectType >= ObjectTypes.Object)
                         {
@@ -334,7 +334,7 @@ namespace ILRuntime.Runtime.Generated
                     break;
                  case ObjectTypes.ArrayReference:
                     {
-                        var instance_of_arrayReference = __mStack[ptr_of_this_method->Value] as System.Runtime.CompilerServices.TaskAwaiter<ETModel.IResponse>[];
+                        var instance_of_arrayReference = __mStack[ptr_of_this_method->Value] as ETModel.ETTask<Google.Protobuf.IMessageAdaptor.Adaptor>.Awaiter[];
                         instance_of_arrayReference[ptr_of_this_method->ValueLow] = @awaiter;
                     }
                     break;

@@ -18,9 +18,12 @@ namespace Trinity
             //TODO:注册重定向方法
 
             //TODO:适配委托
+
+            //GF用
             appDomain.DelegateManager.RegisterMethodDelegate<float>();
             appDomain.DelegateManager.RegisterMethodDelegate<object, GameFramework.Event.GameEventArgs>();
 
+            //ET用
             appDomain.DelegateManager.RegisterMethodDelegate<List<object>>();
             appDomain.DelegateManager.RegisterMethodDelegate<AChannel, System.Net.Sockets.SocketError>();
             appDomain.DelegateManager.RegisterMethodDelegate<byte[], int, int>();
@@ -29,7 +32,8 @@ namespace Trinity
             appDomain.DelegateManager.RegisterMethodDelegate<Session, byte, ushort, MemoryStream>();
             appDomain.DelegateManager.RegisterMethodDelegate<Session>();
             appDomain.DelegateManager.RegisterMethodDelegate<ILTypeInstance>();
-
+            appDomain.DelegateManager.RegisterMethodDelegate<Session, ushort, MemoryStream>();
+            //PB用
             appDomain.DelegateManager.RegisterFunctionDelegate<IMessageAdaptor.Adaptor>();
             appDomain.DelegateManager.RegisterMethodDelegate<IMessageAdaptor.Adaptor>();
 

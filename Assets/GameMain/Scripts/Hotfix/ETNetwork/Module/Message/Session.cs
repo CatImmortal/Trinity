@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ETModel;
 
-namespace Trinity.Hotfix
+namespace ETHotfix
 {
 	[ObjectSystem]
 	public class SessionAwakeSystem : AwakeSystem<Session, ETModel.Session>
@@ -15,13 +15,13 @@ namespace Trinity.Hotfix
 		{
 			self.session = session;
 			SessionCallbackComponent sessionComponent = self.session.AddComponent<SessionCallbackComponent>();
-			sessionComponent.MessageCallback = (s, flag, opcode, memoryStream) => { self.Run(s, flag, opcode, memoryStream); };
+			sessionComponent.MessageCallback = (s, opcode, memoryStream) => { self.Run(s, opcode, memoryStream); };
 			sessionComponent.DisposeCallback = s => { self.Dispose(); };
 		}
 	}
 
 	/// <summary>
-	/// 热更新层会话
+	/// 用来收发热更层的消息
 	/// </summary>
 	public class Session: Entity
 	{
@@ -49,7 +49,7 @@ namespace Trinity.Hotfix
 			this.session.Dispose();
 		}
 
-		public void Run(ETModel.Session s, byte flag, ushort opcode, MemoryStream memoryStream)
+		public void Run(ETModel.Session s, ushort opcode, MemoryStream memoryStream)
 		{
 			OpcodeTypeComponent opcodeTypeComponent = Game.Scene.GetComponent<OpcodeTypeComponent>();
 			object instance = opcodeTypeComponent.GetInstance(opcode);
@@ -60,52 +60,42 @@ namespace Trinity.Hotfix
 				Log.Msg(message);
 			}
 
-			if ((flag & 0x01) > 0)
+			IResponse response = message as IResponse;
+			if (response == null)
 			{
-				IResponse response = message as IResponse;
-				if (response == null)
-				{
-					throw new Exception($"flag is response, but hotfix message is not! {opcode}");
-				}
-				
-				Action<IResponse> action;
-				if (!this.requestCallback.TryGetValue(response.RpcId, out action))
-				{
-					return;
-				}
-				this.requestCallback.Remove(response.RpcId);
-
-				action(response);
+				Game.Scene.GetComponent<MessageDispatcherComponent>().Handle(session, new MessageInfo(opcode, message));
 				return;
 			}
+			
+			Action<IResponse> action;
+			if (!this.requestCallback.TryGetValue(response.RpcId, out action))
+			{
+				throw new Exception($"not found rpc, response message: {StringHelper.MessageToStr(response)}");
+			}
+			this.requestCallback.Remove(response.RpcId);
 
-			Game.Scene.GetComponent<MessageDispatherComponent>().Handle(session, new MessageInfo(opcode, message));
+			action(response);
 		}
 
 		public void Send(IMessage message)
 		{
-			Send(0x00, message);
-		}
-
-		public void Send(byte flag, IMessage message)
-		{
 			ushort opcode = Game.Scene.GetComponent<OpcodeTypeComponent>().GetOpcode(message.GetType());
-			this.Send(flag, opcode, message);
+			this.Send(opcode, message);
 		}
 
-		public void Send(byte flag, ushort opcode, IMessage message)
+		public void Send(ushort opcode, IMessage message)
 		{
 			if (OpcodeHelper.IsNeedDebugLogMessage(opcode))
 			{
 				Log.Msg(message);
 			}
-			session.Send(flag, opcode, message);
+			session.Send(opcode, message);
 		}
 
-		public Task<IResponse> Call(IRequest request)
+		public ETTask<IResponse> Call(IRequest request)
 		{
 			int rpcId = ++RpcId;
-			var tcs = new TaskCompletionSource<IResponse>();
+			var tcs = new ETTaskCompletionSource<IResponse>();
 
 			this.requestCallback[rpcId] = (response) =>
 			{
@@ -126,14 +116,14 @@ namespace Trinity.Hotfix
 
 			request.RpcId = rpcId;
 			
-			this.Send(0x00, request);
+			this.Send(request);
 			return tcs.Task;
 		}
 
-		public Task<IResponse> Call(IRequest request, CancellationToken cancellationToken)
+		public ETTask<IResponse> Call(IRequest request, CancellationToken cancellationToken)
 		{
 			int rpcId = ++RpcId;
-			var tcs = new TaskCompletionSource<IResponse>();
+			var tcs = new ETTaskCompletionSource<IResponse>();
 
 			this.requestCallback[rpcId] = (response) =>
 			{
@@ -156,7 +146,7 @@ namespace Trinity.Hotfix
 
 			request.RpcId = rpcId;
 
-			this.Send(0x00, request);
+			this.Send(request);
 			return tcs.Task;
 		}
 	}

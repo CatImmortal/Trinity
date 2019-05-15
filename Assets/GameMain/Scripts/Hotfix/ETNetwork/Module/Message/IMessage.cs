@@ -1,6 +1,6 @@
 ﻿using Google.Protobuf;
 
-namespace Trinity.Hotfix
+namespace ETHotfix
 {
 	public interface IMessage: Google.Protobuf.IMessage
 	{

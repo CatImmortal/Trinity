@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 
 namespace ETModel
 {
@@ -7,7 +6,7 @@ namespace ETModel
 	{
 		protected abstract void Run(E entity, Message message);
 
-		public async Task Handle(Session session, Entity entity, object actorMessage)
+		public async ETTask Handle(Session session, Entity entity, object actorMessage)
 		{
 			Message msg = actorMessage as Message;
 			if (msg == null)
@@ -28,7 +27,7 @@ namespace ETModel
 			
 			this.Run(e, msg);
 			
-			await Task.CompletedTask;
+			await ETTask.CompletedTask;
 		}
 
 		public Type GetMessageType()

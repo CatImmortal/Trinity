@@ -1,11 +1,8 @@
 ﻿using System;
 using ETModel;
 
-namespace Trinity.Hotfix
+namespace ETHotfix
 {
-    /// <summary>
-    /// Actor消息处理器基类
-    /// </summary>
 	public abstract class AMHandler<Message> : IMHandler where Message: class
 	{
 		protected abstract void Run(ETModel.Session session, Message message);

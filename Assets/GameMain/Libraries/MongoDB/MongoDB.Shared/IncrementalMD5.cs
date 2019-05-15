@@ -1,4 +1,4 @@
-﻿/* Copyright 2016 MongoDB Inc.
+﻿/* Copyright 2016-present MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -22,7 +22,11 @@ namespace MongoDB.Shared
     {
         public static IncrementalMD5 Create()
         {
+#if NET452
             return new IncrementalMD5Net45();
+#else
+            return new IncrementalMD5NetStandard16();
+#endif
         }
 
         public abstract void AppendData(byte[] data, int offset, int count);
@@ -30,6 +34,7 @@ namespace MongoDB.Shared
         public abstract byte[] GetHashAndReset();
     }
 
+#if NET452
     internal class IncrementalMD5Net45 : IncrementalMD5
     {
         private static readonly byte[] __emptyByteArray = new byte[0];
@@ -66,4 +71,30 @@ namespace MongoDB.Shared
             return hash;
         }
     }
+#else
+    internal class IncrementalMD5NetStandard16 : IncrementalMD5
+    {
+        private readonly IncrementalHash _incrementalHash;
+
+        public IncrementalMD5NetStandard16()
+        {
+            _incrementalHash = IncrementalHash.CreateHash(HashAlgorithmName.MD5);
+        }
+
+        public override void AppendData(byte[] data, int offset, int count)
+        {
+            _incrementalHash.AppendData(data, offset, count);
+        }
+
+        public override void Dispose()
+        {
+            _incrementalHash.Dispose();
+        }
+
+        public override byte[] GetHashAndReset()
+        {
+            return _incrementalHash.GetHashAndReset();
+        }
+    }
+#endif
 }

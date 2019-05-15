@@ -1,24 +1,9 @@
-﻿namespace Trinity.Hotfix
-{
-	public enum SceneType
-	{
-		Share,
-		Game,
-		Login,
-		Lobby,
-		Map,
-		Launcher,
-		Robot,
-		BehaviorTreeScene,
-		RobotClient,
+﻿using ETModel;
 
-		Realm
-	}
-	
+namespace ETHotfix
+{
 	public sealed class Scene: Entity
 	{
-		public ETModel.Scene ModelScene { get; set; } = new ETModel.Scene();
-
 		public string Name { get; set; }
 
 		public Scene()
@@ -37,8 +22,6 @@
 			}
 
 			base.Dispose();
-
-			this.ModelScene.Dispose();
 		}
 	}
 }

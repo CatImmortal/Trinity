@@ -23,11 +23,11 @@ namespace ILRuntime.Runtime.Generated
             Type[] args;
             Type type = typeof(Trinity.GameEntry);
             args = new Type[]{};
-            method = type.GetMethod("get_Entity", flag, null, args, null);
-            app.RegisterCLRMethodRedirection(method, get_Entity_0);
-            args = new Type[]{};
             method = type.GetMethod("get_ILRuntime", flag, null, args, null);
-            app.RegisterCLRMethodRedirection(method, get_ILRuntime_1);
+            app.RegisterCLRMethodRedirection(method, get_ILRuntime_0);
+            args = new Type[]{};
+            method = type.GetMethod("get_Entity", flag, null, args, null);
+            app.RegisterCLRMethodRedirection(method, get_Entity_1);
             args = new Type[]{};
             method = type.GetMethod("get_Event", flag, null, args, null);
             app.RegisterCLRMethodRedirection(method, get_Event_2);
@@ -51,24 +51,24 @@ namespace ILRuntime.Runtime.Generated
         }
 
 
-        static StackObject* get_Entity_0(ILIntepreter __intp, StackObject* __esp, IList<object> __mStack, CLRMethod __method, bool isNewObj)
-        {
-            ILRuntime.Runtime.Enviorment.AppDomain __domain = __intp.AppDomain;
-            StackObject* __ret = ILIntepreter.Minus(__esp, 0);
-
-
-            var result_of_this_method = Trinity.GameEntry.Entity;
-
-            return ILIntepreter.PushObject(__ret, __mStack, result_of_this_method);
-        }
-
-        static StackObject* get_ILRuntime_1(ILIntepreter __intp, StackObject* __esp, IList<object> __mStack, CLRMethod __method, bool isNewObj)
+        static StackObject* get_ILRuntime_0(ILIntepreter __intp, StackObject* __esp, IList<object> __mStack, CLRMethod __method, bool isNewObj)
         {
             ILRuntime.Runtime.Enviorment.AppDomain __domain = __intp.AppDomain;
             StackObject* __ret = ILIntepreter.Minus(__esp, 0);
 
 
             var result_of_this_method = Trinity.GameEntry.ILRuntime;
+
+            return ILIntepreter.PushObject(__ret, __mStack, result_of_this_method);
+        }
+
+        static StackObject* get_Entity_1(ILIntepreter __intp, StackObject* __esp, IList<object> __mStack, CLRMethod __method, bool isNewObj)
+        {
+            ILRuntime.Runtime.Enviorment.AppDomain __domain = __intp.AppDomain;
+            StackObject* __ret = ILIntepreter.Minus(__esp, 0);
+
+
+            var result_of_this_method = Trinity.GameEntry.Entity;
 
             return ILIntepreter.PushObject(__ret, __mStack, result_of_this_method);
         }

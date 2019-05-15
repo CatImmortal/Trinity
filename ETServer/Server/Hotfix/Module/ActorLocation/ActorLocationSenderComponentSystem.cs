@@ -6,8 +6,14 @@ namespace ETHotfix
     [ObjectSystem]
     public class ActorLocationSenderComponentSystem : StartSystem<ActorLocationSenderComponent>
     {
+        public override void Start(ActorLocationSenderComponent self)
+        {
+            StartAsync(self).Coroutine();
+        }
+        
         // 每10s扫描一次过期的actorproxy进行回收,过期时间是1分钟
-        public override async void Start(ActorLocationSenderComponent self)
+        // 可能由于bug或者进程挂掉，导致ActorLocationSender发送的消息没有确认，结果无法自动删除，每一分钟清理一次这种ActorLocationSender
+        public async ETVoid StartAsync(ActorLocationSenderComponent self)
         {
             List<long> timeoutActorProxyIds = new List<long>();
 
@@ -31,7 +37,7 @@ namespace ETHotfix
                         continue;
                     }
 
-                    if (timeNow < actorLocationMessageSender.LastSendTime + 60 * 1000)
+                    if (timeNow < actorLocationMessageSender.LastRecvTime + 60 * 1000)
                     {
                         continue;
                     }

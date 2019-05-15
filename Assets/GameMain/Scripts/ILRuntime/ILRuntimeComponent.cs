@@ -67,6 +67,9 @@ namespace Trinity
         private ILInstanceMethod m_Update;
         private ILInstanceMethod m_ShutDown;
 
+        private MemoryStream m_DLLStream;
+        private MemoryStream m_PDBStream;
+
         private void Update()
         {
             m_Update?.Invoke(Time.deltaTime, Time.unscaledDeltaTime);
@@ -141,16 +144,11 @@ namespace Trinity
                 m_DLLLoaded = false;
                 m_PDBLoaded = false;
 
-                using (MemoryStream fs = new MemoryStream(m_DLL))
-                {
-                    using (MemoryStream p = new MemoryStream(m_PDB))
-                    {
-                        AppDomain.LoadAssembly(fs, p, new Mono.Cecil.Pdb.PdbReaderProvider());
-                    }
-                }
+                m_DLLStream = new MemoryStream(m_DLL);
+                m_PDBStream = new MemoryStream(m_PDB);
 
-                GameEntry.Resource.UnloadAsset(m_DLL);
-                GameEntry.Resource.UnloadAsset(m_PDB);
+                AppDomain.LoadAssembly(m_DLLStream, m_PDBStream, new Mono.Cecil.Pdb.PdbReaderProvider());
+
             }
         }
 

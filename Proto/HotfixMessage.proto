@@ -1,5 +1,5 @@
 syntax = "proto3";
-package Trinity.Hotfix;
+package ETHotfix;
 
 message C2R_Login // IRequest
 {
@@ -75,5 +75,19 @@ message G2C_PlayerInfo // IResponse
 
 message HotfixTestMessage // IMessage
 {
-	string text = 1;
+	string info = 1;
+}
+
+message HotfixRpcRequest // IRequest
+{
+	int32 RpcId = 90;
+	string info = 1;
+}
+
+message HotfixRpcResponse // IResponse
+{
+	int32 RpcId = 90;
+	int32 Error = 91;
+	string Message = 92;
+	string info = 1;
 }

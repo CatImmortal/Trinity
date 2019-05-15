@@ -1,4 +1,4 @@
-﻿namespace Trinity.Hotfix
+﻿namespace ETHotfix
 {
 	public interface IDisposable
 	{

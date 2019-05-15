@@ -53,7 +53,7 @@ namespace ILRuntime.Runtime.Generated
             {
                 case ObjectTypes.StackObjectReference:
                     {
-                        var ___dst = *(StackObject**)&ptr_of_this_method->Value;
+                        var ___dst = ILIntepreter.ResolveReference(ptr_of_this_method);
                         ___dst->ObjectType = ObjectTypes.Integer;
                         ___dst->Value = @lockTaken ? 1 : 0;;
                     }

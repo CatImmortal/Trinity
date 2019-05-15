@@ -1,7 +1,7 @@
 ﻿using System;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace Trinity.Hotfix
+namespace ETHotfix
 {
 	[BsonIgnoreExtraElements]
 	public abstract class ComponentWithId : Component

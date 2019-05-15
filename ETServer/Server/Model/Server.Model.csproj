@@ -1,8 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
     <AssemblyName>Model</AssemblyName>
     <RootNamespace>Model</RootNamespace>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -10,33 +11,44 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>TRACE;DEBUG;NETCOREAPP2_0;SERVER</DefineConstants>
     <OutputPath>..\..\Bin\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>TRACE;RELEASE;NETCOREAPP2_0;SERVER</DefineConstants>
     <OutputPath>..\..\Bin\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Module\Message\MessagePool.cs" />
+    <Compile Remove="Base\Base\**" />
+    <Compile Remove="Libs\**" />
+    <EmbeddedResource Remove="Base\Base\**" />
+    <EmbeddedResource Remove="Libs\**" />
+    <None Remove="Base\Base\**" />
+    <None Remove="Libs\**" />
+    <None Remove="graph.bytes" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\..\Assets\GameMain\Libraries\ET\Module\Message\OuterMessage.cs" Link="Module\Message\OuterMessage.cs" />
+    <Compile Include="..\..\..\Assets\GameMain\Libraries\ET\Module\Message\OuterOpcode.cs" Link="Module\Message\OuterOpcode.cs" />
+    <Compile Include="..\..\..\Assets\GameMain\Scripts\Hotfix\ETNetwork\Module\Message\HotfixMessage.cs" Link="Module\Message\HotfixMessage.cs" />
+    <Compile Include="..\..\..\Assets\GameMain\Scripts\Hotfix\ETNetwork\Module\Message\HotfixOpcode.cs" Link="Module\Message\HotfixOpcode.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.2.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.9.0" />
     <PackageReference Include="NLog" Version="4.5.4" />
     <PackageReference Include="SharpZipLib" Version="1.0.0-alpha2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ThirdParty\Google.Protobuf\Google.Protobuf.csproj" />
-    <ProjectReference Include="..\ThirdParty\Libs\KcpLib.csproj" />
-    <ProjectReference Include="..\ThirdParty\MongodbDriver\DotNetCoreDriver\MongoDB.Bson\MongoDB.Bson.csproj" />
-    <ProjectReference Include="..\ThirdParty\MongodbDriver\DotNetCoreDriver\MongoDB.Driver.Core\MongoDB.Driver.Core.csproj" />
-    <ProjectReference Include="..\ThirdParty\MongodbDriver\DotNetCoreDriver\MongoDB.Driver\MongoDB.Driver.csproj" />
+    <ProjectReference Include="..\ThirdParty\KcpLib\KcpLib.csproj" />
+    <ProjectReference Include="..\ThirdParty\MongoDBDriver\MongoDB.Bson\MongoDB.Bson.csproj" />
+    <ProjectReference Include="..\ThirdParty\MongoDBDriver\MongoDB.Driver.Core\MongoDB.Driver.Core.csproj" />
+    <ProjectReference Include="..\ThirdParty\MongoDBDriver\MongoDB.Driver\MongoDB.Driver.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Base\RecyclableMemoryStream\" />
-    <Folder Include="Base\Base\" />
-    <Folder Include="Component\Config\" />
-    <Folder Include="Module\Message\Network\KCP\" />
-    <Folder Include="Module\Message\Network\TCP\" />
-    <Folder Include="Module\Message\MessagePool\" />
-    <Folder Include="Module\Numeric\" />
+    <Reference Include="Pathfinding.Ionic.Zip.Reduced, Version=1.9.1.9000, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\ThirdParty\Pathfinding.Ionic.Zip.Reduced.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

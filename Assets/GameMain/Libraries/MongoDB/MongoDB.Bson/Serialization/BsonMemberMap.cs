@@ -1,4 +1,4 @@
-﻿/* Copyright 2010-2016 MongoDB Inc.
+﻿/* Copyright 2010-present MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,9 +14,7 @@
 */
 
 using System;
-using System.Linq.Expressions;
 using System.Reflection;
-using System.Reflection.Emit;
 using MongoDB.Bson.Serialization.Serializers;
 
 namespace MongoDB.Bson.Serialization
@@ -539,7 +537,7 @@ namespace MongoDB.Bson.Serialization
             switch (Type.GetTypeCode(type))
             {
                 case TypeCode.Empty:
-#if NET45
+#if NET452
                 case TypeCode.DBNull:
 #endif
                 case TypeCode.String:
@@ -570,87 +568,42 @@ namespace MongoDB.Bson.Serialization
 
         private Action<object, object> GetFieldSetter()
         {
-            var fieldInfo = (FieldInfo)_memberInfo;
+            FieldInfo fieldInfo = (FieldInfo) _memberInfo;
 
             if (IsReadOnly)
             {
-                var message = string.Format(
-                    "The field '{0} {1}' of class '{2}' is readonly. To avoid this exception, call IsReadOnly to ensure that setting a value is allowed.",
-                    fieldInfo.FieldType.FullName, fieldInfo.Name, fieldInfo.DeclaringType.FullName);
+                string message =
+                        $"The field '{fieldInfo.FieldType.FullName} {fieldInfo.Name}' of class '{fieldInfo.DeclaringType.FullName}' is readonly. To avoid this exception, call IsReadOnly to ensure that setting a value is allowed.";
                 throw new BsonSerializationException(message);
             }
 
-            var sourceType = fieldInfo.DeclaringType;
-            var method = new DynamicMethod("Set" + fieldInfo.Name, null, new[] { typeof(object), typeof(object) }, true);
-            var gen = method.GetILGenerator();
-
-            gen.Emit(OpCodes.Ldarg_0);
-            gen.Emit(OpCodes.Castclass, sourceType);
-            gen.Emit(OpCodes.Ldarg_1);
-            gen.Emit(OpCodes.Unbox_Any, fieldInfo.FieldType);
-            gen.Emit(OpCodes.Stfld, fieldInfo);
-            gen.Emit(OpCodes.Ret);
-
-            return (Action<object, object>)method.CreateDelegate(typeof(Action<object, object>));
+            return (obj, value) => { fieldInfo.SetValue(obj, value); };
         }
 
         private Func<object, object> GetGetter()
         {
-            var propertyInfo = _memberInfo as PropertyInfo;
+            PropertyInfo propertyInfo = _memberInfo as PropertyInfo;
             if (propertyInfo != null)
             {
-                var getMethodInfo = propertyInfo.GetMethod;
+                MethodInfo getMethodInfo = propertyInfo.GetMethod;
                 if (getMethodInfo == null)
                 {
-                    var message = string.Format(
-                        "The property '{0} {1}' of class '{2}' has no 'get' accessor.",
-                        propertyInfo.PropertyType.FullName, propertyInfo.Name, propertyInfo.DeclaringType.FullName);
+                    string message =
+                            $"The property '{propertyInfo.PropertyType.FullName} {propertyInfo.Name}' of class '{propertyInfo.DeclaringType.FullName}' has no 'get' accessor.";
                     throw new BsonSerializationException(message);
                 }
+
+                return obj => { return propertyInfo.GetValue(obj); };
             }
 
-            // lambdaExpression = (obj) => (object) ((TClass) obj).Member
-            var objParameter = Expression.Parameter(typeof(object), "obj");
-            var lambdaExpression = Expression.Lambda<Func<object, object>>(
-                Expression.Convert(
-                    Expression.MakeMemberAccess(
-                        Expression.Convert(objParameter, _memberInfo.DeclaringType),
-                        _memberInfo
-                    ),
-                    typeof(object)
-                ),
-                objParameter
-            );
-
-            return lambdaExpression.Compile();
+            FieldInfo fieldInfo = _memberInfo as FieldInfo;
+            return obj => { return fieldInfo.GetValue(obj); };
         }
 
         private Action<object, object> GetPropertySetter()
         {
-            var propertyInfo = (PropertyInfo)_memberInfo;
-            var setMethodInfo = propertyInfo.SetMethod;
-            if (IsReadOnly)
-            {
-                var message = string.Format(
-                    "The property '{0} {1}' of class '{2}' has no 'set' accessor. To avoid this exception, call IsReadOnly to ensure that setting a value is allowed.",
-                    propertyInfo.PropertyType.FullName, propertyInfo.Name, propertyInfo.DeclaringType.FullName);
-                throw new BsonSerializationException(message);
-            }
-
-            // lambdaExpression = (obj, value) => ((TClass) obj).SetMethod((TMember) value)
-            var objParameter = Expression.Parameter(typeof(object), "obj");
-            var valueParameter = Expression.Parameter(typeof(object), "value");
-            var lambdaExpression = Expression.Lambda<Action<object, object>>(
-                Expression.Call(
-                    Expression.Convert(objParameter, _memberInfo.DeclaringType),
-                    setMethodInfo,
-                    Expression.Convert(valueParameter, _memberType)
-                ),
-                objParameter,
-                valueParameter
-            );
-
-            return lambdaExpression.Compile();
+            PropertyInfo propertyInfo = (PropertyInfo) _memberInfo;
+            return (obj, value) => { propertyInfo.SetValue(obj, value); };
         }
 
         private void ThrowFrozenException()

@@ -1,5 +1,5 @@
 using ETModel;
-namespace Trinity.Hotfix
+namespace ETHotfix
 {
 	[Message(HotfixOpcode.C2R_Login)]
 	public partial class C2R_Login : IRequest {}
@@ -34,8 +34,14 @@ namespace Trinity.Hotfix
 	[Message(HotfixOpcode.HotfixTestMessage)]
 	public partial class HotfixTestMessage : IMessage {}
 
+	[Message(HotfixOpcode.HotfixRpcRequest)]
+	public partial class HotfixRpcRequest : IRequest {}
+
+	[Message(HotfixOpcode.HotfixRpcResponse)]
+	public partial class HotfixRpcResponse : IResponse {}
+
 }
-namespace Trinity.Hotfix
+namespace ETHotfix
 {
 	public static partial class HotfixOpcode
 	{
@@ -50,5 +56,7 @@ namespace Trinity.Hotfix
 		 public const ushort C2G_PlayerInfo = 10009;
 		 public const ushort G2C_PlayerInfo = 10010;
 		 public const ushort HotfixTestMessage = 10011;
+		 public const ushort HotfixRpcRequest = 10012;
+		 public const ushort HotfixRpcResponse = 10013;
 	}
 }

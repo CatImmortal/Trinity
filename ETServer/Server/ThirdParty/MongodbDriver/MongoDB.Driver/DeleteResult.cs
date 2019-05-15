@@ -1,4 +1,4 @@
-/* Copyright 2010-2017 MongoDB Inc.
+/* Copyright 2010-present MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -64,7 +64,7 @@ namespace MongoDB.Driver
             private readonly long _deletedCount;
 
             /// <summary>
-            /// Initializes a new instance of the <see cref="Acknowledged"/> class.
+            /// Initializes a new instance of the
             /// </summary>
             /// <param name="deletedCount">The deleted count.</param>
             public Acknowledged(long deletedCount)

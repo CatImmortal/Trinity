@@ -39,14 +39,11 @@ namespace Trinity
                 ///网络组件
                 m_NetOuter = Game.Scene.AddComponent<NetOuterComponent>();
 
-                //帧同步组件
-                Game.Scene.AddComponent<ClientFrameComponent>();
-
                 //消息识别码组件
                 Game.Scene.AddComponent<OpcodeTypeComponent>();
 
                 //消息分发组件
-                Game.Scene.AddComponent<MessageDispatherComponent>();
+                Game.Scene.AddComponent<MessageDispatcherComponent>();
             }
             catch (System.Exception e)
             {

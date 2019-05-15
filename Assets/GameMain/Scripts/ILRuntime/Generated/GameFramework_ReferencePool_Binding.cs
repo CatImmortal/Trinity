@@ -62,6 +62,11 @@ namespace ILRuntime.Runtime.Generated
 
             var result_of_this_method = GameFramework.ReferencePool.Acquire<Trinity.HotfixEntityData>();
 
+            object obj_result_of_this_method = result_of_this_method;
+            if(obj_result_of_this_method is CrossBindingAdaptorType)
+            {    
+                return ILIntepreter.PushObject(__ret, __mStack, ((CrossBindingAdaptorType)obj_result_of_this_method).ILInstance);
+            }
             return ILIntepreter.PushObject(__ret, __mStack, result_of_this_method);
         }
 

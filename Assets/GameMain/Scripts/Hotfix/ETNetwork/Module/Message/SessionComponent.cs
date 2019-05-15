@@ -1,10 +1,7 @@
 ﻿using ETModel;
 
-namespace Trinity.Hotfix
+namespace ETHotfix
 {
-    /// <summary>
-    ///热更新层会话组件
-    /// </summary>
 	[ObjectSystem]
 	public class SessionComponentAwakeSystem : AwakeSystem<SessionComponent>
 	{
@@ -18,7 +15,24 @@ namespace Trinity.Hotfix
 	{
 		public static SessionComponent Instance;
 
-		public Session Session;
+		private Session session;
+
+		public Session Session
+		{
+			get
+			{
+				return this.session;
+			}
+			set
+			{
+				this.session = value;
+				
+				if (this.session != null)
+				{
+					this.session.Parent = this;
+				}
+			}
+		}
 
 		public void Awake()
 		{

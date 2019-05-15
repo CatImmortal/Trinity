@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using ETModel;
 
-namespace Trinity.Hotfix
+namespace ETHotfix
 {
 	[ObjectSystem]
 	public class OpcodeTypeComponentAwakeSystem : AwakeSystem<OpcodeTypeComponent>

@@ -6,7 +6,7 @@
 using pb = global::Google.Protobuf;
 using pbc = global::Google.Protobuf.Collections;
 using scg = global::System.Collections.Generic;
-namespace Trinity.Hotfix {
+namespace ETHotfix {
 
   #region Messages
   public partial class C2R_Login : pb::IMessage {
@@ -751,18 +751,18 @@ namespace Trinity.Hotfix {
       }
     }
 
-    private global::Trinity.Hotfix.PlayerInfo playerInfo_;
-    public global::Trinity.Hotfix.PlayerInfo PlayerInfo {
+    private global::ETHotfix.PlayerInfo playerInfo_;
+    public global::ETHotfix.PlayerInfo PlayerInfo {
       get { return playerInfo_; }
       set {
         playerInfo_ = value;
       }
     }
 
-    private static readonly pb::FieldCodec<global::Trinity.Hotfix.PlayerInfo> _repeated_playerInfos_codec
-        = pb::FieldCodec.ForMessage(18, global::Trinity.Hotfix.PlayerInfo.Parser);
-    private pbc::RepeatedField<global::Trinity.Hotfix.PlayerInfo> playerInfos_ = new pbc::RepeatedField<global::Trinity.Hotfix.PlayerInfo>();
-    public pbc::RepeatedField<global::Trinity.Hotfix.PlayerInfo> PlayerInfos {
+    private static readonly pb::FieldCodec<global::ETHotfix.PlayerInfo> _repeated_playerInfos_codec
+        = pb::FieldCodec.ForMessage(18, global::ETHotfix.PlayerInfo.Parser);
+    private pbc::RepeatedField<global::ETHotfix.PlayerInfo> playerInfos_ = new pbc::RepeatedField<global::ETHotfix.PlayerInfo>();
+    public pbc::RepeatedField<global::ETHotfix.PlayerInfo> PlayerInfos {
       get { return playerInfos_; }
       set { playerInfos_ = value; }
     }
@@ -853,7 +853,7 @@ namespace Trinity.Hotfix {
             break;
           case 10: {
             if (playerInfo_ == null) {
-              playerInfo_ = new global::Trinity.Hotfix.PlayerInfo();
+              playerInfo_ = new global::ETHotfix.PlayerInfo();
             }
             input.ReadMessage(playerInfo_);
             break;
@@ -898,31 +898,31 @@ namespace Trinity.Hotfix {
     private static readonly pb::MessageParser<HotfixTestMessage> _parser = new pb::MessageParser<HotfixTestMessage>(() => (HotfixTestMessage)MessagePool.Instance.Fetch(typeof(HotfixTestMessage)));
     public static pb::MessageParser<HotfixTestMessage> Parser { get { return _parser; } }
 
-    private string text_ = "";
-    public string Text {
-      get { return text_; }
+    private string info_ = "";
+    public string Info {
+      get { return info_; }
       set {
-        text_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        info_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
       }
     }
 
     public void WriteTo(pb::CodedOutputStream output) {
-      if (Text.Length != 0) {
+      if (Info.Length != 0) {
         output.WriteRawTag(10);
-        output.WriteString(Text);
+        output.WriteString(Info);
       }
     }
 
     public int CalculateSize() {
       int size = 0;
-      if (Text.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(Text);
+      if (Info.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Info);
       }
       return size;
     }
 
     public void MergeFrom(pb::CodedInputStream input) {
-      text_ = "";
+      info_ = "";
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
         switch(tag) {
@@ -930,7 +930,177 @@ namespace Trinity.Hotfix {
             input.SkipLastField();
             break;
           case 10: {
-            Text = input.ReadString();
+            Info = input.ReadString();
+            break;
+          }
+        }
+      }
+    }
+
+  }
+
+  public partial class HotfixRpcRequest : pb::IMessage {
+    private static readonly pb::MessageParser<HotfixRpcRequest> _parser = new pb::MessageParser<HotfixRpcRequest>(() => (HotfixRpcRequest)MessagePool.Instance.Fetch(typeof(HotfixRpcRequest)));
+    public static pb::MessageParser<HotfixRpcRequest> Parser { get { return _parser; } }
+
+    private int rpcId_;
+    public int RpcId {
+      get { return rpcId_; }
+      set {
+        rpcId_ = value;
+      }
+    }
+
+    private string info_ = "";
+    public string Info {
+      get { return info_; }
+      set {
+        info_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    public void WriteTo(pb::CodedOutputStream output) {
+      if (Info.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(Info);
+      }
+      if (RpcId != 0) {
+        output.WriteRawTag(208, 5);
+        output.WriteInt32(RpcId);
+      }
+    }
+
+    public int CalculateSize() {
+      int size = 0;
+      if (RpcId != 0) {
+        size += 2 + pb::CodedOutputStream.ComputeInt32Size(RpcId);
+      }
+      if (Info.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Info);
+      }
+      return size;
+    }
+
+    public void MergeFrom(pb::CodedInputStream input) {
+      info_ = "";
+      rpcId_ = 0;
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            input.SkipLastField();
+            break;
+          case 10: {
+            Info = input.ReadString();
+            break;
+          }
+          case 720: {
+            RpcId = input.ReadInt32();
+            break;
+          }
+        }
+      }
+    }
+
+  }
+
+  public partial class HotfixRpcResponse : pb::IMessage {
+    private static readonly pb::MessageParser<HotfixRpcResponse> _parser = new pb::MessageParser<HotfixRpcResponse>(() => (HotfixRpcResponse)MessagePool.Instance.Fetch(typeof(HotfixRpcResponse)));
+    public static pb::MessageParser<HotfixRpcResponse> Parser { get { return _parser; } }
+
+    private int rpcId_;
+    public int RpcId {
+      get { return rpcId_; }
+      set {
+        rpcId_ = value;
+      }
+    }
+
+    private int error_;
+    public int Error {
+      get { return error_; }
+      set {
+        error_ = value;
+      }
+    }
+
+    private string message_ = "";
+    public string Message {
+      get { return message_; }
+      set {
+        message_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    private string info_ = "";
+    public string Info {
+      get { return info_; }
+      set {
+        info_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    public void WriteTo(pb::CodedOutputStream output) {
+      if (Info.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(Info);
+      }
+      if (RpcId != 0) {
+        output.WriteRawTag(208, 5);
+        output.WriteInt32(RpcId);
+      }
+      if (Error != 0) {
+        output.WriteRawTag(216, 5);
+        output.WriteInt32(Error);
+      }
+      if (Message.Length != 0) {
+        output.WriteRawTag(226, 5);
+        output.WriteString(Message);
+      }
+    }
+
+    public int CalculateSize() {
+      int size = 0;
+      if (RpcId != 0) {
+        size += 2 + pb::CodedOutputStream.ComputeInt32Size(RpcId);
+      }
+      if (Error != 0) {
+        size += 2 + pb::CodedOutputStream.ComputeInt32Size(Error);
+      }
+      if (Message.Length != 0) {
+        size += 2 + pb::CodedOutputStream.ComputeStringSize(Message);
+      }
+      if (Info.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Info);
+      }
+      return size;
+    }
+
+    public void MergeFrom(pb::CodedInputStream input) {
+      info_ = "";
+      rpcId_ = 0;
+      error_ = 0;
+      message_ = "";
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            input.SkipLastField();
+            break;
+          case 10: {
+            Info = input.ReadString();
+            break;
+          }
+          case 720: {
+            RpcId = input.ReadInt32();
+            break;
+          }
+          case 728: {
+            Error = input.ReadInt32();
+            break;
+          }
+          case 738: {
+            Message = input.ReadString();
             break;
           }
         }

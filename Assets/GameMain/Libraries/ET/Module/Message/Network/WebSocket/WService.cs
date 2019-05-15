@@ -20,9 +20,9 @@ namespace ETModel
             
             this.httpListener = new HttpListener();
 
-            StartAccept(prefixs);
+            StartAccept(prefixs).Coroutine();
         }
-
+        
         public WService()
         {
         }
@@ -44,7 +44,7 @@ namespace ETModel
 			ClientWebSocket webSocket = new ClientWebSocket();
             WChannel channel = new WChannel(webSocket, this);
             this.channels[channel.Id] = channel;
-            channel.ConnectAsync(address);
+            channel.ConnectAsync(address).Coroutine();
             return channel;
         }
 
@@ -65,7 +65,7 @@ namespace ETModel
             
         }
 
-        public async void StartAccept(IEnumerable<string> prefixs)
+        public async ETVoid StartAccept(IEnumerable<string> prefixs)
         {
             try
             {

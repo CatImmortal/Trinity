@@ -1,9 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
     <ApplicationIcon />
     <StartupObject />
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -15,6 +16,6 @@
     <OutputPath>..\..\..\Bin\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MongodbDriver\DotNetCoreDriver\MongoDB.Bson\MongoDB.Bson.csproj" />
+    <ProjectReference Include="..\MongoDBDriver\MongoDB.Bson\MongoDB.Bson.csproj" />
   </ItemGroup>
 </Project>

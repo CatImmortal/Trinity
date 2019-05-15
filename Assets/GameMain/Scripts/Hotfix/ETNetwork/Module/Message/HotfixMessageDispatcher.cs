@@ -1,7 +1,7 @@
 ﻿using System;
 using ETModel;
 
-namespace Trinity.Hotfix
+namespace ETHotfix
 {
 	public static class HotfixMessageDispatcher
 	{
