@@ -1,4 +1,4 @@
-/* Copyright 2010-present MongoDB Inc.
+/* Copyright 2010-2016 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-#if NET452
+#if NET45
 using System.Runtime.Serialization;
 #endif
 using System.Text;
@@ -28,7 +28,7 @@ namespace MongoDB.Driver.Core.Operations
     /// <summary>
     /// Represents a bulk write operation exception.
     /// </summary>
-#if NET452
+#if NET45
     [Serializable]
 #endif
     public class MongoBulkWriteOperationException : MongoServerException
@@ -62,7 +62,7 @@ namespace MongoDB.Driver.Core.Operations
             _unprocessedRequests = unprocessedRequests;
         }
 
-#if NET452
+#if NET45
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoBulkWriteOperationException" /> class.
         /// </summary>
@@ -122,7 +122,7 @@ namespace MongoDB.Driver.Core.Operations
         }
 
         // methods
-#if NET452
+#if NET45
         /// <inheritdoc/>
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {

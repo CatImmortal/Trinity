@@ -25,7 +25,7 @@ namespace ILRuntime.Runtime.Intepreter
             }
             else
             {
-                stackTrace = ds.GetStackTrace(intepreter);
+                stackTrace = ds.GetStackTrance(intepreter);
                 if (method.HasThis)
                     thisInfo = ds.GetThisInfo(intepreter);
                 else

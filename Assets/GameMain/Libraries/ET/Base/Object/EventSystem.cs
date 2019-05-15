@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace ETModel
@@ -18,8 +19,6 @@ namespace ETModel
 		private readonly Dictionary<DLLType, Assembly> assemblies = new Dictionary<DLLType, Assembly>();
 		private readonly UnOrderMultiMap<Type, Type> types = new UnOrderMultiMap<Type, Type>();
 
-		private readonly Dictionary<string, List<IEvent>> allEvents = new Dictionary<string, List<IEvent>>();
-
 		private readonly UnOrderMultiMap<Type, IAwakeSystem> awakeSystems = new UnOrderMultiMap<Type, IAwakeSystem>();
 
 		private readonly UnOrderMultiMap<Type, IStartSystem> startSystems = new UnOrderMultiMap<Type, IStartSystem>();
@@ -33,8 +32,6 @@ namespace ETModel
 		private readonly UnOrderMultiMap<Type, ILateUpdateSystem> lateUpdateSystems = new UnOrderMultiMap<Type, ILateUpdateSystem>();
 
 		private readonly UnOrderMultiMap<Type, IChangeSystem> changeSystems = new UnOrderMultiMap<Type, IChangeSystem>();
-		
-		private readonly UnOrderMultiMap<Type, IDeserializeSystem> deserializeSystems = new UnOrderMultiMap<Type, IDeserializeSystem>();
 
 		private Queue<long> updates = new Queue<long>();
 		private Queue<long> updates2 = new Queue<long>();
@@ -72,8 +69,6 @@ namespace ETModel
 			this.startSystems.Clear();
 			this.loadSystems.Clear();
 			this.changeSystems.Clear();
-			this.destroySystems.Clear();
-			this.deserializeSystems.Clear();
 
 			foreach (Type type in types[typeof(ObjectSystemAttribute)])
 			{
@@ -86,64 +81,54 @@ namespace ETModel
 
 				object obj = Activator.CreateInstance(type);
 
-				switch (obj)
+				IAwakeSystem objectSystem = obj as IAwakeSystem;
+				if (objectSystem != null)
 				{
-					case IAwakeSystem objectSystem:
-						this.awakeSystems.Add(objectSystem.Type(), objectSystem);
-						break;
-					case IUpdateSystem updateSystem:
-						this.updateSystems.Add(updateSystem.Type(), updateSystem);
-						break;
-					case ILateUpdateSystem lateUpdateSystem:
-						this.lateUpdateSystems.Add(lateUpdateSystem.Type(), lateUpdateSystem);
-						break;
-					case IStartSystem startSystem:
-						this.startSystems.Add(startSystem.Type(), startSystem);
-						break;
-					case IDestroySystem destroySystem:
-						this.destroySystems.Add(destroySystem.Type(), destroySystem);
-						break;
-					case ILoadSystem loadSystem:
-						this.loadSystems.Add(loadSystem.Type(), loadSystem);
-						break;
-					case IChangeSystem changeSystem:
-						this.changeSystems.Add(changeSystem.Type(), changeSystem);
-						break;
-					case IDeserializeSystem deserializeSystem:
-						this.deserializeSystems.Add(deserializeSystem.Type(), deserializeSystem);
-						break;
+					this.awakeSystems.Add(objectSystem.Type(), objectSystem);
+				}
+
+				IUpdateSystem updateSystem = obj as IUpdateSystem;
+				if (updateSystem != null)
+				{
+					this.updateSystems.Add(updateSystem.Type(), updateSystem);
+				}
+
+				ILateUpdateSystem lateUpdateSystem = obj as ILateUpdateSystem;
+				if (lateUpdateSystem != null)
+				{
+					this.lateUpdateSystems.Add(lateUpdateSystem.Type(), lateUpdateSystem);
+				}
+
+				IStartSystem startSystem = obj as IStartSystem;
+				if (startSystem != null)
+				{
+					this.startSystems.Add(startSystem.Type(), startSystem);
+				}
+
+				IDestroySystem destroySystem = obj as IDestroySystem;
+				if (destroySystem != null)
+				{
+					this.destroySystems.Add(destroySystem.Type(), destroySystem);
+				}
+
+				ILoadSystem loadSystem = obj as ILoadSystem;
+				if (loadSystem != null)
+				{
+					this.loadSystems.Add(loadSystem.Type(), loadSystem);
+				}
+
+				IChangeSystem changeSystem = obj as IChangeSystem;
+				if (changeSystem != null)
+				{
+					this.changeSystems.Add(changeSystem.Type(), changeSystem);
 				}
 			}
 
-			this.allEvents.Clear();
-			foreach (Type type in types[typeof(EventAttribute)])
-			{
-				object[] attrs = type.GetCustomAttributes(typeof(EventAttribute), false);
-
-				foreach (object attr in attrs)
-				{
-					EventAttribute aEventAttribute = (EventAttribute)attr;
-					object obj = Activator.CreateInstance(type);
-					IEvent iEvent = obj as IEvent;
-					if (iEvent == null)
-					{
-						ETLog.Error($"{obj.GetType().Name} 没有继承IEvent");
-					}
-					this.RegisterEvent(aEventAttribute.Type, iEvent);
-				}
-			}
+			
 
 			this.Load();
 		}
 
-		public void RegisterEvent(string eventId, IEvent e)
-		{
-			if (!this.allEvents.ContainsKey(eventId))
-			{
-				this.allEvents.Add(eventId, new List<IEvent>());
-			}
-			this.allEvents[eventId].Add(e);
-		}
 
 		public Assembly Get(DLLType dllType)
 		{
@@ -191,37 +176,11 @@ namespace ETModel
 			this.allComponents.Remove(instanceId);
 		}
 
-		public Component Get(long instanceId)
+		public Component Get(long id)
 		{
 			Component component = null;
-			this.allComponents.TryGetValue(instanceId, out component);
+			this.allComponents.TryGetValue(id, out component);
 			return component;
-		}
-		
-		public void Deserialize(Component component)
-		{
-			List<IDeserializeSystem> iDeserializeSystems = this.deserializeSystems[component.GetType()];
-			if (iDeserializeSystems == null)
-			{
-				return;
-			}
-
-			foreach (IDeserializeSystem deserializeSystem in iDeserializeSystems)
-			{
-				if (deserializeSystem == null)
-				{
-					continue;
-				}
-
-				try
-				{
-					deserializeSystem.Run(component);
-				}
-				catch (Exception e)
-				{
-					ETLog.Error(e);
-				}
-			}
 		}
 
 		public void Awake(Component component)
@@ -251,7 +210,7 @@ namespace ETModel
 				}
 				catch (Exception e)
 				{
-					ETLog.Error(e);
+					Log.Error(e);
 				}
 			}
 		}
@@ -283,7 +242,7 @@ namespace ETModel
 				}
 				catch (Exception e)
 				{
-					ETLog.Error(e);
+					Log.Error(e);
 				}
 			}
 		}
@@ -315,7 +274,7 @@ namespace ETModel
 				}
 				catch (Exception e)
 				{
-					ETLog.Error(e);
+					Log.Error(e);
 				}
 			}
 		}
@@ -347,7 +306,7 @@ namespace ETModel
 				}
 				catch (Exception e)
 				{
-					ETLog.Error(e);
+					Log.Error(e);
 				}
 			}
 		}
@@ -373,7 +332,7 @@ namespace ETModel
 				}
 				catch (Exception e)
 				{
-					ETLog.Error(e);
+					Log.Error(e);
 				}
 			}
 		}
@@ -409,7 +368,7 @@ namespace ETModel
 					}
 					catch (Exception e)
 					{
-						ETLog.Error(e);
+						Log.Error(e);
 					}
 				}
 			}
@@ -442,7 +401,7 @@ namespace ETModel
 					}
 					catch (Exception e)
 					{
-						ETLog.Error(e);
+						Log.Error(e);
 					}
 				}
 			}
@@ -469,7 +428,7 @@ namespace ETModel
 				}
 				catch (Exception e)
 				{
-					ETLog.Error(e);
+					Log.Error(e);
 				}
 			}
 		}
@@ -507,7 +466,7 @@ namespace ETModel
 					}
 					catch (Exception e)
 					{
-						ETLog.Error(e);
+						Log.Error(e);
 					}
 				}
 			}
@@ -546,7 +505,7 @@ namespace ETModel
 					}
 					catch (Exception e)
 					{
-						ETLog.Error(e);
+						Log.Error(e);
 					}
 				}
 			}
@@ -554,84 +513,6 @@ namespace ETModel
 			ObjectHelper.Swap(ref this.lateUpdates, ref this.lateUpdates2);
 		}
 
-		public void Run(string type)
-		{
-			List<IEvent> iEvents;
-			if (!this.allEvents.TryGetValue(type, out iEvents))
-			{
-				return;
-			}
-			foreach (IEvent iEvent in iEvents)
-			{
-				try
-				{
-					iEvent?.Handle();
-				}
-				catch (Exception e)
-				{
-					ETLog.Error(e);
-				}
-			}
-		}
-
-		public void Run<A>(string type, A a)
-		{
-			List<IEvent> iEvents;
-			if (!this.allEvents.TryGetValue(type, out iEvents))
-			{
-				return;
-			}
-			foreach (IEvent iEvent in iEvents)
-			{
-				try
-				{
-					iEvent?.Handle(a);
-				}
-				catch (Exception e)
-				{
-					ETLog.Error(e);
-				}
-			}
-		}
-
-		public void Run<A, B>(string type, A a, B b)
-		{
-			List<IEvent> iEvents;
-			if (!this.allEvents.TryGetValue(type, out iEvents))
-			{
-				return;
-			}
-			foreach (IEvent iEvent in iEvents)
-			{
-				try
-				{
-					iEvent?.Handle(a, b);
-				}
-				catch (Exception e)
-				{
-					ETLog.Error(e);
-				}
-			}
-		}
-
-		public void Run<A, B, C>(string type, A a, B b, C c)
-		{
-			List<IEvent> iEvents;
-			if (!this.allEvents.TryGetValue(type, out iEvents))
-			{
-				return;
-			}
-			foreach (IEvent iEvent in iEvents)
-			{
-				try
-				{
-					iEvent?.Handle(a, b, c);
-				}
-				catch (Exception e)
-				{
-					ETLog.Error(e);
-				}
-			}
-		}
+		
 	}
 }

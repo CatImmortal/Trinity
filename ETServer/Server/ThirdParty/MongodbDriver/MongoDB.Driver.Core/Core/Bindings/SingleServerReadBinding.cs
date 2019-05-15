@@ -1,4 +1,4 @@
-/* Copyright 2013-present MongoDB Inc.
+/* Copyright 2013-2015 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@ namespace MongoDB.Driver.Core.Bindings
         private bool _disposed;
         private readonly ReadPreference _readPreference;
         private readonly IServer _server;
-        private readonly ICoreSessionHandle _session;
 
         // constructors
         /// <summary>
@@ -38,12 +37,10 @@ namespace MongoDB.Driver.Core.Bindings
         /// </summary>
         /// <param name="server">The server.</param>
         /// <param name="readPreference">The read preference.</param>
-        /// <param name="session">The session.</param>
-        public SingleServerReadBinding(IServer server, ReadPreference readPreference, ICoreSessionHandle session)
+        public SingleServerReadBinding(IServer server, ReadPreference readPreference)
         {
             _server = Ensure.IsNotNull(server, nameof(server));
             _readPreference = Ensure.IsNotNull(readPreference, nameof(readPreference));
-            _session = Ensure.IsNotNull(session, nameof(session));
         }
 
         // properties
@@ -51,12 +48,6 @@ namespace MongoDB.Driver.Core.Bindings
         public ReadPreference ReadPreference
         {
             get { return _readPreference; }
-        }
-
-        /// <inheritdoc/>
-        public ICoreSessionHandle Session
-        {
-            get { return _session; }
         }
 
         // methods
@@ -79,21 +70,21 @@ namespace MongoDB.Driver.Core.Bindings
         {
             if (!_disposed)
             {
-                _session.Dispose();
                 _disposed = true;
+                GC.SuppressFinalize(this);
             }
         }
 
         private IChannelSourceHandle GetChannelSourceHelper()
         {
-            return new ChannelSourceHandle(new ServerChannelSource(_server, _session.Fork()));
+            return new ChannelSourceHandle(new ServerChannelSource(_server));
         }
 
         private void ThrowIfDisposed()
         {
             if (_disposed)
             {
-                throw new ObjectDisposedException(GetType().FullName);
+                throw new ObjectDisposedException(GetType().Name);
             }
         }
     }

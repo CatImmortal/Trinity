@@ -1,4 +1,4 @@
-/* Copyright 2013-present MongoDB Inc.
+/* Copyright 2013-2016 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver.Core.Bindings;
 using MongoDB.Driver.Core.Misc;
 using MongoDB.Driver.Core.WireProtocol.Messages.Encoders;
-using MongoDB.Shared;
 
 namespace MongoDB.Driver.Core.Operations
 {
@@ -174,7 +173,7 @@ namespace MongoDB.Driver.Core.Operations
         public TimeSpan? MaxTime
         {
             get { return _maxTime; }
-            set { _maxTime = Ensure.IsNullOrInfiniteOrGreaterThanOrEqualToZero(value, nameof(value)); }
+            set { _maxTime = value; }
         }
 
         /// <summary>
@@ -218,7 +217,7 @@ namespace MongoDB.Driver.Core.Operations
             Ensure.IsNotNull(binding, nameof(binding));
             using (var channelSource = binding.GetReadChannelSource(cancellationToken))
             using (var channel = channelSource.GetChannel(cancellationToken))
-            using (var channelBinding = new ChannelReadBinding(channelSource.Server, channel, binding.ReadPreference, binding.Session.Fork()))
+            using (var channelBinding = new ChannelReadBinding(channelSource.Server, channel, binding.ReadPreference))
             {
                 var operation = CreateOperation(channel.ConnectionDescription.ServerVersion);
                 return operation.Execute(channelBinding, cancellationToken);
@@ -231,7 +230,7 @@ namespace MongoDB.Driver.Core.Operations
             Ensure.IsNotNull(binding, nameof(binding));
             using (var channelSource = await binding.GetReadChannelSourceAsync(cancellationToken).ConfigureAwait(false))
             using (var channel = await channelSource.GetChannelAsync(cancellationToken).ConfigureAwait(false))
-            using (var channelBinding = new ChannelReadBinding(channelSource.Server, channel, binding.ReadPreference, binding.Session.Fork()))
+            using (var channelBinding = new ChannelReadBinding(channelSource.Server, channel, binding.ReadPreference))
             {
                 var operation = CreateOperation(channel.ConnectionDescription.ServerVersion);
                 return await operation.ExecuteAsync(channelBinding, cancellationToken).ConfigureAwait(false);
@@ -257,7 +256,7 @@ namespace MongoDB.Driver.Core.Operations
                         { "collation", () => _collation.ToBsonDocument(), _collation != null }
                     }
                 },
-                { "maxTimeMS", () => MaxTimeHelper.ToMaxTimeMS(_maxTime.Value), _maxTime.HasValue }
+                { "maxTimeMS", () => _maxTime.Value.TotalMilliseconds, _maxTime.HasValue }
            };
         }
 

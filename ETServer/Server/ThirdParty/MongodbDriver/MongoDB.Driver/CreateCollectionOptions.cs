@@ -1,4 +1,4 @@
-/* Copyright 2010-present MongoDB Inc.
+/* Copyright 2010-2016 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
 * limitations under the License.
 */
 
-using System;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 
@@ -51,7 +50,6 @@ namespace MongoDB.Driver
         /// <summary>
         /// Gets or sets a value indicating whether to automatically create an index on the _id.
         /// </summary>
-        [Obsolete("AutoIndexId has been deprecated since server version 3.2.")]
         public bool? AutoIndexId
         {
             get { return _autoIndexId; }
@@ -180,7 +178,6 @@ namespace MongoDB.Driver
 
             if (options.GetType() == typeof(CreateCollectionOptions))
             {
-#pragma warning disable 618
                 return new CreateCollectionOptions<TDocument>
                 {
                     AutoIndexId = options.AutoIndexId,
@@ -196,7 +193,6 @@ namespace MongoDB.Driver
                     ValidationAction = options.ValidationAction,
                     ValidationLevel = options.ValidationLevel
                 };
-#pragma warning restore
             }
 
             return (CreateCollectionOptions<TDocument>)options;

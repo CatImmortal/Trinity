@@ -9,6 +9,7 @@ namespace ETHotfix
         protected override void Run(Session session, G2C_Test message)
         {
             count++;
+            Log.Info(count.ToString());
         }
     }
 }

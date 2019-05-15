@@ -22,7 +22,7 @@ namespace Trinity
             // 变体配置：根据使用的语言，通知底层加载对应的资源变体。
             InitCurrentVariant();
 
-            // 画质配置：根据用户配置数据，设置即将使用的画质选项。
+            // 画质配置：根据检测到的硬件信息 Assets/Main/Configs/DeviceModelConfig 和用户配置数据，设置即将使用的画质选项。
             InitQualitySettings();
 
             // 声音配置：根据用户配置数据，设置即将使用的声音选项。

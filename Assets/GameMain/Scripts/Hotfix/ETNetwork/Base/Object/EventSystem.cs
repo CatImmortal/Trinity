@@ -10,8 +10,6 @@ namespace Trinity.Hotfix
 		
 		private readonly List<Type> types = new List<Type>();
 
-		private readonly Dictionary<string, List<IEvent>> allEvents = new Dictionary<string, List<IEvent>>();
-
 		private readonly UnOrderMultiMap<Type, IAwakeSystem> awakeSystems = new UnOrderMultiMap<Type, IAwakeSystem>();
 
 		private readonly UnOrderMultiMap<Type, IStartSystem> startSystems = new UnOrderMultiMap<Type, IStartSystem>();
@@ -25,8 +23,6 @@ namespace Trinity.Hotfix
 		private readonly UnOrderMultiMap<Type, ILateUpdateSystem> lateUpdateSystems = new UnOrderMultiMap<Type, ILateUpdateSystem>();
 
 		private readonly UnOrderMultiMap<Type, IChangeSystem> changeSystems = new UnOrderMultiMap<Type, IChangeSystem>();
-		
-		private readonly UnOrderMultiMap<Type, IDeserializeSystem> deserializeSystems = new UnOrderMultiMap<Type, IDeserializeSystem>();
 
 		private Queue<long> updates = new Queue<long>();
 		private Queue<long> updates2 = new Queue<long>();
@@ -42,10 +38,11 @@ namespace Trinity.Hotfix
 		public EventSystem()
 		{
 			this.types.Clear();
-			//TODO: 此处修改了ET的源码 将热更types的来源改掉了
-			//List<Type> ts = ETModel.Game.Hotfix.GetHotfixTypes();
+
+            //获取所有热更新层类的Type
             List<Type> ts = GameEntry.ILRuntime.GetHotfixTypes();
-            foreach (Type type in ts)
+			
+			foreach (Type type in ts)
 			{
 				// ILRuntime无法判断是否有Attribute
 				//if (type.GetCustomAttributes(typeof (Attribute), false).Length == 0)
@@ -67,88 +64,54 @@ namespace Trinity.Hotfix
 
 				object obj = Activator.CreateInstance(type);
 
-				switch (obj)
+				IAwakeSystem objectSystem = obj as IAwakeSystem;
+				if (objectSystem != null)
 				{
-					case IAwakeSystem objectSystem:
-						this.awakeSystems.Add(objectSystem.Type(), objectSystem);
-						break;
-					case IUpdateSystem updateSystem:
-						this.updateSystems.Add(updateSystem.Type(), updateSystem);
-						break;
-					case ILateUpdateSystem lateUpdateSystem:
-						this.lateUpdateSystems.Add(lateUpdateSystem.Type(), lateUpdateSystem);
-						break;
-					case IStartSystem startSystem:
-						this.startSystems.Add(startSystem.Type(), startSystem);
-						break;
-					case IDestroySystem destroySystem:
-						this.destroySystems.Add(destroySystem.Type(), destroySystem);
-						break;
-					case ILoadSystem loadSystem:
-						this.loadSystems.Add(loadSystem.Type(), loadSystem);
-						break;
-					case IChangeSystem changeSystem:
-						this.changeSystems.Add(changeSystem.Type(), changeSystem);
-						break;
-					case IDeserializeSystem deserializeSystem:
-						this.deserializeSystems.Add(deserializeSystem.Type(), deserializeSystem);
-						break;
+					this.awakeSystems.Add(objectSystem.Type(), objectSystem);
 				}
-			}
 
-			this.allEvents.Clear();
-			foreach (Type type in types)
-			{
-				object[] attrs = type.GetCustomAttributes(typeof(EventAttribute), false);
-
-				foreach (object attr in attrs)
+				IUpdateSystem updateSystem = obj as IUpdateSystem;
+				if (updateSystem != null)
 				{
-					EventAttribute aEventAttribute = (EventAttribute)attr;
-					object obj = Activator.CreateInstance(type);
-					IEvent iEvent = obj as IEvent;
-					if (iEvent == null)
-					{
-                        ETModel.ETLog.Error($"{obj.GetType().Name} 没有继承IEvent");
-					}
-					this.RegisterEvent(aEventAttribute.Type, iEvent);
+					this.updateSystems.Add(updateSystem.Type(), updateSystem);
+				}
 
-					// hotfix的事件也要注册到mono层，hotfix可以订阅mono层的事件
-					Action<List<object>> action = list => { Handle(iEvent, list); };
-					ETModel.Game.EventSystem.RegisterEvent(aEventAttribute.Type, new EventProxy(action));
+				ILateUpdateSystem lateUpdateSystem = obj as ILateUpdateSystem;
+				if (lateUpdateSystem != null)
+				{
+					this.lateUpdateSystems.Add(lateUpdateSystem.Type(), lateUpdateSystem);
+				}
+
+				IStartSystem startSystem = obj as IStartSystem;
+				if (startSystem != null)
+				{
+					this.startSystems.Add(startSystem.Type(), startSystem);
+				}
+
+				IDestroySystem destroySystem = obj as IDestroySystem;
+				if (destroySystem != null)
+				{
+					this.destroySystems.Add(destroySystem.Type(), destroySystem);
+				}
+
+				ILoadSystem loadSystem = obj as ILoadSystem;
+				if (loadSystem != null)
+				{
+					this.loadSystems.Add(loadSystem.Type(), loadSystem);
+				}
+
+				IChangeSystem changeSystem = obj as IChangeSystem;
+				if (changeSystem != null)
+				{
+					this.changeSystems.Add(changeSystem.Type(), changeSystem);
 				}
 			}
 
 			this.Load();
 		}
 
-		public static void Handle(IEvent iEvent, List<object> param)
-		{
-			switch (param.Count)
-			{
-				case 0:
-					iEvent.Handle();
-					break;
-				case 1:
-					iEvent.Handle(param[0]);
-					break;
-				case 2:
-					iEvent.Handle(param[0], param[1]);
-					break;
-				case 3:
-					iEvent.Handle(param[0], param[1], param[2]);
-					break;
-			}
-		}
-		
-		public void RegisterEvent(string eventId, IEvent e)
-		{
-			if (!this.allEvents.ContainsKey(eventId))
-			{
-				this.allEvents.Add(eventId, new List<IEvent>());
-			}
-			this.allEvents[eventId].Add(e);
-		}
-		
+	
+
 		public List<Type> GetTypes()
 		{
 			return this.types;
@@ -185,32 +148,6 @@ namespace Trinity.Hotfix
 		{
 			this.allComponents.Remove(instanceId);
 		}
-		
-		public void Deserialize(Component component)
-		{
-			List<IDeserializeSystem> iDeserializeSystems = this.deserializeSystems[component.GetType()];
-			if (iDeserializeSystems == null)
-			{
-				return;
-			}
-
-			foreach (IDeserializeSystem deserializeSystem in iDeserializeSystems)
-			{
-				if (deserializeSystem == null)
-				{
-					continue;
-				}
-
-				try
-				{
-					deserializeSystem.Run(component);
-				}
-				catch (Exception e)
-				{
-                    ETModel.ETLog.Error(e);
-				}
-			}
-		}
 
 		public void Awake(Component component)
 		{
@@ -239,7 +176,7 @@ namespace Trinity.Hotfix
 				}
 				catch (Exception e)
 				{
-                    ETModel.ETLog.Error(e);
+					Log.Error(e);
 				}
 			}
 		}
@@ -271,7 +208,7 @@ namespace Trinity.Hotfix
 				}
 				catch (Exception e)
 				{
-                    ETModel.ETLog.Error(e);
+					Log.Error(e);
 				}
 			}
 		}
@@ -303,7 +240,7 @@ namespace Trinity.Hotfix
 				}
 				catch (Exception e)
 				{
-                    ETModel.ETLog.Error(e);
+					Log.Error(e);
 				}
 			}
 		}
@@ -335,7 +272,7 @@ namespace Trinity.Hotfix
 				}
 				catch (Exception e)
 				{
-                    ETModel.ETLog.Error(e);
+					Log.Error(e);
 				}
 			}
 		}
@@ -361,7 +298,7 @@ namespace Trinity.Hotfix
 				}
 				catch (Exception e)
 				{
-                    ETModel.ETLog.Error(e);
+					Log.Error(e);
 				}
 			}
 		}
@@ -397,7 +334,7 @@ namespace Trinity.Hotfix
 					}
 					catch (Exception e)
 					{
-                        ETModel.ETLog.Error(e);
+						Log.Error(e);
 					}
 				}
 			}
@@ -430,7 +367,7 @@ namespace Trinity.Hotfix
 					}
 					catch (Exception e)
 					{
-                        ETModel.ETLog.Error(e);
+						Log.Error(e);
 					}
 				}
 			}
@@ -457,7 +394,7 @@ namespace Trinity.Hotfix
 				}
 				catch (Exception e)
 				{
-                    ETModel.ETLog.Error(e);
+					Log.Error(e);
 				}
 			}
 		}
@@ -495,7 +432,7 @@ namespace Trinity.Hotfix
 					}
 					catch (Exception e)
 					{
-                        ETModel.ETLog.Error(e);
+						Log.Error(e);
 					}
 				}
 			}
@@ -534,7 +471,7 @@ namespace Trinity.Hotfix
 					}
 					catch (Exception e)
 					{
-                        ETModel.ETLog.Error(e);
+						Log.Error(e);
 					}
 				}
 			}
@@ -542,84 +479,6 @@ namespace Trinity.Hotfix
 			ObjectHelper.Swap(ref this.lateUpdates, ref this.lateUpdates2);
 		}
 
-		public void Run(string type)
-		{
-			List<IEvent> iEvents;
-			if (!this.allEvents.TryGetValue(type, out iEvents))
-			{
-				return;
-			}
-			foreach (IEvent iEvent in iEvents)
-			{
-				try
-				{
-					iEvent?.Handle();
-				}
-				catch (Exception e)
-				{
-                    ETModel.ETLog.Error(e);
-				}
-			}
-		}
-
-		public void Run<A>(string type, A a)
-		{
-			List<IEvent> iEvents;
-			if (!this.allEvents.TryGetValue(type, out iEvents))
-			{
-				return;
-			}
-			foreach (IEvent iEvent in iEvents)
-			{
-				try
-				{
-					iEvent?.Handle(a);
-				}
-				catch (Exception e)
-				{
-                    ETModel.ETLog.Error(e);
-				}
-			}
-		}
-
-		public void Run<A, B>(string type, A a, B b)
-		{
-			List<IEvent> iEvents;
-			if (!this.allEvents.TryGetValue(type, out iEvents))
-			{
-				return;
-			}
-			foreach (IEvent iEvent in iEvents)
-			{
-				try
-				{
-					iEvent?.Handle(a, b);
-				}
-				catch (Exception e)
-				{
-                    ETModel.ETLog.Error(e);
-				}
-			}
-		}
-
-		public void Run<A, B, C>(string type, A a, B b, C c)
-		{
-			List<IEvent> iEvents;
-			if (!this.allEvents.TryGetValue(type, out iEvents))
-			{
-				return;
-			}
-			foreach (IEvent iEvent in iEvents)
-			{
-				try
-				{
-					iEvent?.Handle(a, b, c);
-				}
-				catch (Exception e)
-				{
-                    ETModel.ETLog.Error(e);
-				}
-			}
-		}
+	
 	}
 }

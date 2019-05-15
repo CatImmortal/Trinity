@@ -196,7 +196,7 @@ namespace ILRuntime.Runtime.Enviorment
 
         public void PushDouble<T>(T val)
         {
-            PushDouble(PrimitiveConverter<T>.CheckAndInvokeToDouble(val));
+            PushFloat(PrimitiveConverter<T>.CheckAndInvokeToFloat(val));
         }
 
         public void PushDouble(double val)

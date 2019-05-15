@@ -158,14 +158,13 @@ namespace ILRuntime.CLR.Method
 
         Mono.Cecil.Cil.SequencePoint GetValidSequence(int startIdx, int dir)
         {
-            var seqMapping = def.DebugInformation.GetSequencePointMapping();
-            var cur = DebugService.FindSequencePoint(def.Body.Instructions[startIdx], seqMapping);
+            var cur = DebugService.FindSequencePoint(def.Body.Instructions[startIdx]);
             while (cur != null && cur.StartLine == 0x0feefee)
             {
                 startIdx += dir;
                 if (startIdx >= 0 && startIdx < def.Body.Instructions.Count)
                 {
-                    cur = DebugService.FindSequencePoint(def.Body.Instructions[startIdx], seqMapping);
+                    cur = DebugService.FindSequencePoint(def.Body.Instructions[startIdx]);
                 }
                 else
                     break;
@@ -529,7 +528,7 @@ namespace ILRuntime.CLR.Method
             {
                 TypeReference _ref = ((TypeReference)token);
                 if (_ref.IsArray)
-                    return CheckHasGenericParamter(((ArrayType)_ref).ElementType);
+                    return CheckHasGenericParamter(_ref.GetElementType());
                 if (_ref.IsGenericParameter)
                     return true;
                 if (_ref.IsGenericInstance)
@@ -577,16 +576,16 @@ namespace ILRuntime.CLR.Method
                 bool isArray = false;
                 int rank = 1;
                 TypeReference pt = i.ParameterType;
-                if (pt.IsByReference)
+                if (i.ParameterType.IsByReference)
                 {
                     isByRef = true;
-                    pt = ((ByReferenceType)pt).ElementType;
+                    pt = pt.GetElementType();
                 }
-                if (pt.IsArray)
+                if (i.ParameterType.IsArray)
                 {
                     isArray = true;
                     rank = ((ArrayType)pt).Rank;
-                    pt = ((ArrayType)pt).ElementType;
+                    pt = pt.GetElementType();
                 }
                 if (pt.IsGenericParameter)
                 {
@@ -609,14 +608,14 @@ namespace ILRuntime.CLR.Method
                         else
                             throw new NotSupportedException("Cannot find Generic Parameter " + pt.Name + " in " + def.FullName);
                     }
+
+                    if (isByRef)
+                        type = type.MakeByRefType();
+                    if (isArray)
+                        type = type.MakeArrayType(rank);
                 }
                 else
-                    type = appdomain.GetType(pt, declaringType, this);
-
-                if (isByRef)
-                    type = type.MakeByRefType();
-                if (isArray)
-                    type = type.MakeArrayType(rank);
+                    type = appdomain.GetType(i.ParameterType, declaringType, this);
                 parameters.Add(type);
             }
         }

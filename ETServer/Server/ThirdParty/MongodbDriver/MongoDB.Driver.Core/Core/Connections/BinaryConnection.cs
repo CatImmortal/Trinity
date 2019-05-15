@@ -1,4 +1,4 @@
-/* Copyright 2013-present MongoDB Inc.
+/* Copyright 2013-2017 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -611,11 +611,10 @@ namespace MongoDB.Driver.Core.Connections
         private Exception WrapException(Exception ex, string action)
         {
             if (
-#if NET452
+#if NET45
                 ex is ThreadAbortException ||
                 ex is StackOverflowException ||
 #endif
-                ex is MongoAuthenticationException ||
                 ex is OutOfMemoryException)
             {
                 return ex;
@@ -676,7 +675,7 @@ namespace MongoDB.Driver.Core.Connections
                 if (!_connection._state.TryChange(State.Connecting, State.Failed) && !_connection._state.TryChange(State.Initializing, State.Failed))
                 {
                     var currentState = _connection._state.Value;
-                    if (currentState != State.Failed && currentState != State.Disposed)
+                    if (currentState != State.Disposed)
                     {
                         throw new InvalidOperationException($"Invalid BinaryConnection state transition from {currentState} to Failed.");
                     }

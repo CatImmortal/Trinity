@@ -225,7 +225,7 @@ namespace LitJson
 
             writer.Write ('"');
 
-	        //鐩存帴瀛樺偍鍘熷瀛楃涓诧紝涓嶅啀鍋氫换浣曡浆涔夊瓧绗︾殑瑙ｆ瀽
+	        //直接存储原始字符串，不再做任何转义字符的解析
 	        writer.Write(str);
 	        writer.Write('"');
 	        return;
@@ -463,17 +463,6 @@ namespace LitJson
                 writer.Write (':');
 
             context.ExpectingValue = true;
-        }
-        
-        public void Write(float number)
-        {
-            DoValidation(Condition.Value);
-            PutNewline();
- 
-            string str = number.ToString();
-            Put(str);
- 
-            context.ExpectingValue = false;
         }
     }
 }

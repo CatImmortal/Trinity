@@ -1,4 +1,4 @@
-/* Copyright 2013-present MongoDB Inc.
+/* Copyright 2013-2017 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -22,11 +22,9 @@ using MongoDB.Bson;
 using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver.Core.Bindings;
-using MongoDB.Driver.Core.Connections;
 using MongoDB.Driver.Core.Misc;
 using MongoDB.Driver.Core.Operations.ElementNameValidators;
 using MongoDB.Driver.Core.WireProtocol.Messages.Encoders;
-using MongoDB.Shared;
 
 namespace MongoDB.Driver.Core.Operations
 {
@@ -125,7 +123,7 @@ namespace MongoDB.Driver.Core.Operations
         public TimeSpan? MaxTime
         {
             get { return _maxTime; }
-            set { _maxTime = Ensure.IsNullOrInfiniteOrGreaterThanOrEqualToZero(value, nameof(value)); }
+            set { _maxTime = value; }
         }
 
         /// <summary>
@@ -176,12 +174,10 @@ namespace MongoDB.Driver.Core.Operations
         }
 
         // methods
-        internal override BsonDocument CreateCommand(ICoreSessionHandle session, ConnectionDescription connectionDescription, long? transactionNumber)
+        internal override BsonDocument CreateCommand(SemanticVersion serverVersion)
         {
-            var serverVersion = connectionDescription.ServerVersion;
             Feature.Collation.ThrowIfNotSupported(serverVersion, Collation);
 
-            var writeConcern = WriteConcernHelper.GetWriteConcernForCommand(session, WriteConcern, serverVersion, Feature.FindAndModifyWriteConcern);
             return new BsonDocument
             {
                 { "findAndModify", CollectionNamespace.CollectionName },
@@ -191,12 +187,11 @@ namespace MongoDB.Driver.Core.Operations
                 { "sort", _sort, _sort != null },
                 { "fields", _projection, _projection != null },
                 { "upsert", true, _isUpsert },
-                { "maxTimeMS", () => MaxTimeHelper.ToMaxTimeMS(_maxTime.Value), _maxTime.HasValue },
-                { "writeConcern", writeConcern, writeConcern != null },
+                { "maxTimeMS", () => _maxTime.Value.TotalMilliseconds, _maxTime.HasValue },
+                { "writeConcern", () => WriteConcern.ToBsonDocument(), WriteConcern != null && !WriteConcern.IsServerDefault && Feature.FindAndModifyWriteConcern.IsSupported(serverVersion) },
                 { "bypassDocumentValidation", () => _bypassDocumentValidation.Value, _bypassDocumentValidation.HasValue && Feature.BypassDocumentValidation.IsSupported(serverVersion) },
                 { "collation", () => Collation.ToBsonDocument(), Collation != null },
-                { "arrayFilters", () => new BsonArray(_arrayFilters), _arrayFilters != null },
-                { "txnNumber", () => transactionNumber, transactionNumber.HasValue }
+                { "arrayFilters", () => new BsonArray(_arrayFilters), _arrayFilters != null }
             };
         }
 

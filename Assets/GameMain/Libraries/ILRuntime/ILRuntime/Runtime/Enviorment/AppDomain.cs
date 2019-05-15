@@ -60,10 +60,6 @@ namespace ILRuntime.Runtime.Enviorment
 
 #if DEBUG && (UNITY_EDITOR || UNITY_ANDROID || UNITY_IPHONE)
         public int UnityMainThreadID { get; set; }
-        public bool IsNotUnityMainThread()
-        {
-            return UnityMainThreadID != 0 && (UnityMainThreadID != System.Threading.Thread.CurrentThread.ManagedThreadId);
-        }
 #endif
         public unsafe AppDomain()
         {
@@ -141,10 +137,6 @@ namespace ILRuntime.Runtime.Enviorment
                 if(i.Name == "GetName")
                 {
                     RegisterCLRMethodRedirection(i, CLRRedirections.EnumGetName);
-                }
-                if (i.Name == "ToObject" && i.GetParameters()[1].ParameterType == typeof(int))
-                {
-                    RegisterCLRMethodRedirection(i, CLRRedirections.EnumToObject);
                 }
             }
             mi = typeof(System.Type).GetMethod("GetTypeFromHandle");
@@ -368,7 +360,6 @@ namespace ILRuntime.Runtime.Enviorment
         /// <param name="stream">Assembly Stream</param>
         /// <param name="symbol">symbol Stream</param>
         /// <param name="symbolReader">symbol 读取器</param>
-        /// <param name="inMemory">是否完整读入内存</param>
         public void LoadAssembly(System.IO.Stream stream, System.IO.Stream symbol, ISymbolReaderProvider symbolReader)
         {
             var module = ModuleDefinition.ReadModule(stream); //从MONO中加载模块
@@ -414,6 +405,7 @@ namespace ILRuntime.Runtime.Enviorment
                 doubleType = GetType("System.Double");
                 objectType = GetType("System.Object");
             }
+            module.AssemblyResolver.ResolveFailure += AssemblyResolver_ResolveFailure;
 #if DEBUG && !DISABLE_ILRUNTIME_DEBUG
             debugService.NotifyModuleLoaded(module.Name);
 #endif
@@ -427,6 +419,20 @@ namespace ILRuntime.Runtime.Enviorment
         public void AddReferenceBytes(string name, byte[] content)
         {
             references[name] = content;
+        }
+
+        private AssemblyDefinition AssemblyResolver_ResolveFailure(object sender, AssemblyNameReference reference)
+        {
+            byte[] content;
+            if (references.TryGetValue(reference.Name, out content))
+            {
+                using (System.IO.MemoryStream ms = new System.IO.MemoryStream(content))
+                {
+                    return AssemblyDefinition.ReadAssembly(ms);
+                }
+            }
+            else
+                return null;
         }
 
         public void RegisterCLRMethodRedirection(MethodBase mi, CLRRedirectionDelegate func)
@@ -532,8 +538,6 @@ namespace ILRuntime.Runtime.Enviorment
                     mapTypeToken[bt.GetHashCode()] = bt;
                     if (bt is CLRType)
                     {
-                        clrTypeMapping[bt.TypeForCLR] = bt;
-
                         //It still make sense for CLRType, since CLR uses [T] for generics instead of <T>
                         StringBuilder sb = new StringBuilder();
                         sb.Append(baseType);
@@ -542,9 +546,9 @@ namespace ILRuntime.Runtime.Enviorment
                         {
                             if (i > 0)
                                 sb.Append(",");
-                            /*if (genericParams[i].Contains(","))
+                            if (genericParams[i].Contains(","))
                                 sb.Append(genericParams[i].Substring(0, genericParams[i].IndexOf(',')));
-                            else*/
+                            else
                                 sb.Append(genericParams[i]);
                         }
                         sb.Append('>');
@@ -557,8 +561,6 @@ namespace ILRuntime.Runtime.Enviorment
                 if (isArray)
                 {
                     bt = bt.MakeArrayType(1);
-                    if (bt is CLRType)
-                        clrTypeMapping[bt.TypeForCLR] = bt;
                     mapType[bt.FullName] = bt;
                     mapTypeToken[bt.GetHashCode()] = bt;
                     if (!isByRef)
@@ -571,8 +573,6 @@ namespace ILRuntime.Runtime.Enviorment
                 if (isByRef)
                 {
                     res = bt.MakeByRefType();
-                    if (bt is CLRType)
-                        clrTypeMapping[bt.TypeForCLR] = bt;
                     mapType[fullname] = res;
                     mapType[res.FullName] = res;
                     mapTypeToken[res.GetHashCode()] = res;
@@ -652,7 +652,7 @@ namespace ILRuntime.Runtime.Enviorment
                                 name = name.Substring(1, name.Length - 2);
                             if (!string.IsNullOrEmpty(name))
                                 genericParams.Add(name);
-                            else if (!string.IsNullOrEmpty(name))
+                            else
                             {
                                 if (!isArray)
                                 {
@@ -662,11 +662,6 @@ namespace ILRuntime.Runtime.Enviorment
                                 {
                                     baseType += "[]";
                                 }
-                            }
-                            else
-                            {
-                                sb.Append("<>");
-                                continue;
                             }
                             sb.Length = 0;
                             continue;
@@ -726,8 +721,8 @@ namespace ILRuntime.Runtime.Enviorment
                 }
                 if (_ref.IsByReference)
                 {
-                    var et = ((ByReferenceType)_ref).ElementType;
-                    bool valid = !et.ContainsGenericParameter;
+                    var et = _ref.GetElementType();
+                    bool valid = !et.IsGenericParameter;
                     var t = GetType(et, contextType, contextMethod);
                     if (t != null)
                     {
@@ -738,11 +733,9 @@ namespace ILRuntime.Runtime.Enviorment
                             ((ILType)res).TypeReference = _ref;
                         }
                         if (valid)
-                        {
                             mapTypeToken[hash] = res;
-                            if (!string.IsNullOrEmpty(res.FullName))
-                                mapType[res.FullName] = res;
-                        }
+                        if (!string.IsNullOrEmpty(res.FullName))
+                            mapType[res.FullName] = res;
                         return res;
                     }
                     return null;
@@ -750,7 +743,7 @@ namespace ILRuntime.Runtime.Enviorment
                 if (_ref.IsArray)
                 {
                     ArrayType at = (ArrayType)_ref;
-                    var t = GetType(at.ElementType, contextType, contextMethod);
+                    var t = GetType(_ref.GetElementType(), contextType, contextMethod);
                     if (t != null)
                     {
                         res = t.MakeArrayType(at.Rank);
@@ -801,7 +794,7 @@ namespace ILRuntime.Runtime.Enviorment
                         }
                         else
                             val = GetType(gType.GenericArguments[i], contextType, contextMethod);
-                        if (gType.GenericArguments[i].ContainsGenericParameter)
+                        if (val != null && gType.GenericArguments[i].ContainsGenericParameter)
                             dummyGenericInstance = true;
                         if (val != null)
                             genericArguments[i] = new KeyValuePair<string, IType>(key, val);

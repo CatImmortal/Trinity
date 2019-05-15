@@ -1,4 +1,4 @@
-﻿/* Copyright 2010-present MongoDB Inc.
+﻿/* Copyright 2010-2014 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ namespace MongoDB.Driver.Core.Operations
             var unprocessedRequests = CreateUnprocessedRequests(requests, writeErrors, isOrdered);
             var upserts = CreateUpserts(writeCommandResponse);
 
-            var n = writeCommandResponse == null ? 0 : writeCommandResponse.GetValue("n", 0).ToInt64();
+            var n = writeCommandResponse.GetValue("n", 0).ToInt64();
             var matchedCount = 0L;
             var deletedCount = 0L;
             var insertedCount = 0L;
@@ -64,7 +64,7 @@ namespace MongoDB.Driver.Core.Operations
                     case WriteRequestType.Update:
                         matchedCount = n - upserts.Count();
                         BsonValue nModified;
-                        if (writeCommandResponse != null && writeCommandResponse.TryGetValue("nModified", out nModified))
+                        if (writeCommandResponse.TryGetValue("nModified", out nModified))
                         {
                             modifiedCount = nModified.ToInt64();
                         }
@@ -248,7 +248,7 @@ namespace MongoDB.Driver.Core.Operations
         {
             var upserts = new List<BulkWriteOperationUpsert>();
 
-            if (writeCommandResponse != null && writeCommandResponse.Contains("upserted"))
+            if (writeCommandResponse.Contains("upserted"))
             {
                 foreach (BsonDocument value in writeCommandResponse["upserted"].AsBsonArray)
                 {
@@ -264,14 +264,13 @@ namespace MongoDB.Driver.Core.Operations
 
         private static BulkWriteConcernError CreateWriteConcernError(BsonDocument writeCommandResponse)
         {
-            if (writeCommandResponse != null && writeCommandResponse.Contains("writeConcernError"))
+            if (writeCommandResponse.Contains("writeConcernError"))
             {
                 var value = (BsonDocument)writeCommandResponse["writeConcernError"];
                 var code = value["code"].ToInt32();
-                var codeName = (string)value.GetValue("codeName", null);
                 var message = value["errmsg"].AsString;
                 var details = (BsonDocument)value.GetValue("errInfo", null);
-                return new BulkWriteConcernError(code, codeName, message, details);
+                return new BulkWriteConcernError(code, message, details);
             }
 
             return null;
@@ -280,7 +279,6 @@ namespace MongoDB.Driver.Core.Operations
         private static BulkWriteConcernError CreateWriteConcernErrorFromGetLastErrorResponse(BsonDocument getLastErrorResponse)
         {
             var code = getLastErrorResponse.GetValue("code", 64).ToInt32(); // default = WriteConcernFailed
-            var codeName = (string)getLastErrorResponse.GetValue("codeName", null);
 
             string message = null;
             BsonValue value;
@@ -299,7 +297,7 @@ namespace MongoDB.Driver.Core.Operations
 
             var details = new BsonDocument(getLastErrorResponse.Where(e => !new[] { "ok", "code", "err" }.Contains(e.Name)));
 
-            return new BulkWriteConcernError(code, codeName, message, details);
+            return new BulkWriteConcernError(code, message, details);
         }
 
         private static BulkWriteOperationError CreateWriteErrorFromGetLastErrorResponse(BsonDocument getLastErrorResponse)
@@ -313,7 +311,7 @@ namespace MongoDB.Driver.Core.Operations
         {
             var writeErrors = new List<BulkWriteOperationError>();
 
-            if (writeCommandResponse != null && writeCommandResponse.Contains("writeErrors"))
+            if (writeCommandResponse.Contains("writeErrors"))
             {
                 foreach (BsonDocument value in writeCommandResponse["writeErrors"].AsBsonArray)
                 {

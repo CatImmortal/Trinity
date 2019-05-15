@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using ETModel;
 
 namespace ETHotfix
@@ -8,7 +10,7 @@ namespace ETHotfix
 	{
 		public override void Awake(MailBoxComponent self)
 		{
-			self.MailboxType = MailboxType.MessageDispatcher;
+			self.ActorInterceptType = ActorInterceptType.None;
 			self.Queue.Clear();
 		}
 	}
@@ -16,9 +18,9 @@ namespace ETHotfix
 	[ObjectSystem]
 	public class MailBoxComponentAwake1System : AwakeSystem<MailBoxComponent, string>
 	{
-		public override void Awake(MailBoxComponent self, string mailboxType)
+		public override void Awake(MailBoxComponent self, string actorInterceptType)
 		{
-			self.MailboxType = mailboxType;
+			self.ActorInterceptType = actorInterceptType;
 			self.Queue.Clear();
 		}
 	}
@@ -28,7 +30,7 @@ namespace ETHotfix
 	{
 		public override void Start(MailBoxComponent self)
 		{
-			self.HandleAsync().Coroutine();
+			self.HandleAsync();
 		}
 	}
 
@@ -37,12 +39,12 @@ namespace ETHotfix
 	/// </summary>
 	public static class MailBoxComponentHelper
 	{
-		public static async ETTask AddLocation(this MailBoxComponent self)
+		public static async Task AddLocation(this MailBoxComponent self)
 		{
 			await Game.Scene.GetComponent<LocationProxyComponent>().Add(self.Entity.Id, self.Entity.InstanceId);
 		}
 
-		public static async ETTask RemoveLocation(this MailBoxComponent self)
+		public static async Task RemoveLocation(this MailBoxComponent self)
 		{
 			await Game.Scene.GetComponent<LocationProxyComponent>().Remove(self.Entity.Id);
 		}
@@ -61,20 +63,20 @@ namespace ETHotfix
 			t.SetResult(self.Queue.Dequeue());
 		}
 
-		private static ETTask<ActorMessageInfo> GetAsync(this MailBoxComponent self)
+		private static Task<ActorMessageInfo> GetAsync(this MailBoxComponent self)
 		{
 			if (self.Queue.Count > 0)
 			{
-				return ETTask.FromResult(self.Queue.Dequeue());
+				return Task.FromResult(self.Queue.Dequeue());
 			}
 
-			self.Tcs = new ETTaskCompletionSource<ActorMessageInfo>();
+			self.Tcs = new TaskCompletionSource<ActorMessageInfo>();
 			return self.Tcs.Task;
 		}
 
-		public static async ETVoid HandleAsync(this MailBoxComponent self)
+		public static async void HandleAsync(this MailBoxComponent self)
 		{
-			MailboxDispatcherComponent mailboxDispatcherComponent = Game.Scene.GetComponent<MailboxDispatcherComponent>();
+			ActorMessageDispatherComponent actorMessageDispatherComponent = Game.Scene.GetComponent<ActorMessageDispatherComponent>();
 			
 			long instanceId = self.InstanceId;
 			
@@ -93,8 +95,8 @@ namespace ETHotfix
 						return;
 					}
 
-					// 根据这个mailbox类型分发给相应的处理
-					await mailboxDispatcherComponent.Handle(self, info);
+					// 根据这个actor的类型分发给相应的ActorHandler处理
+					await actorMessageDispatherComponent.Handle(self, info);
 				}
 				catch (Exception e)
 				{

@@ -134,10 +134,7 @@ namespace ILRuntime.CLR.TypeSystem
         {
             get { return false; }
         }
-        public bool IsEnum
-        {
-            get { return false; }
-        }
+
         public bool IsInterface
         {
             get { return false; }

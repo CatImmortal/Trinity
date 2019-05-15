@@ -1,4 +1,4 @@
-/* Copyright 2010-present MongoDB Inc.
+/* Copyright 2010-2017 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ using System;
 using MongoDB.Bson;
 using MongoDB.Driver.Core.Misc;
 using System.Collections.Generic;
-using MongoDB.Driver.Core.Connections;
 
 namespace MongoDB.Driver.Core.Operations
 {
@@ -122,13 +121,6 @@ namespace MongoDB.Driver.Core.Operations
         public UpdateType UpdateType
         {
             get { return _updateType; }
-        }
-
-        // public methods
-        /// <inheritdoc />
-        public override bool IsRetryable(ConnectionDescription connectionDescription)
-        {
-            return !_isMulti;
         }
     }
 }

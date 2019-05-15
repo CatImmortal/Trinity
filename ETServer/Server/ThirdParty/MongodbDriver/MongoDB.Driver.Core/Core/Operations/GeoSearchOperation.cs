@@ -1,4 +1,4 @@
-﻿/* Copyright 2015-present MongoDB Inc.
+﻿/* Copyright 2015-2016 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -19,10 +19,8 @@ using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver.Core.Bindings;
-using MongoDB.Driver.Core.Connections;
 using MongoDB.Driver.Core.Misc;
 using MongoDB.Driver.Core.WireProtocol.Messages.Encoders;
-using MongoDB.Shared;
 
 namespace MongoDB.Driver.Core.Operations
 {
@@ -89,7 +87,7 @@ namespace MongoDB.Driver.Core.Operations
         public TimeSpan? MaxTime
         {
             get { return _maxTime; }
-            set { _maxTime = Ensure.IsNullOrInfiniteOrGreaterThanOrEqualToZero(value, nameof(value)); }
+            set { _maxTime = value; }
         }
 
         /// <summary>
@@ -140,9 +138,9 @@ namespace MongoDB.Driver.Core.Operations
             Ensure.IsNotNull(binding, nameof(binding));
             using (var channelSource = binding.GetReadChannelSource(cancellationToken))
             using (var channel = channelSource.GetChannel(cancellationToken))
-            using (var channelBinding = new ChannelReadBinding(channelSource.Server, channel, binding.ReadPreference, binding.Session.Fork()))
+            using (var channelBinding = new ChannelReadBinding(channelSource.Server, channel, binding.ReadPreference))
             {
-                var operation = CreateOperation(channel, channelBinding);
+                var operation = CreateOperation(channel.ConnectionDescription.ServerVersion);
                 return operation.Execute(channelBinding, cancellationToken);
             }
         }
@@ -153,18 +151,17 @@ namespace MongoDB.Driver.Core.Operations
             Ensure.IsNotNull(binding, nameof(binding));
             using (var channelSource = await binding.GetReadChannelSourceAsync(cancellationToken).ConfigureAwait(false))
             using (var channel = await channelSource.GetChannelAsync(cancellationToken).ConfigureAwait(false))
-            using (var channelBinding = new ChannelReadBinding(channelSource.Server, channel, binding.ReadPreference, binding.Session.Fork()))
+            using (var channelBinding = new ChannelReadBinding(channelSource.Server, channel, binding.ReadPreference))
             {
-                var operation = CreateOperation(channel, channelBinding);
+                var operation = CreateOperation(channel.ConnectionDescription.ServerVersion);
                 return await operation.ExecuteAsync(channelBinding, cancellationToken).ConfigureAwait(false);
             }
         }
 
-        internal BsonDocument CreateCommand(ConnectionDescription connectionDescription, ICoreSession session)
+        internal BsonDocument CreateCommand(SemanticVersion serverVersion)
         {
-            Feature.ReadConcern.ThrowIfNotSupported(connectionDescription.ServerVersion, _readConcern);
+            Feature.ReadConcern.ThrowIfNotSupported(serverVersion, _readConcern);
 
-            var readConcern = ReadConcernHelper.GetReadConcernForCommand(session, connectionDescription, _readConcern);
             return new BsonDocument
             {
                 { "geoSearch", _collectionNamespace.CollectionName },
@@ -172,14 +169,14 @@ namespace MongoDB.Driver.Core.Operations
                 { "limit", () => _limit.Value, _limit.HasValue },
                 { "maxDistance", () => _maxDistance.Value, _maxDistance.HasValue },
                 { "search", _search, _search != null },
-                { "maxTimeMS", () => MaxTimeHelper.ToMaxTimeMS(_maxTime.Value), _maxTime.HasValue },
-                { "readConcern", readConcern, readConcern != null }
+                { "maxTimeMS", () => _maxTime.Value.TotalMilliseconds, _maxTime.HasValue },
+                { "readConcern", _readConcern.ToBsonDocument(), !_readConcern.IsServerDefault }
             };
         }
 
-        private ReadCommandOperation<TResult> CreateOperation(IChannel channel, IBinding binding)
+        private ReadCommandOperation<TResult> CreateOperation(SemanticVersion serverVersion)
         {
-            var command = CreateCommand(channel.ConnectionDescription, binding.Session);
+            var command = CreateCommand(serverVersion);
             return new ReadCommandOperation<TResult>(
                 _collectionNamespace.DatabaseNamespace,
                 command,

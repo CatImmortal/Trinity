@@ -28,7 +28,6 @@ namespace ILRuntime.Runtime.Intepreter
         public StackObject* LastStepFrameBase { get; set; }
         public int LastStepInstructionIndex { get; set; }
         StackObject* ValueTypeBasePointer;
-        bool mainthreadLock;
         public ILIntepreter(Enviorment.AppDomain domain)
         {
             this.domain = domain;
@@ -45,18 +44,6 @@ namespace ILRuntime.Runtime.Intepreter
         {
             //Clear old debug state
             ClearDebugState();
-#if DEBUG && (UNITY_EDITOR || UNITY_ANDROID || UNITY_IPHONE)
-            if(domain.UnityMainThreadID == Thread.CurrentThread.ManagedThreadId)
-            {
-                mainthreadLock = true;
-                while (mainthreadLock)
-                {
-                    domain.DebugService.ResolvePendingRequests();
-                    Thread.Sleep(10);
-                }
-                return;
-            }
-#endif
             lock (_lockObj)
             {
                 Monitor.Wait(_lockObj);
@@ -65,7 +52,6 @@ namespace ILRuntime.Runtime.Intepreter
 
         public void Resume()
         {
-            mainthreadLock = false;
             lock (_lockObj)
                 Monitor.Pulse(_lockObj);
         }
@@ -127,7 +113,7 @@ namespace ILRuntime.Runtime.Intepreter
             int finallyEndAddress = 0;
 
             esp = frame.BasePointer;
-            var arg = Minus(frame.LocalVarPointer, method.ParameterCount);
+            StackObject* arg = Minus(frame.LocalVarPointer, method.ParameterCount);
             IList<object> mStack = stack.ManagedStack;
             int paramCnt = method.ParameterCount;
             if (method.HasThis)//this parameter is always object reference
@@ -136,16 +122,11 @@ namespace ILRuntime.Runtime.Intepreter
                 paramCnt++;
             }
             unhandledException = false;
-            StackObject* objRef, objRef2, dst, val, a, b, arrRef;
-            object obj;
-            IType type;
-            Type clrType;
-            int intVal;
 
             //Managed Stack reserved for arguments(In case of starg)
             for (int i = 0; i < paramCnt; i++)
             {
-                a = Add(arg, i);
+                var a = Add(arg, i);
                 switch (a->ObjectType)
                 {
                     case ObjectTypes.Null:
@@ -166,7 +147,7 @@ namespace ILRuntime.Runtime.Intepreter
             }
 
             stack.PushFrame(ref frame);
-            
+
             int locBase = mStack.Count;
             //Managed Stack reserved for local variable
             for (int i = 0; i < method.LocalVariableCount; i++)
@@ -201,7 +182,7 @@ namespace ILRuntime.Runtime.Intepreter
                         }
                         else
                         {
-                            obj = ((CLRType)t).CreateDefaultInstance();
+                            var obj = ((CLRType)t).CreateDefaultInstance();
                             loc->ObjectType = ObjectTypes.Object;
                             loc->Value = locBase + i;
                             mStack[locBase + i] = obj;
@@ -224,7 +205,6 @@ namespace ILRuntime.Runtime.Intepreter
                     }
                 }
             }
-
             var bp = stack.ValueTypeStackPointer;
             ValueTypeBasePointer = bp;
             fixed (OpCode* ptr = body)
@@ -271,24 +251,24 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Ldarga:
                             case OpCodeEnum.Ldarga_S:
                                 {
-                                    a = Add(arg, ip->TokenInteger);
+                                    var a = Add(arg, ip->TokenInteger);
                                     esp->ObjectType = ObjectTypes.StackObjectReference;
-                                    *(long*)&esp->Value = (long)a;
+                                    *(StackObject**)&esp->Value = a;
                                     esp++;
                                 }
                                 break;
                             case OpCodeEnum.Starg:
                             case OpCodeEnum.Starg_S:
                                 {
-                                    a = Add(arg, ip->TokenInteger);
-                                    val = esp - 1;
+                                    var a = Add(arg, ip->TokenInteger);
+                                    var val = esp - 1;
                                     int idx = a->Value;
                                     bool isObj = a->ObjectType >= ObjectTypes.Object;
                                     if (val->ObjectType >= ObjectTypes.Object)
                                     {
                                         if (a->ObjectType == ObjectTypes.ValueTypeObjectReference)
                                         {
-                                            dst = ILIntepreter.ResolveReference(a);
+                                            var dst = *((StackObject**)&a->Value);
                                             CopyValueTypeToStack(dst, mStack[val->Value], mStack);
                                         }
                                         else
@@ -394,19 +374,19 @@ namespace ILRuntime.Runtime.Intepreter
                                 {
                                     var v = Add(frame.LocalVarPointer, ip->TokenInteger);
                                     esp->ObjectType = ObjectTypes.StackObjectReference;
-                                    *(long*)&esp->Value = (long)v;
+                                    *(StackObject**)&esp->Value = v;
                                     esp++;
                                 }
                                 break;
                             case OpCodeEnum.Ldobj:
                                 {
-                                    objRef = esp - 1;
+                                    var objRef = esp - 1;
                                     switch (objRef->ObjectType)
                                     {
                                         case ObjectTypes.ArrayReference:
                                             {
                                                 var t = AppDomain.GetType(ip->TokenInteger);
-                                                obj = mStack[objRef->Value];
+                                                var obj = mStack[objRef->Value];
                                                 var idx = objRef->ValueLow;
                                                 Free(objRef);
                                                 LoadFromArrayReference(obj, idx, objRef, t, mStack);
@@ -414,18 +394,18 @@ namespace ILRuntime.Runtime.Intepreter
                                             break;
                                         case ObjectTypes.StackObjectReference:
                                             {
-                                                objRef2 = GetObjectAndResolveReference(objRef);
-                                                *objRef = *objRef2;
+                                                var obj = GetObjectAndResolveReference(objRef);
+                                                *objRef = *obj;
                                                 if (objRef->ObjectType >= ObjectTypes.Object)
                                                 {
                                                     objRef->Value = mStack.Count;
-                                                    mStack.Add(mStack[objRef2->Value]);
+                                                    mStack.Add(mStack[obj->Value]);
                                                 }
                                             }
                                             break;
                                         case ObjectTypes.FieldReference:
                                             {
-                                                obj = mStack[objRef->Value];
+                                                var obj = mStack[objRef->Value];
                                                 int idx = objRef->ValueLow;
                                                 Free(objRef);
                                                 if (obj is ILTypeInstance)
@@ -451,7 +431,7 @@ namespace ILRuntime.Runtime.Intepreter
                                                 }
                                                 else
                                                 {
-                                                    obj = ((CLRType)t).GetFieldValue(idx, null);
+                                                    var obj = ((CLRType)t).GetFieldValue(idx, null);
                                                     PushObject(objRef, mStack, obj);
                                                 }
                                             }
@@ -463,8 +443,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Stobj:
                                 {
-                                    objRef = esp - 1 - 1;
-                                    val = esp - 1;
+                                    var objRef = esp - 1 - 1;
+                                    var val = esp - 1;
                                     switch (objRef->ObjectType)
                                     {
                                         case ObjectTypes.ArrayReference:
@@ -481,7 +461,7 @@ namespace ILRuntime.Runtime.Intepreter
                                                     switch (val->ObjectType)
                                                     {
                                                         case ObjectTypes.Object:
-                                                            dst = ILIntepreter.ResolveReference(objRef);
+                                                            StackObject* dst = *(StackObject**)&objRef->Value;
                                                             CopyValueTypeToStack(dst, mStack[val->Value], mStack);
                                                             break;
                                                         case ObjectTypes.ValueTypeObjectReference:
@@ -507,7 +487,7 @@ namespace ILRuntime.Runtime.Intepreter
                                             break;
                                         case ObjectTypes.FieldReference:
                                             {
-                                                obj = mStack[objRef->Value];
+                                                var obj = mStack[objRef->Value];
                                                 int idx = objRef->ValueLow;
                                                 if (obj is ILTypeInstance)
                                                 {
@@ -634,8 +614,8 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Ldind_U2:
                             case OpCodeEnum.Ldind_U4:
                                 {
-                                    val = GetObjectAndResolveReference(esp - 1);
-                                    dst = esp - 1;
+                                    var val = GetObjectAndResolveReference(esp - 1);
+                                    var dst = esp - 1;
                                     switch (val->ObjectType)
                                     {
                                         case ObjectTypes.FieldReference:
@@ -666,8 +646,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Ldind_I8:
                                 {
-                                    val = GetObjectAndResolveReference(esp - 1);
-                                    dst = esp - 1;
+                                    var val = GetObjectAndResolveReference(esp - 1);
+                                    var dst = esp - 1;
                                     switch (val->ObjectType)
                                     {
                                         case ObjectTypes.FieldReference:
@@ -697,8 +677,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Ldind_R4:
                                 {
-                                    val = GetObjectAndResolveReference(esp - 1);
-                                    dst = esp - 1;
+                                    var val = GetObjectAndResolveReference(esp - 1);
+                                    var dst = esp - 1;
                                     switch (val->ObjectType)
                                     {
                                         case ObjectTypes.FieldReference:
@@ -729,8 +709,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Ldind_R8:
                                 {
-                                    val = GetObjectAndResolveReference(esp - 1);
-                                    dst = esp - 1;
+                                    var val = GetObjectAndResolveReference(esp - 1);
+                                    var dst = esp - 1;
                                     switch (val->ObjectType)
                                     {
                                         case ObjectTypes.FieldReference:
@@ -760,8 +740,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Ldind_Ref:
                                 {
-                                    val = GetObjectAndResolveReference(esp - 1);
-                                    dst = esp - 1;
+                                    var val = GetObjectAndResolveReference(esp - 1);
+                                    var dst = esp - 1;
                                     switch (val->ObjectType)
                                     {
                                         case ObjectTypes.FieldReference:
@@ -796,8 +776,8 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Stind_I4:
                             case OpCodeEnum.Stind_R4:
                                 {
-                                    dst = GetObjectAndResolveReference(esp - 1 - 1);
-                                    val = esp - 1;
+                                    var dst = GetObjectAndResolveReference(esp - 1 - 1);
+                                    var val = esp - 1;
                                     switch (dst->ObjectType)
                                     {
                                         case ObjectTypes.FieldReference:
@@ -823,8 +803,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Stind_I8:
                                 {
-                                    dst = GetObjectAndResolveReference(esp - 1 - 1);
-                                    val = esp - 1;
+                                    var dst = GetObjectAndResolveReference(esp - 1 - 1);
+                                    var val = esp - 1;
                                     switch (dst->ObjectType)
                                     {
                                         case ObjectTypes.FieldReference:
@@ -852,8 +832,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Stind_R8:
                                 {
-                                    dst = GetObjectAndResolveReference(esp - 1 - 1);
-                                    val = esp - 1;
+                                    var dst = GetObjectAndResolveReference(esp - 1 - 1);
+                                    var val = esp - 1;
                                     switch (dst->ObjectType)
                                     {
                                         case ObjectTypes.FieldReference:
@@ -881,8 +861,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Stind_Ref:
                                 {
-                                    dst = GetObjectAndResolveReference(esp - 1 - 1);
-                                    val = esp - 1;
+                                    var dst = GetObjectAndResolveReference(esp - 1 - 1);
+                                    var val = esp - 1;
                                     switch (dst->ObjectType)
                                     {
                                         case ObjectTypes.FieldReference:
@@ -925,8 +905,8 @@ namespace ILRuntime.Runtime.Intepreter
                             #region Althemetics
                             case OpCodeEnum.Add:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    StackObject* b = esp - 1;
+                                    StackObject* a = esp - 1 - 1;
                                     esp = a;
                                     switch (a->ObjectType)
                                     {
@@ -950,8 +930,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Sub:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    StackObject* b = esp - 1;
+                                    StackObject* a = esp - 1 - 1;
                                     esp = a;
                                     switch (a->ObjectType)
                                     {
@@ -975,8 +955,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Mul:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    StackObject* b = esp - 1;
+                                    StackObject* a = esp - 1 - 1;
                                     esp = a;
                                     switch (a->ObjectType)
                                     {
@@ -1000,8 +980,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Div:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    StackObject* b = esp - 1;
+                                    StackObject* a = esp - 1 - 1;
                                     esp = a;
                                     switch (a->ObjectType)
                                     {
@@ -1025,8 +1005,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Div_Un:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    StackObject* b = esp - 1;
+                                    StackObject* a = esp - 1 - 1;
                                     esp = a;
                                     switch (a->ObjectType)
                                     {
@@ -1044,8 +1024,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Rem:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    StackObject* b = esp - 1;
+                                    StackObject* a = esp - 1 - 1;
                                     esp = a;
                                     switch (a->ObjectType)
                                     {
@@ -1069,8 +1049,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Rem_Un:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    StackObject* b = esp - 1;
+                                    StackObject* a = esp - 1 - 1;
                                     esp = a;
                                     switch (a->ObjectType)
                                     {
@@ -1088,8 +1068,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Xor:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    StackObject* b = esp - 1;
+                                    StackObject* a = esp - 1 - 1;
                                     esp = a;
                                     switch (a->ObjectType)
                                     {
@@ -1107,8 +1087,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.And:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    StackObject* b = esp - 1;
+                                    StackObject* a = esp - 1 - 1;
                                     esp = a;
                                     switch (a->ObjectType)
                                     {
@@ -1126,8 +1106,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Or:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    StackObject* b = esp - 1;
+                                    StackObject* a = esp - 1 - 1;
                                     esp = a;
                                     switch (a->ObjectType)
                                     {
@@ -1145,8 +1125,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Shl:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    StackObject* b = esp - 1;
+                                    StackObject* a = esp - 1 - 1;
                                     esp = a;
                                     int bits = b->Value;
                                     switch (a->ObjectType)
@@ -1165,8 +1145,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Shr:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    StackObject* b = esp - 1;
+                                    StackObject* a = esp - 1 - 1;
                                     esp = a;
                                     int bits = b->Value;
                                     switch (a->ObjectType)
@@ -1185,8 +1165,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Shr_Un:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    StackObject* b = esp - 1;
+                                    StackObject* a = esp - 1 - 1;
                                     esp = a;
                                     int bits = b->Value;
                                     switch (a->ObjectType)
@@ -1205,7 +1185,7 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Not:
                                 {
-                                    a = esp - 1;
+                                    StackObject* a = esp - 1;
                                     switch (a->ObjectType)
                                     {
                                         case ObjectTypes.Long:
@@ -1221,7 +1201,7 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Neg:
                                 {
-                                    a = esp - 1;
+                                    StackObject* a = esp - 1;
                                     switch (a->ObjectType)
                                     {
                                         case ObjectTypes.Long:
@@ -1308,8 +1288,8 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Beq:
                             case OpCodeEnum.Beq_S:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    var b = esp - 1;
+                                    var a = esp - 1 - 1;
                                     bool transfer = false;
                                     if (a->ObjectType == b->ObjectType)
                                     {
@@ -1351,8 +1331,8 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Bne_Un:
                             case OpCodeEnum.Bne_Un_S:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    var b = esp - 1;
+                                    var a = esp - 1 - 1;
                                     bool transfer = false;
                                     if (a->ObjectType == b->ObjectType)
                                     {
@@ -1396,8 +1376,8 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Bgt:
                             case OpCodeEnum.Bgt_S:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    var b = esp - 1;
+                                    var a = esp - 1 - 1;
                                     esp = esp - 1 - 1;
                                     bool transfer = false;
                                     switch (esp->ObjectType)
@@ -1429,8 +1409,8 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Bgt_Un:
                             case OpCodeEnum.Bgt_Un_S:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    var b = esp - 1;
+                                    var a = esp - 1 - 1;
                                     esp = esp - 1 - 1;
                                     bool transfer = false;
                                     switch (esp->ObjectType)
@@ -1462,8 +1442,8 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Bge:
                             case OpCodeEnum.Bge_S:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    var b = esp - 1;
+                                    var a = esp - 1 - 1;
                                     esp = esp - 1 - 1;
                                     bool transfer = false;
                                     switch (esp->ObjectType)
@@ -1496,8 +1476,8 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Bge_Un:
                             case OpCodeEnum.Bge_Un_S:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    var b = esp - 1;
+                                    var a = esp - 1 - 1;
                                     esp = esp - 1 - 1;
                                     bool transfer = false;
                                     switch (esp->ObjectType)
@@ -1529,8 +1509,8 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Blt:
                             case OpCodeEnum.Blt_S:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    var b = esp - 1;
+                                    var a = esp - 1 - 1;
                                     esp = esp - 1 - 1;
                                     bool transfer = false;
                                     switch (esp->ObjectType)
@@ -1562,8 +1542,8 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Blt_Un:
                             case OpCodeEnum.Blt_Un_S:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    var b = esp - 1;
+                                    var a = esp - 1 - 1;
                                     esp = esp - 1 - 1;
                                     bool transfer = false;
                                     switch (esp->ObjectType)
@@ -1595,8 +1575,8 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Ble:
                             case OpCodeEnum.Ble_S:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    var b = esp - 1;
+                                    var a = esp - 1 - 1;
                                     esp = esp - 1 - 1;
                                     bool transfer = false;
                                     switch (esp->ObjectType)
@@ -1628,8 +1608,8 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Ble_Un:
                             case OpCodeEnum.Ble_Un_S:
                                 {
-                                    b = esp - 1;
-                                    a = esp - 1 - 1;
+                                    var b = esp - 1;
+                                    var a = esp - 1 - 1;
                                     esp = esp - 1 - 1;
                                     bool transfer = false;
                                     switch (esp->ObjectType)
@@ -1664,13 +1644,13 @@ namespace ILRuntime.Runtime.Intepreter
                                 continue;
                             case OpCodeEnum.Switch:
                                 {
-                                    intVal = (esp - 1)->Value;
+                                    var val = (esp - 1)->Value;
                                     Free(esp - 1);
                                     esp--;
                                     var table = method.JumpTables[ip->TokenInteger];
-                                    if (intVal >= 0 && intVal < table.Length)
+                                    if (val >= 0 && val < table.Length)
                                     {
-                                        ip = ptr + table[intVal];
+                                        ip = ptr + table[val];
                                         continue;
                                     }
                                 }
@@ -1737,18 +1717,18 @@ namespace ILRuntime.Runtime.Intepreter
                                             {
                                                 if (code == OpCodeEnum.Callvirt)
                                                 {
-                                                    objRef = GetObjectAndResolveReference(Minus(esp, ilm.ParameterCount + 1));
+                                                    var objRef = GetObjectAndResolveReference(Minus(esp, ilm.ParameterCount + 1));
                                                     if (objRef->ObjectType == ObjectTypes.Null)
                                                         throw new NullReferenceException();
                                                     if (objRef->ObjectType == ObjectTypes.ValueTypeObjectReference)
                                                     {
-                                                        dst = ILIntepreter.ResolveReference(objRef);
+                                                        StackObject* dst = *(StackObject**)&objRef->Value;
                                                         var ft = domain.GetType(dst->Value) as ILType;
                                                         ilm = ft.GetVirtualMethod(ilm) as ILMethod;
                                                     }
                                                     else
                                                     {
-                                                        obj = mStack[objRef->Value];
+                                                        var obj = mStack[objRef->Value];
                                                         if (obj == null)
                                                             throw new NullReferenceException();
                                                         ilm = ((ILTypeInstance)obj).Type.GetVirtualMethod(ilm) as ILMethod;
@@ -1833,10 +1813,10 @@ namespace ILRuntime.Runtime.Intepreter
                             #region FieldOperation
                             case OpCodeEnum.Stfld:
                                 {
-                                    objRef = GetObjectAndResolveReference(esp - 1 - 1);
+                                    var objRef = GetObjectAndResolveReference(esp - 1 - 1);
                                     if (objRef->ObjectType == ObjectTypes.ValueTypeObjectReference)
                                     {
-                                        dst = ILIntepreter.ResolveReference(objRef);
+                                        StackObject* dst = *(StackObject**)&objRef->Value;
                                         var ft = domain.GetType(dst->Value);
                                         if (ft is ILType)
                                             CopyToValueTypeField(dst, (int)ip->TokenLong, esp - 1, mStack);
@@ -1845,23 +1825,23 @@ namespace ILRuntime.Runtime.Intepreter
                                     }
                                     else
                                     {
-                                        obj = RetriveObject(objRef, mStack);
+                                        object obj = RetriveObject(objRef, mStack);
 
                                         if (obj != null)
                                         {
                                             if (obj is ILTypeInstance)
                                             {
                                                 ILTypeInstance instance = obj as ILTypeInstance;
-                                                val = esp - 1;
+                                                StackObject* val = esp - 1;
                                                 instance.AssignFromStack((int)ip->TokenLong, val, AppDomain, mStack);
                                             }
                                             else
                                             {
                                                 var t = obj.GetType();
-                                                type = AppDomain.GetType((int)(ip->TokenLong >> 32));
+                                                var type = AppDomain.GetType((int)(ip->TokenLong >> 32));
                                                 if (type != null)
                                                 {
-                                                    val = esp - 1;
+                                                    var val = esp - 1;
                                                     var fieldToken = (int)ip->TokenLong;
                                                     var f = ((CLRType)type).GetField(fieldToken);
                                                     ((CLRType)type).SetFieldValue(fieldToken, ref obj, f.FieldType.CheckCLRTypes(CheckAndCloneValueType(StackObject.ToObject(val, domain, mStack), domain)));
@@ -1910,7 +1890,7 @@ namespace ILRuntime.Runtime.Intepreter
                                                                 break;
                                                             case ObjectTypes.ValueTypeObjectReference:
                                                                 {
-                                                                    dst = ILIntepreter.ResolveReference(objRef);
+                                                                    var dst = *(StackObject**)&objRef->Value;
                                                                     var ct = domain.GetType(dst->Value) as CLRType;
                                                                     var binder = ct.ValueTypeBinder;
                                                                     binder.CopyValueTypeToStack(obj, dst, mStack);
@@ -1936,10 +1916,10 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Ldfld:
                                 {
                                     var ret = esp - 1;
-                                    objRef = GetObjectAndResolveReference(ret);
+                                    StackObject* objRef = GetObjectAndResolveReference(ret);
                                     if (objRef->ObjectType == ObjectTypes.ValueTypeObjectReference)
                                     {
-                                        dst = ILIntepreter.ResolveReference(objRef);
+                                        var dst = *(StackObject**)&objRef->Value;
                                         var ft = domain.GetType(dst->Value);
                                         if (ft is ILType)
                                             dst = Minus(dst, (int)ip->TokenLong + 1);
@@ -1951,7 +1931,7 @@ namespace ILRuntime.Runtime.Intepreter
                                     }
                                     else
                                     {
-                                        obj = RetriveObject(objRef, mStack);
+                                        object obj = RetriveObject(objRef, mStack);
                                         Free(ret);
                                         if (obj != null)
                                         {
@@ -1963,15 +1943,15 @@ namespace ILRuntime.Runtime.Intepreter
                                             else
                                             {
                                                 //var t = obj.GetType();
-                                                type = AppDomain.GetType((int)(ip->TokenLong >> 32));
+                                                var type = AppDomain.GetType((int)(ip->TokenLong >> 32));
                                                 if (type != null)
                                                 {
                                                     var token = (int)ip->TokenLong;
                                                     var ft = ((CLRType)type).GetField(token);
-                                                    obj = ((CLRType)type).GetFieldValue(token, obj);
-                                                    if (obj is CrossBindingAdaptorType)
-                                                        obj = ((CrossBindingAdaptorType)obj).ILInstance;
-                                                    PushObject(ret, mStack, obj, ft.FieldType == typeof(object));
+                                                    var val = ((CLRType)type).GetFieldValue(token, obj);
+                                                    if (val is CrossBindingAdaptorType)
+                                                        val = ((CrossBindingAdaptorType)val).ILInstance;
+                                                    PushObject(ret, mStack, val, ft.FieldType == typeof(object));
                                                 }
                                                 else
                                                     throw new TypeLoadException();
@@ -1984,28 +1964,28 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Ldflda:
                                 {
-                                    objRef = GetObjectAndResolveReference(esp - 1);
+                                    StackObject* objRef = GetObjectAndResolveReference(esp - 1);
                                     if (objRef->ObjectType == ObjectTypes.ValueTypeObjectReference)
                                     {
-                                        dst = esp - 1;
+                                        var dst = esp - 1;
                                         var ft = domain.GetType((int)(ip->TokenLong >> 32));
                                         StackObject* fieldAddr;
                                         if (ft is ILType)
                                         {
-                                            fieldAddr = Minus(ILIntepreter.ResolveReference(objRef), (int)ip->TokenLong + 1);                                            
+                                            fieldAddr = Minus(*(StackObject**)&objRef->Value, (int)ip->TokenLong + 1);                                            
                                         }
                                         else
                                         {
-                                            fieldAddr = Minus(ILIntepreter.ResolveReference(objRef), ((CLRType)ft).FieldIndexMapping[(int)ip->TokenLong] + 1);
+                                            fieldAddr = Minus(*(StackObject**)&objRef->Value, ((CLRType)ft).FieldIndexMapping[(int)ip->TokenLong] + 1);
                                         }
                                         StackObject valRef = *dst;
                                         dst->ObjectType = ObjectTypes.StackObjectReference;
-                                        *(long*)&dst->Value = (long) fieldAddr;
+                                        *(StackObject**)&dst->Value = fieldAddr;
                                         FreeStackValueType(&valRef);
                                     }
                                     else
                                     {
-                                        obj = RetriveObject(objRef, mStack);
+                                        object obj = RetriveObject(objRef, mStack);
 
                                         Free(esp - 1);
                                         if (obj != null)
@@ -2031,13 +2011,13 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Stsfld:
                                 {
-                                    type = AppDomain.GetType((int)(ip->TokenLong >> 32));
+                                    IType type = AppDomain.GetType((int)(ip->TokenLong >> 32));
                                     if (type != null)
                                     {
                                         if (type is ILType)
                                         {
                                             ILType t = type as ILType;
-                                            val = esp - 1;
+                                            StackObject* val = esp - 1;
                                             t.StaticInstance.AssignFromStack((int)ip->TokenLong, val, AppDomain, mStack);
                                         }
                                         else
@@ -2045,7 +2025,7 @@ namespace ILRuntime.Runtime.Intepreter
                                             CLRType t = type as CLRType;
                                             int idx = (int)ip->TokenLong;
                                             var f = t.GetField(idx);
-                                            val = esp - 1;
+                                            StackObject* val = esp - 1;
                                             t.SetStaticFieldValue(idx, f.FieldType.CheckCLRTypes(CheckAndCloneValueType(StackObject.ToObject(val, domain, mStack), domain)));
                                         }
                                     }
@@ -2057,7 +2037,7 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Ldsfld:
                                 {
-                                    type = AppDomain.GetType((int)(ip->TokenLong >> 32));
+                                    IType type = AppDomain.GetType((int)(ip->TokenLong >> 32));
                                     if (type != null)
                                     {
                                         if (type is ILType)
@@ -2070,10 +2050,10 @@ namespace ILRuntime.Runtime.Intepreter
                                             CLRType t = type as CLRType;
                                             int idx = (int)ip->TokenLong;
                                             var f = t.GetField(idx);
-                                            obj = t.GetFieldValue(idx, null);
-                                            if (obj is CrossBindingAdaptorType)
-                                                obj = ((CrossBindingAdaptorType)obj).ILInstance;
-                                            PushObject(esp, mStack, obj, f.FieldType == typeof(object));
+                                            var val = t.GetFieldValue(idx, null);
+                                            if (val is CrossBindingAdaptorType)
+                                                val = ((CrossBindingAdaptorType)val).ILInstance;
+                                            PushObject(esp, mStack, val, f.FieldType == typeof(object));
                                         }
                                     }
                                     else
@@ -2083,10 +2063,10 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Ldsflda:
                                 {
-                                    int typeId = (int)(ip->TokenLong >> 32);
+                                    int type = (int)(ip->TokenLong >> 32);
                                     int fieldIdx = (int)(ip->TokenLong);
                                     esp->ObjectType = ObjectTypes.StaticFieldReference;
-                                    esp->Value = typeId;
+                                    esp->Value = type;
                                     esp->ValueLow = fieldIdx;
                                     esp++;
                                 }
@@ -2097,7 +2077,7 @@ namespace ILRuntime.Runtime.Intepreter
                                     {
                                         case 0:
                                             {
-                                                type = AppDomain.GetType((int)(ip->TokenLong >> 32));
+                                                IType type = AppDomain.GetType((int)(ip->TokenLong >> 32));
                                                 if (type != null)
                                                 {
                                                     if (type is ILType)
@@ -2113,7 +2093,7 @@ namespace ILRuntime.Runtime.Intepreter
                                             break;
                                         case 1:
                                             {
-                                                type = AppDomain.GetType((int)ip->TokenLong);
+                                                IType type = AppDomain.GetType((int)ip->TokenLong);
                                                 if (type != null)
                                                 {
                                                     esp = PushObject(esp, mStack, type.ReflectionType);
@@ -2136,17 +2116,17 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Ldvirtftn:
                                 {
                                     IMethod m = domain.GetMethod(ip->TokenInteger);
-                                    objRef = esp - 1;
+                                    var objRef = esp - 1;
                                     if (m is ILMethod)
                                     {
                                         ILMethod ilm = (ILMethod)m;
 
-                                        obj = mStack[objRef->Value];
+                                        var obj = mStack[objRef->Value];
                                         m = ((ILTypeInstance)obj).Type.GetVirtualMethod(ilm) as ILMethod;
                                     }
                                     else
                                     {
-                                        obj = mStack[objRef->Value];
+                                        var obj = mStack[objRef->Value];
                                         if (obj is ILTypeInstance)
                                             m = ((ILTypeInstance)obj).Type.GetVirtualMethod(m);
                                         else if (obj is CrossBindingAdaptorType)
@@ -2335,10 +2315,10 @@ namespace ILRuntime.Runtime.Intepreter
                                     IMethod m = domain.GetMethod(ip->TokenInteger);
                                     if (m is ILMethod)
                                     {
-                                        type = m.DeclearingType as ILType;
+                                        ILType type = m.DeclearingType as ILType;
                                         if (type.IsDelegate)
                                         {
-                                            objRef = GetObjectAndResolveReference(esp - 1 - 1);
+                                            var objRef = GetObjectAndResolveReference(esp - 1 - 1);
                                             var mi = (IMethod)mStack[(esp - 1)->Value];
                                             object ins;
                                             if (objRef->ObjectType == ObjectTypes.Null)
@@ -2375,20 +2355,21 @@ namespace ILRuntime.Runtime.Intepreter
                                         }
                                         else
                                         {
-                                            a = esp - m.ParameterCount;
-                                            obj = null;
+                                            var a = esp - m.ParameterCount;
+                                            StackObject* objRef;
+                                            ILTypeInstance obj = null;
                                             bool isValueType = type.IsValueType;
                                             if (isValueType)
                                             {
                                                 stack.AllocValueType(esp, type);
                                                 objRef = esp + 1;
                                                 objRef->ObjectType = ObjectTypes.StackObjectReference;
-                                                *(long*)&objRef->Value = (long)esp; 
+                                                *(StackObject**)&objRef->Value = esp;
                                                 objRef++;
                                             }
                                             else
                                             {
-                                                obj = ((ILType)type).Instantiate(false);
+                                                obj = type.Instantiate(false);
                                                 objRef = PushObject(esp, mStack, obj);//this parameter for constructor
                                             }
                                             esp = objRef;
@@ -2423,7 +2404,7 @@ namespace ILRuntime.Runtime.Intepreter
                                         {
                                             if (cm.DeclearingType.IsDelegate)
                                             {
-                                                objRef = GetObjectAndResolveReference(esp - 1 - 1);
+                                                var objRef = GetObjectAndResolveReference(esp - 1 - 1);
                                                 var mi = (IMethod)mStack[(esp - 1)->Value];
                                                 object ins;
                                                 if (objRef->ObjectType == ObjectTypes.Null)
@@ -2482,10 +2463,10 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Constrained:
                                 {
-                                    type = domain.GetType(ip->TokenInteger);
+                                    var type = domain.GetType(ip->TokenInteger);
                                     var m = domain.GetMethod((int)ip->TokenLong);
                                     var pCnt = m.ParameterCount;
-                                    objRef = Minus(esp, pCnt + 1);
+                                    var objRef = Minus(esp, pCnt + 1);
                                     var insIdx = mStack.Count;
                                     if (objRef->ObjectType < ObjectTypes.Object)
                                     {
@@ -2520,7 +2501,7 @@ namespace ILRuntime.Runtime.Intepreter
                                     }
                                     else
                                         insIdx = objRef->Value;
-                                    objRef2 = GetObjectAndResolveReference(objRef);
+                                    var obj = GetObjectAndResolveReference(objRef);
                                     if (type != null)
                                     {
                                         if (type is ILType)
@@ -2529,12 +2510,12 @@ namespace ILRuntime.Runtime.Intepreter
                                             if (t.IsEnum)
                                             {
                                                 ILEnumTypeInstance ins = new ILEnumTypeInstance(t);
-                                                switch (objRef2->ObjectType)
+                                                switch (obj->ObjectType)
                                                 {
                                                     case ObjectTypes.FieldReference:
                                                         {
-                                                            var owner = mStack[objRef2->Value] as ILTypeInstance;
-                                                            int idx = objRef2->ValueLow;
+                                                            var owner = mStack[obj->Value] as ILTypeInstance;
+                                                            int idx = obj->ValueLow;
                                                             //Free(objRef);
                                                             owner.PushToStack(idx, objRef, AppDomain, mStack);
                                                             ins.AssignFromStack(0, objRef, AppDomain, mStack);
@@ -2543,8 +2524,8 @@ namespace ILRuntime.Runtime.Intepreter
                                                         break;
                                                     case ObjectTypes.StaticFieldReference:
                                                         {
-                                                            var st = AppDomain.GetType(objRef2->Value) as ILType;
-                                                            int idx = objRef2->ValueLow;
+                                                            var st = AppDomain.GetType(obj->Value) as ILType;
+                                                            int idx = obj->ValueLow;
                                                             //Free(objRef);
                                                             st.StaticInstance.PushToStack(idx, objRef, AppDomain, mStack);
                                                             ins.AssignFromStack(0, objRef, AppDomain, mStack);
@@ -2553,8 +2534,8 @@ namespace ILRuntime.Runtime.Intepreter
                                                         break;
                                                     case ObjectTypes.ArrayReference:
                                                         {
-                                                            var arr = mStack[objRef2->Value];
-                                                            var idx = objRef2->ValueLow;
+                                                            var arr = mStack[obj->Value];
+                                                            var idx = obj->ValueLow;
                                                             //Free(objRef);
                                                             LoadFromArrayReference(arr, idx, objRef, t, mStack);
                                                             ins.AssignFromStack(0, objRef, AppDomain, mStack);
@@ -2562,7 +2543,7 @@ namespace ILRuntime.Runtime.Intepreter
                                                         }
                                                         break;
                                                     default:
-                                                        ins.AssignFromStack(0, objRef2, AppDomain, mStack);
+                                                        ins.AssignFromStack(0, obj, AppDomain, mStack);
                                                         ins.Boxed = true;
                                                         break;
                                                 }
@@ -2574,7 +2555,7 @@ namespace ILRuntime.Runtime.Intepreter
                                             }
                                             else
                                             {
-                                                object res = RetriveObject(objRef2, mStack);
+                                                object res = RetriveObject(obj, mStack);
                                                 //Free(objRef);
                                                 objRef->ObjectType = ObjectTypes.Object;
                                                 objRef->Value = insIdx;
@@ -2587,21 +2568,21 @@ namespace ILRuntime.Runtime.Intepreter
                                             var tt = type.TypeForCLR;
                                             if (tt.IsEnum)
                                             {
-                                                mStack[insIdx] = Enum.ToObject(tt, StackObject.ToObject(objRef2, AppDomain, mStack));
+                                                mStack[insIdx] = Enum.ToObject(tt, StackObject.ToObject(obj, AppDomain, mStack));
                                                 objRef->ObjectType = ObjectTypes.Object;
                                                 objRef->Value = insIdx;
                                                 //esp = PushObject(esp - 1, mStack, Enum.ToObject(tt, StackObject.ToObject(obj, AppDomain, mStack)), true);
                                             }
                                             else if (tt.IsPrimitive)
                                             {
-                                                mStack[insIdx] = tt.CheckCLRTypes(StackObject.ToObject(objRef2, AppDomain, mStack));
+                                                mStack[insIdx] = tt.CheckCLRTypes(StackObject.ToObject(obj, AppDomain, mStack));
                                                 objRef->ObjectType = ObjectTypes.Object;
                                                 objRef->Value = insIdx;
                                                 //esp = PushObject(esp - 1, mStack, tt.CheckCLRTypes(StackObject.ToObject(obj, AppDomain, mStack)));
                                             }
                                             else
                                             {
-                                                object res = RetriveObject(objRef2, mStack);
+                                                object res = RetriveObject(obj, mStack);
                                                 //Free(objRef);
                                                 objRef->ObjectType = ObjectTypes.Object;
                                                 objRef->Value = insIdx;
@@ -2616,8 +2597,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Box:
                                 {
-                                    objRef = esp - 1;
-                                    type = domain.GetType(ip->TokenInteger);
+                                    var obj = esp - 1;
+                                    var type = domain.GetType(ip->TokenInteger);
                                     if (type != null)
                                     {
                                         if (type is ILType)
@@ -2625,46 +2606,46 @@ namespace ILRuntime.Runtime.Intepreter
                                             if (((ILType)type).IsEnum)
                                             {
                                                 ILEnumTypeInstance ins = new Intepreter.ILEnumTypeInstance((ILType)type);
-                                                ins.AssignFromStack(0, objRef, AppDomain, mStack);
+                                                ins.AssignFromStack(0, obj, AppDomain, mStack);
                                                 ins.Boxed = true;
-                                                esp = PushObject(objRef, mStack, ins, true);
+                                                esp = PushObject(obj, mStack, ins, true);
                                             }
                                             else
                                             {
-                                                switch (objRef->ObjectType)
+                                                switch (obj->ObjectType)
                                                 {
                                                     case ObjectTypes.Null:
                                                         break;
                                                     case ObjectTypes.ValueTypeObjectReference:
                                                         {
                                                             ILTypeInstance ins = ((ILType)type).Instantiate(false);
-                                                            ins.AssignFromStack(objRef, domain, mStack);
-                                                            FreeStackValueType(objRef);
-                                                            esp = PushObject(objRef, mStack, ins, true);
+                                                            ins.AssignFromStack(obj, domain, mStack);
+                                                            FreeStackValueType(obj);
+                                                            esp = PushObject(obj, mStack, ins, true);
                                                         }
                                                         break;
                                                     default:
                                                         {
-                                                            obj = mStack[objRef->Value];
-                                                            Free(objRef);
+                                                            var val = mStack[obj->Value];
+                                                            Free(obj);
                                                             if (type.IsArray)
                                                             {
-                                                                esp = PushObject(objRef, mStack, obj, true);
+                                                                esp = PushObject(obj, mStack, val, true);
                                                             }
                                                             else
                                                             {
-                                                                ILTypeInstance ins = (ILTypeInstance)obj;
+                                                                ILTypeInstance ins = (ILTypeInstance)val;
                                                                 if (ins != null)
                                                                 {
                                                                     if (ins.IsValueType)
                                                                     {
                                                                         ins.Boxed = true;
                                                                     }
-                                                                    esp = PushObject(objRef, mStack, ins, true);
+                                                                    esp = PushObject(obj, mStack, ins, true);
                                                                 }
                                                                 else
                                                                 {
-                                                                    esp = PushNull(objRef);
+                                                                    esp = PushNull(obj);
                                                                 }
                                                             }
                                                         }
@@ -2679,13 +2660,13 @@ namespace ILRuntime.Runtime.Intepreter
                                                 var t = type.TypeForCLR;
                                                 if (t == typeof(int))
                                                 {
-                                                    switch (objRef->ObjectType)
+                                                    switch (obj->ObjectType)
                                                     {
                                                         case ObjectTypes.Integer:
-                                                            esp = PushObject(objRef, mStack, objRef->Value, true);
+                                                            esp = PushObject(obj, mStack, obj->Value, true);
                                                             break;
                                                         case ObjectTypes.Null:
-                                                            esp = PushObject(objRef, mStack, 0, true);
+                                                            esp = PushObject(obj, mStack, 0, true);
                                                             break;
                                                         case ObjectTypes.Object:
                                                             break;
@@ -2695,13 +2676,13 @@ namespace ILRuntime.Runtime.Intepreter
                                                 }
                                                 else if (t == typeof(bool))
                                                 {
-                                                    switch (objRef->ObjectType)
+                                                    switch (obj->ObjectType)
                                                     {
                                                         case ObjectTypes.Integer:
-                                                            esp = PushObject(objRef, mStack, (objRef->Value == 1), true);
+                                                            esp = PushObject(obj, mStack, (obj->Value == 1), true);
                                                             break;
                                                         case ObjectTypes.Null:
-                                                            esp = PushObject(objRef, mStack, false, true);
+                                                            esp = PushObject(obj, mStack, false, true);
                                                             break;
                                                         case ObjectTypes.Object:
                                                             break;
@@ -2711,13 +2692,13 @@ namespace ILRuntime.Runtime.Intepreter
                                                 }
                                                 else if (t == typeof(byte))
                                                 {
-                                                    switch (objRef->ObjectType)
+                                                    switch (obj->ObjectType)
                                                     {
                                                         case ObjectTypes.Integer:
-                                                            esp = PushObject(objRef, mStack, (byte)objRef->Value, true);
+                                                            esp = PushObject(obj, mStack, (byte)obj->Value, true);
                                                             break;
                                                         case ObjectTypes.Null:
-                                                            esp = PushObject(objRef, mStack, 0L, true);
+                                                            esp = PushObject(obj, mStack, 0L, true);
                                                             break;
                                                         case ObjectTypes.Object:
                                                             break;
@@ -2727,13 +2708,13 @@ namespace ILRuntime.Runtime.Intepreter
                                                 }
                                                 else if (t == typeof(short))
                                                 {
-                                                    switch (objRef->ObjectType)
+                                                    switch (obj->ObjectType)
                                                     {
                                                         case ObjectTypes.Integer:
-                                                            esp = PushObject(objRef, mStack, (short)objRef->Value, true);
+                                                            esp = PushObject(obj, mStack, (short)obj->Value, true);
                                                             break;
                                                         case ObjectTypes.Null:
-                                                            esp = PushObject(objRef, mStack, (short)0, true);
+                                                            esp = PushObject(obj, mStack, (short)0, true);
                                                             break;
                                                         case ObjectTypes.Object:
                                                             break;
@@ -2743,13 +2724,13 @@ namespace ILRuntime.Runtime.Intepreter
                                                 }
                                                 else if (t == typeof(long))
                                                 {
-                                                    switch (objRef->ObjectType)
+                                                    switch (obj->ObjectType)
                                                     {
                                                         case ObjectTypes.Long:
-                                                            esp = PushObject(objRef, mStack, *(long*)&objRef->Value, true);
+                                                            esp = PushObject(obj, mStack, *(long*)&obj->Value, true);
                                                             break;
                                                         case ObjectTypes.Null:
-                                                            esp = PushObject(objRef, mStack, 0L, true);
+                                                            esp = PushObject(obj, mStack, 0L, true);
                                                             break;
                                                         case ObjectTypes.Object:
                                                             break;
@@ -2759,13 +2740,13 @@ namespace ILRuntime.Runtime.Intepreter
                                                 }
                                                 else if (t == typeof(float))
                                                 {
-                                                    switch (objRef->ObjectType)
+                                                    switch (obj->ObjectType)
                                                     {
                                                         case ObjectTypes.Float:
-                                                            esp = PushObject(objRef, mStack, *(float*)&objRef->Value, true);
+                                                            esp = PushObject(obj, mStack, *(float*)&obj->Value, true);
                                                             break;
                                                         case ObjectTypes.Null:
-                                                            esp = PushObject(objRef, mStack, 0f, true);
+                                                            esp = PushObject(obj, mStack, 0f, true);
                                                             break;
                                                         case ObjectTypes.Object:
                                                             break;
@@ -2775,13 +2756,13 @@ namespace ILRuntime.Runtime.Intepreter
                                                 }
                                                 else if (t == typeof(double))
                                                 {
-                                                    switch (objRef->ObjectType)
+                                                    switch (obj->ObjectType)
                                                     {
                                                         case ObjectTypes.Double:
-                                                            esp = PushObject(objRef, mStack, *(double*)&objRef->Value, true);
+                                                            esp = PushObject(obj, mStack, *(double*)&obj->Value, true);
                                                             break;
                                                         case ObjectTypes.Null:
-                                                            esp = PushObject(objRef, mStack, 0.0, true);
+                                                            esp = PushObject(obj, mStack, 0.0, true);
                                                             break;
                                                         case ObjectTypes.Object:
                                                             break;
@@ -2791,10 +2772,10 @@ namespace ILRuntime.Runtime.Intepreter
                                                 }
                                                 else if (t == typeof(char))
                                                 {
-                                                    switch (objRef->ObjectType)
+                                                    switch (obj->ObjectType)
                                                     {
                                                         case ObjectTypes.Integer:
-                                                            esp = PushObject(objRef, mStack, (char)objRef->Value, true);
+                                                            esp = PushObject(obj, mStack, (char)obj->Value, true);
                                                             break;
                                                         case ObjectTypes.Object:
                                                             break;
@@ -2804,13 +2785,13 @@ namespace ILRuntime.Runtime.Intepreter
                                                 }
                                                 else if (t == typeof(uint))
                                                 {
-                                                    switch (objRef->ObjectType)
+                                                    switch (obj->ObjectType)
                                                     {
                                                         case ObjectTypes.Integer:
-                                                            esp = PushObject(objRef, mStack, (uint)objRef->Value, true);
+                                                            esp = PushObject(obj, mStack, (uint)obj->Value, true);
                                                             break;
                                                         case ObjectTypes.Null:
-                                                            esp = PushObject(objRef, mStack, (uint)0, true);
+                                                            esp = PushObject(obj, mStack, (uint)0, true);
                                                             break;
                                                         case ObjectTypes.Object:
                                                             break;
@@ -2820,13 +2801,13 @@ namespace ILRuntime.Runtime.Intepreter
                                                 }
                                                 else if (t == typeof(ushort))
                                                 {
-                                                    switch (objRef->ObjectType)
+                                                    switch (obj->ObjectType)
                                                     {
                                                         case ObjectTypes.Integer:
-                                                            esp = PushObject(objRef, mStack, (ushort)objRef->Value, true);
+                                                            esp = PushObject(obj, mStack, (ushort)obj->Value, true);
                                                             break;
                                                         case ObjectTypes.Null:
-                                                            esp = PushObject(objRef, mStack, (ushort)0, true);
+                                                            esp = PushObject(obj, mStack, (ushort)0, true);
                                                             break;
                                                         case ObjectTypes.Object:
                                                             break;
@@ -2836,13 +2817,13 @@ namespace ILRuntime.Runtime.Intepreter
                                                 }
                                                 else if (t == typeof(ulong))
                                                 {
-                                                    switch (objRef->ObjectType)
+                                                    switch (obj->ObjectType)
                                                     {
                                                         case ObjectTypes.Long:
-                                                            esp = PushObject(objRef, mStack, *(ulong*)&objRef->Value, true);
+                                                            esp = PushObject(obj, mStack, *(ulong*)&obj->Value, true);
                                                             break;
                                                         case ObjectTypes.Null:
-                                                            esp = PushObject(objRef, mStack, (ulong)0, true);
+                                                            esp = PushObject(obj, mStack, (ulong)0, true);
                                                             break;
                                                         case ObjectTypes.Object:
                                                             break;
@@ -2852,13 +2833,13 @@ namespace ILRuntime.Runtime.Intepreter
                                                 }
                                                 else if (t == typeof(sbyte))
                                                 {
-                                                    switch (objRef->ObjectType)
+                                                    switch (obj->ObjectType)
                                                     {
                                                         case ObjectTypes.Integer:
-                                                            esp = PushObject(objRef, mStack, (sbyte)objRef->Value, true);
+                                                            esp = PushObject(obj, mStack, (sbyte)obj->Value, true);
                                                             break;
                                                         case ObjectTypes.Null:
-                                                            esp = PushObject(objRef, mStack, (sbyte)0, true);
+                                                            esp = PushObject(obj, mStack, (sbyte)0, true);
                                                             break;
                                                         case ObjectTypes.Object:
                                                             break;
@@ -2871,19 +2852,19 @@ namespace ILRuntime.Runtime.Intepreter
                                             }
                                             else if (type.TypeForCLR.IsEnum)
                                             {
-                                                esp = PushObject(objRef, mStack, Enum.ToObject(type.TypeForCLR, StackObject.ToObject(objRef, AppDomain, mStack)), true);
+                                                esp = PushObject(obj, mStack, Enum.ToObject(type.TypeForCLR, StackObject.ToObject(obj, AppDomain, mStack)), true);
                                             }
                                             else
                                             {
-                                                if(objRef->ObjectType== ObjectTypes.ValueTypeObjectReference)
+                                                if(obj->ObjectType== ObjectTypes.ValueTypeObjectReference)
                                                 {
-                                                    dst = ILIntepreter.ResolveReference(objRef);
+                                                    var dst = *(StackObject**)&obj->Value;
                                                     var vt = domain.GetType(dst->Value);
                                                     if (vt != type)
                                                         throw new InvalidCastException();
                                                     object ins = ((CLRType)vt).ValueTypeBinder.ToObject(dst, mStack);
-                                                    FreeStackValueType(objRef);
-                                                    esp = PushObject(objRef, mStack, ins, true);
+                                                    FreeStackValueType(obj);
+                                                    esp = PushObject(obj, mStack, ins, true);
                                                 }
                                                 //nothing to do for CLR type boxing
                                             }
@@ -2896,91 +2877,91 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Unbox:
                             case OpCodeEnum.Unbox_Any:
                                 {
-                                    objRef = esp - 1;
+                                    var objRef = esp - 1;
                                     if (objRef->ObjectType == ObjectTypes.Object)
                                     {
-                                        obj = mStack[objRef->Value];
+                                        object obj = mStack[objRef->Value];
                                         Free(objRef);
                                         if (obj != null)
                                         {
                                             var t = domain.GetType(ip->TokenInteger);
                                             if (t != null)
                                             {
-                                                clrType = t.TypeForCLR;
+                                                var type = t.TypeForCLR;
                                                 bool isEnumObj = obj is ILEnumTypeInstance;
-                                                if ((t is CLRType) && clrType.IsPrimitive && !isEnumObj)
+                                                if ((t is CLRType) && type.IsPrimitive && !isEnumObj)
                                                 {
-                                                    if (clrType == typeof(int))
+                                                    if (type == typeof(int))
                                                     {
-                                                        int value = obj.ToInt32();
+                                                        int val = obj.ToInt32();
                                                         objRef->ObjectType = ObjectTypes.Integer;
-                                                        objRef->Value = value;
+                                                        objRef->Value = val;
                                                     }
-                                                    else if (clrType == typeof(bool))
+                                                    else if (type == typeof(bool))
                                                     {
-                                                        bool value = (bool)obj;
+                                                        bool val = (bool)obj;
                                                         objRef->ObjectType = ObjectTypes.Integer;
-                                                        objRef->Value = value ? 1 : 0;
+                                                        objRef->Value = val ? 1 : 0;
                                                     }
-                                                    else if (clrType == typeof(short))
+                                                    else if (type == typeof(short))
                                                     {
-                                                        short value = obj.ToInt16();
+                                                        short val = obj.ToInt16();
                                                         objRef->ObjectType = ObjectTypes.Integer;
-                                                        objRef->Value = value;
+                                                        objRef->Value = val;
                                                     }
-                                                    else if (clrType == typeof(long))
+                                                    else if (type == typeof(long))
                                                     {
-                                                        long value = obj.ToInt64();
+                                                        long val = obj.ToInt64();
                                                         objRef->ObjectType = ObjectTypes.Long;
-                                                        *(long*)&objRef->Value = value;
+                                                        *(long*)&objRef->Value = val;
                                                     }
-                                                    else if (clrType == typeof(float))
+                                                    else if (type == typeof(float))
                                                     {
-                                                        float value = obj.ToFloat();
+                                                        float val = obj.ToFloat();
                                                         objRef->ObjectType = ObjectTypes.Float;
-                                                        *(float*)&objRef->Value = value;
+                                                        *(float*)&objRef->Value = val;
                                                     }
-                                                    else if (clrType == typeof(byte))
+                                                    else if (type == typeof(byte))
                                                     {
-                                                        byte value = (byte)obj;
+                                                        byte val = (byte)obj;
                                                         objRef->ObjectType = ObjectTypes.Integer;
-                                                        objRef->Value = value;
+                                                        objRef->Value = val;
                                                     }
-                                                    else if (clrType == typeof(double))
+                                                    else if (type == typeof(double))
                                                     {
-                                                        double value = obj.ToDouble();
+                                                        double val = obj.ToDouble();
                                                         objRef->ObjectType = ObjectTypes.Double;
-                                                        *(double*)&objRef->Value = value;
+                                                        *(double*)&objRef->Value = val;
                                                     }
-                                                    else if (clrType == typeof(char))
+                                                    else if (type == typeof(char))
                                                     {
-                                                        char value = (char)obj;
+                                                        char val = (char)obj;
                                                         objRef->ObjectType = ObjectTypes.Integer;
-                                                        *(&objRef->Value) = value;
+                                                        *(&objRef->Value) = val;
                                                     }
-                                                    else if (clrType == typeof(uint))
+                                                    else if (type == typeof(uint))
                                                     {
-                                                        uint value = (uint)obj;
+                                                        uint val = (uint)obj;
                                                         objRef->ObjectType = ObjectTypes.Integer;
-                                                        objRef->Value = (int)value;
+                                                        objRef->Value = (int)val;
                                                     }
-                                                    else if (clrType == typeof(ushort))
+                                                    else if (type == typeof(ushort))
                                                     {
-                                                        ushort value = (ushort)obj;
+                                                        ushort val = (ushort)obj;
                                                         objRef->ObjectType = ObjectTypes.Integer;
-                                                        objRef->Value = value;
+                                                        objRef->Value = val;
                                                     }
-                                                    else if (clrType == typeof(ulong))
+                                                    else if (type == typeof(ulong))
                                                     {
-                                                        ulong value = (ulong)obj;
+                                                        ulong val = (ulong)obj;
                                                         objRef->ObjectType = ObjectTypes.Long;
-                                                        *(ulong*)&objRef->Value = value;
+                                                        *(ulong*)&objRef->Value = val;
                                                     }
-                                                    else if (clrType == typeof(sbyte))
+                                                    else if (type == typeof(sbyte))
                                                     {
-                                                        sbyte value = (sbyte)obj;
+                                                        sbyte val = (sbyte)obj;
                                                         objRef->ObjectType = ObjectTypes.Integer;
-                                                        objRef->Value = value;
+                                                        objRef->Value = val;
                                                     }
                                                     else
                                                         throw new NotImplementedException();
@@ -3028,8 +3009,8 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Initobj:
                                 {
-                                    objRef = GetObjectAndResolveReference(esp - 1);
-                                    type = domain.GetType(ip->TokenInteger);
+                                    var objRef = GetObjectAndResolveReference(esp - 1);
+                                    var type = domain.GetType(ip->TokenInteger);
                                     if (type is ILType)
                                     {
                                         ILType it = (ILType)type;
@@ -3040,11 +3021,11 @@ namespace ILRuntime.Runtime.Intepreter
                                                 case ObjectTypes.Null:
                                                     throw new NullReferenceException();
                                                 case ObjectTypes.ValueTypeObjectReference:
-                                                    stack.ClearValueTypeObject(type, ILIntepreter.ResolveReference(objRef));
+                                                    stack.ClearValueTypeObject(type, *(StackObject**)&objRef->Value);
                                                     break;
                                                 case ObjectTypes.Object:
                                                     {
-                                                        obj = mStack[objRef->Value];
+                                                        var obj = mStack[objRef->Value];
                                                         if (obj != null)
                                                         {
                                                             if (obj is ILTypeInstance)
@@ -3063,7 +3044,7 @@ namespace ILRuntime.Runtime.Intepreter
                                                     {
                                                         var arr = mStack[objRef->Value] as Array;
                                                         var idx = objRef->ValueLow;
-                                                        obj = arr.GetValue(idx);
+                                                        var obj = arr.GetValue(idx);
                                                         if (obj == null)
                                                             arr.SetValue(it.Instantiate(), idx);
                                                         else
@@ -3080,7 +3061,7 @@ namespace ILRuntime.Runtime.Intepreter
                                                     break;
                                                 case ObjectTypes.FieldReference:
                                                     {
-                                                        obj = mStack[objRef->Value];
+                                                        var obj = mStack[objRef->Value];
                                                         if (obj != null)
                                                         {
                                                             if (obj is ILTypeInstance)
@@ -3097,22 +3078,6 @@ namespace ILRuntime.Runtime.Intepreter
                                                         }
                                                         else
                                                             throw new NullReferenceException();
-                                                    }
-                                                    break;
-                                                case ObjectTypes.StaticFieldReference:
-                                                    {
-                                                        var t = AppDomain.GetType(objRef->Value);
-                                                        int idx = objRef->ValueLow;
-                                                        if (t is ILType)
-                                                        {
-                                                            var tar = ((ILType)t).StaticInstance[idx] as ILTypeInstance;
-                                                            if (tar != null)
-                                                                tar.Clear();
-                                                            else
-                                                                throw new NotSupportedException();
-                                                        }
-                                                        else
-                                                            throw new NotSupportedException();
                                                     }
                                                     break;
                                                 default:
@@ -3156,7 +3121,7 @@ namespace ILRuntime.Runtime.Intepreter
                                     {
                                         if (objRef->ObjectType == ObjectTypes.ValueTypeObjectReference)
                                         {
-                                            stack.ClearValueTypeObject(type, ILIntepreter.ResolveReference(objRef));
+                                            stack.ClearValueTypeObject(type, *(StackObject**)&objRef->Value);
                                         }
                                         else if(type.IsPrimitive)
                                             StackObject.Initialized(objRef, type);
@@ -3167,9 +3132,9 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Isinst:
                                 {
-                                    objRef = esp - 1;
+                                    var objRef = esp - 1;
                                     var oriRef = objRef;
-                                    type = domain.GetType(ip->TokenInteger);
+                                    var type = domain.GetType(ip->TokenInteger);
                                     if (type != null)
                                     {
                                         objRef = GetObjectAndResolveReference(objRef);
@@ -3227,7 +3192,7 @@ namespace ILRuntime.Runtime.Intepreter
                                         }
                                         else
                                         {
-                                            obj = RetriveObject(objRef, mStack);
+                                            var obj = RetriveObject(objRef, mStack);
                                             Free(oriRef);
 
                                             if (obj != null)
@@ -3283,7 +3248,7 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Newarr:
                                 {
                                     var cnt = (esp - 1);
-                                    type = domain.GetType(ip->TokenInteger);
+                                    var type = domain.GetType(ip->TokenInteger);
                                     object arr = null;
                                     if (type != null)
                                     {
@@ -3322,9 +3287,9 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Stelem_Ref:
                             case OpCodeEnum.Stelem_Any:
                                 {
-                                    val = GetObjectAndResolveReference(esp - 1);
+                                    var val = GetObjectAndResolveReference(esp - 1);
                                     var idx = esp - 1 - 1;
-                                    arrRef = esp - 1 - 1 - 1;
+                                    var arrRef = esp - 1 - 1 - 1;
                                     Array arr = mStack[arrRef->Value] as Array;
                                     if (arr is object[])
                                     {
@@ -3409,36 +3374,36 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Ldelem_Any:
                                 {
                                     var idx = esp - 1;
-                                    arrRef = esp - 1 - 1;
+                                    var arrRef = esp - 1 - 1;
                                     Array arr = mStack[arrRef->Value] as Array;
-                                    obj = arr.GetValue(idx->Value);
-                                    if (obj is CrossBindingAdaptorType)
-                                        obj = ((CrossBindingAdaptorType)obj).ILInstance;
+                                    object val = arr.GetValue(idx->Value);
+                                    if (val is CrossBindingAdaptorType)
+                                        val = ((CrossBindingAdaptorType)val).ILInstance;
                                     Free(esp - 1);
                                     Free(esp - 1 - 1);
 
-                                    if (obj is ILTypeInstance)
+                                    if (val is ILTypeInstance)
                                     {
-                                        ILTypeInstance ins = (ILTypeInstance)obj;
+                                        ILTypeInstance ins = (ILTypeInstance)val;
                                         if (ins.Type.IsValueType && !ins.Boxed)
                                         {
                                             AllocValueType(arrRef, ins.Type);
-                                            dst = ILIntepreter.ResolveReference(arrRef);
+                                            StackObject* dst = *((StackObject**)&arrRef->Value);
                                             ins.CopyValueTypeToStack(dst, mStack);
                                             esp = idx;
                                         }
                                         else
-                                            esp = PushObject(esp - 1 - 1, mStack, obj, true);
+                                            esp = PushObject(esp - 1 - 1, mStack, val, true);
                                     }
                                     else
-                                        esp = PushObject(esp - 1 - 1, mStack, obj, !arr.GetType().GetElementType().IsPrimitive);
+                                        esp = PushObject(esp - 1 - 1, mStack, val, !arr.GetType().GetElementType().IsPrimitive);
                                 }
                                 break;
                             case OpCodeEnum.Stelem_I1:
                                 {
-                                    val = esp - 1;
+                                    var val = esp - 1;
                                     var idx = esp - 1 - 1;
-                                    arrRef = esp - 1 - 1 - 1;
+                                    var arrRef = esp - 1 - 1 - 1;
                                     byte[] arr = mStack[arrRef->Value] as byte[];
                                     if (arr != null)
                                     {
@@ -3466,49 +3431,51 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Ldelem_I1:
                                 {
                                     var idx = esp - 1;
-                                    arrRef = esp - 1 - 1;
+                                    var arrRef = esp - 1 - 1;
                                     bool[] arr = mStack[arrRef->Value] as bool[];
+                                    int val;
                                     if (arr != null)
-                                        intVal = arr[idx->Value] ? 1 : 0;
+                                        val = arr[idx->Value] ? 1 : 0;
                                     else
                                     {
                                         sbyte[] arr2 = mStack[arrRef->Value] as sbyte[];
-                                        intVal = arr2[idx->Value];
+                                        val = arr2[idx->Value];
                                     }
 
                                     Free(esp - 1);
                                     Free(esp - 1 - 1);
 
                                     arrRef->ObjectType = ObjectTypes.Integer;
-                                    arrRef->Value = intVal;
+                                    arrRef->Value = val;
                                     esp -= 1;
                                 }
                                 break;
                             case OpCodeEnum.Ldelem_U1:
                                 {
                                     var idx = (esp - 1);
-                                    arrRef = esp - 1 - 1;
+                                    var arrRef = esp - 1 - 1;
                                     byte[] arr = mStack[arrRef->Value] as byte[];
+                                    int val;
                                     if (arr != null)
-                                        intVal = arr[idx->Value];
+                                        val = arr[idx->Value];
                                     else
                                     {
                                         bool[] arr2 = mStack[arrRef->Value] as bool[];
-                                        intVal = arr2[idx->Value] ? 1 : 0;
+                                        val = arr2[idx->Value] ? 1 : 0;
                                     }
                                     Free(esp - 1);
                                     Free(esp - 1 - 1);
 
                                     arrRef->ObjectType = ObjectTypes.Integer;
-                                    arrRef->Value = intVal;
+                                    arrRef->Value = val;
                                     esp -= 1;
                                 }
                                 break;
                             case OpCodeEnum.Stelem_I2:
                                 {
-                                    val = esp - 1;
+                                    var val = esp - 1;
                                     var idx = esp - 1 - 1;
-                                    arrRef = esp - 1 - 1 - 1;
+                                    var arrRef = esp - 1 - 1 - 1;
                                     short[] arr = mStack[arrRef->Value] as short[];
                                     if (arr != null)
                                     {
@@ -3536,52 +3503,54 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Ldelem_I2:
                                 {
                                     var idx = (esp - 1)->Value;
-                                    arrRef = esp - 1 - 1;
+                                    var arrRef = esp - 1 - 1;
                                     short[] arr = mStack[arrRef->Value] as short[];
+                                    int val = 0;
                                     if (arr != null)
                                     {
-                                        intVal = arr[idx];
+                                        val = arr[idx];
                                     }
                                     else
                                     {
                                         char[] arr2 = mStack[arrRef->Value] as char[];
-                                        intVal = arr2[idx];
+                                        val = arr2[idx];
                                     }
                                     Free(esp - 1);
                                     Free(esp - 1 - 1);
 
                                     arrRef->ObjectType = ObjectTypes.Integer;
-                                    arrRef->Value = intVal;
+                                    arrRef->Value = val;
                                     esp -= 1;
                                 }
                                 break;
                             case OpCodeEnum.Ldelem_U2:
                                 {
                                     var idx = (esp - 1)->Value;
-                                    arrRef = esp - 1 - 1;
+                                    var arrRef = esp - 1 - 1;
                                     ushort[] arr = mStack[arrRef->Value] as ushort[];
+                                    int val = 0;
                                     if (arr != null)
                                     {
-                                        intVal = arr[idx];
+                                        val = arr[idx];
                                     }
                                     else
                                     {
                                         char[] arr2 = mStack[arrRef->Value] as char[];
-                                        intVal = arr2[idx];
+                                        val = arr2[idx];
                                     }
                                     Free(esp - 1);
                                     Free(esp - 1 - 1);
 
                                     arrRef->ObjectType = ObjectTypes.Integer;
-                                    arrRef->Value = intVal;
+                                    arrRef->Value = val;
                                     esp -= 1;
                                 }
                                 break;
                             case OpCodeEnum.Stelem_I4:
                                 {
-                                    val = esp - 1;
+                                    var val = esp - 1;
                                     var idx = esp - 1 - 1;
-                                    arrRef = esp - 1 - 1 - 1;
+                                    var arrRef = esp - 1 - 1 - 1;
                                     int[] arr = mStack[arrRef->Value] as int[];
                                     if (arr != null)
                                     {
@@ -3601,7 +3570,7 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Ldelem_I4:
                                 {
                                     var idx = (esp - 1)->Value;
-                                    arrRef = esp - 1 - 1;
+                                    var arrRef = esp - 1 - 1;
                                     int[] arr = mStack[arrRef->Value] as int[];
 
                                     Free(esp - 1);
@@ -3615,7 +3584,7 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Ldelem_U4:
                                 {
                                     var idx = (esp - 1)->Value;
-                                    arrRef = esp - 1 - 1;
+                                    var arrRef = esp - 1 - 1;
                                     uint[] arr = mStack[arrRef->Value] as uint[];
 
                                     Free(esp - 1);
@@ -3628,9 +3597,9 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Stelem_I8:
                                 {
-                                    val = esp - 1;
+                                    var val = esp - 1;
                                     var idx = esp - 1 - 1;
-                                    arrRef = esp - 1 - 1 - 1;
+                                    var arrRef = esp - 1 - 1 - 1;
                                     long[] arr = mStack[arrRef->Value] as long[];
                                     if (arr != null)
                                     {
@@ -3650,29 +3619,29 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Ldelem_I8:
                                 {
                                     var idx = esp - 1;
-                                    arrRef = esp - 1 - 1;
+                                    var arrRef = esp - 1 - 1;
                                     long[] arr = mStack[arrRef->Value] as long[];
-                                    long longVal;
+                                    long val;
                                     if (arr != null)
-                                        longVal = arr[idx->Value];
+                                        val = arr[idx->Value];
                                     else
                                     {
                                         ulong[] arr2 = mStack[arrRef->Value] as ulong[];
-                                        longVal = (long)arr2[idx->Value];
+                                        val = (long)arr2[idx->Value];
                                     }
                                     Free(esp - 1);
                                     Free(esp - 1 - 1);
 
                                     arrRef->ObjectType = ObjectTypes.Long;
-                                    *(long*)&arrRef->Value = longVal;
+                                    *(long*)&arrRef->Value = val;
                                     esp -= 1;
                                 }
                                 break;
                             case OpCodeEnum.Stelem_R4:
                                 {
-                                    val = esp - 1;
+                                    var val = esp - 1;
                                     var idx = esp - 1 - 1;
-                                    arrRef = esp - 1 - 1 - 1;
+                                    var arrRef = esp - 1 - 1 - 1;
                                     float[] arr = mStack[arrRef->Value] as float[];
                                     arr[idx->Value] = *(float*)&val->Value;
                                     Free(esp - 1);
@@ -3684,7 +3653,7 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Ldelem_R4:
                                 {
                                     var idx = (esp - 1)->Value;
-                                    arrRef = esp - 1 - 1;
+                                    var arrRef = esp - 1 - 1;
                                     float[] arr = mStack[arrRef->Value] as float[];
 
                                     Free(esp - 1);
@@ -3697,9 +3666,9 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Stelem_R8:
                                 {
-                                    val = esp - 1;
+                                    var val = esp - 1;
                                     var idx = esp - 1 - 1;
-                                    arrRef = esp - 1 - 1 - 1;
+                                    var arrRef = esp - 1 - 1 - 1;
                                     double[] arr = mStack[arrRef->Value] as double[];
                                     arr[idx->Value] = *(double*)&val->Value;
                                     Free(esp - 1);
@@ -3711,7 +3680,7 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Ldelem_R8:
                                 {
                                     var idx = (esp - 1)->Value;
-                                    arrRef = esp - 1 - 1;
+                                    var arrRef = esp - 1 - 1;
                                     double[] arr = mStack[arrRef->Value] as double[];
 
                                     Free(esp - 1);
@@ -3724,7 +3693,7 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Ldlen:
                                 {
-                                    arrRef = esp - 1;
+                                    var arrRef = esp - 1;
                                     Array arr = mStack[arrRef->Value] as Array;
                                     Free(esp - 1);
 
@@ -3734,7 +3703,7 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Ldelema:
                                 {
-                                    arrRef = esp - 1 - 1;
+                                    var arrRef = esp - 1 - 1;
                                     var idx = (esp - 1)->Value;
 
                                     Array arr = mStack[arrRef->Value] as Array;
@@ -3755,100 +3724,104 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Conv_Ovf_U1:
                             case OpCodeEnum.Conv_Ovf_U1_Un:
                                 {
-                                    objRef = esp - 1;
-                                    switch (objRef->ObjectType)
+                                    var obj = esp - 1;
+                                    int val;
+                                    switch (obj->ObjectType)
                                     {
                                         case ObjectTypes.Long:
                                         case ObjectTypes.Integer:
-                                            intVal = (byte)objRef->Value;
+                                            val = (byte)obj->Value;
                                             break;
                                         case ObjectTypes.Float:
-                                            intVal = (byte)*(float*)&objRef->Value;
+                                            val = (byte)*(float*)&obj->Value;
                                             break;
                                         case ObjectTypes.Double:
-                                            intVal = (byte)*(double*)&objRef->Value;
+                                            val = (byte)*(double*)&obj->Value;
                                             break;
                                         default:
                                             throw new NotImplementedException();
                                     }
-                                    objRef->ObjectType = ObjectTypes.Integer;
-                                    objRef->Value = intVal;
-                                    objRef->ValueLow = 0;
+                                    obj->ObjectType = ObjectTypes.Integer;
+                                    obj->Value = val;
+                                    obj->ValueLow = 0;
                                 }
                                 break;
                             case OpCodeEnum.Conv_I1:
                             case OpCodeEnum.Conv_Ovf_I1:
                             case OpCodeEnum.Conv_Ovf_I1_Un:
                                 {
-                                    objRef = esp - 1;
-                                    switch (objRef->ObjectType)
+                                    var obj = esp - 1;
+                                    int val;
+                                    switch (obj->ObjectType)
                                     {
                                         case ObjectTypes.Long:
                                         case ObjectTypes.Integer:
-                                            intVal = (sbyte)objRef->Value;
+                                            val = (sbyte)obj->Value;
                                             break;
                                         case ObjectTypes.Float:
-                                            intVal = (sbyte)*(float*)&objRef->Value;
+                                            val = (sbyte)*(float*)&obj->Value;
                                             break;
                                         case ObjectTypes.Double:
-                                            intVal = (sbyte)*(double*)&objRef->Value;
+                                            val = (sbyte)*(double*)&obj->Value;
                                             break;
                                         default:
                                             throw new NotImplementedException();
                                     }
-                                    objRef->ObjectType = ObjectTypes.Integer;
-                                    objRef->Value = intVal;
-                                    objRef->ValueLow = 0;
+                                    obj->ObjectType = ObjectTypes.Integer;
+                                    obj->Value = val;
+                                    obj->ValueLow = 0;
                                 }
                                 break;
                             case OpCodeEnum.Conv_U2:
                             case OpCodeEnum.Conv_Ovf_U2:
                             case OpCodeEnum.Conv_Ovf_U2_Un:
                                 {
-                                    objRef = esp - 1;
-                                    switch (objRef->ObjectType)
+                                    var obj = esp - 1;
+                                    int val;
+                                    switch (obj->ObjectType)
                                     {
                                         case ObjectTypes.Long:
                                         case ObjectTypes.Integer:
-                                            intVal = (ushort)objRef->Value;
+                                            val = (ushort)obj->Value;
                                             break;
                                         case ObjectTypes.Float:
-                                            intVal = (ushort)*(float*)&objRef->Value;
+                                            val = (ushort)*(float*)&obj->Value;
                                             break;
                                         case ObjectTypes.Double:
-                                            intVal = (ushort)*(double*)&objRef->Value;
+                                            val = (ushort)*(double*)&obj->Value;
                                             break;
                                         default:
                                             throw new NotImplementedException();
                                     }
-                                    objRef->ObjectType = ObjectTypes.Integer;
-                                    objRef->Value = intVal;
-                                    objRef->ValueLow = 0;
+                                    obj->ObjectType = ObjectTypes.Integer;
+                                    obj->Value = val;
+                                    obj->ValueLow = 0;
                                 }
                                 break;
                             case OpCodeEnum.Conv_I2:
                             case OpCodeEnum.Conv_Ovf_I2:
                             case OpCodeEnum.Conv_Ovf_I2_Un:
                                 {
-                                    objRef = esp - 1;
-                                    switch (objRef->ObjectType)
+                                    var obj = esp - 1;
+                                    int val;
+                                    switch (obj->ObjectType)
                                     {
                                         case ObjectTypes.Long:
                                         case ObjectTypes.Integer:
-                                            intVal = (short)(objRef->Value);
+                                            val = (short)(obj->Value);
                                             break;
                                         case ObjectTypes.Float:
-                                            intVal = (short)*(float*)&objRef->Value;
+                                            val = (short)*(float*)&obj->Value;
                                             break;
                                         case ObjectTypes.Double:
-                                            intVal = (short)*(double*)&objRef->Value;
+                                            val = (short)*(double*)&obj->Value;
                                             break;
                                         default:
                                             throw new NotImplementedException();
                                     }
-                                    objRef->ObjectType = ObjectTypes.Integer;
-                                    objRef->Value = intVal;
-                                    objRef->ValueLow = 0;
+                                    obj->ObjectType = ObjectTypes.Integer;
+                                    obj->Value = val;
+                                    obj->ValueLow = 0;
                                 }
                                 break;
                             case OpCodeEnum.Conv_U4:
@@ -3856,28 +3829,28 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Conv_Ovf_U4:
                             case OpCodeEnum.Conv_Ovf_U4_Un:
                                 {
-                                    objRef = esp - 1;
-                                    uint uintVal;
-                                    switch (objRef->ObjectType)
+                                    var obj = esp - 1;
+                                    uint val;
+                                    switch (obj->ObjectType)
                                     {
                                         case ObjectTypes.Long:
-                                            uintVal = (uint)*(long*)&objRef->Value;
+                                            val = (uint)*(long*)&obj->Value;
                                             break;
                                         case ObjectTypes.Integer:
-                                            uintVal = (uint)objRef->Value;
+                                            val = (uint)obj->Value;
                                             break;
                                         case ObjectTypes.Float:
-                                            uintVal = (uint)*(float*)&objRef->Value;
+                                            val = (uint)*(float*)&obj->Value;
                                             break;
                                         case ObjectTypes.Double:
-                                            uintVal = (uint)*(double*)&objRef->Value;
+                                            val = (uint)*(double*)&obj->Value;
                                             break;
                                         default:
                                             throw new NotImplementedException();
                                     }
-                                    objRef->ObjectType = ObjectTypes.Integer;
-                                    objRef->Value = (int)uintVal;
-                                    objRef->ValueLow = 0;
+                                    obj->ObjectType = ObjectTypes.Integer;
+                                    obj->Value = (int)val;
+                                    obj->ValueLow = 0;
                                 }
                                 break;
                             case OpCodeEnum.Conv_I4:
@@ -3887,53 +3860,54 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Conv_Ovf_I4:
                             case OpCodeEnum.Conv_Ovf_I4_Un:
                                 {
-                                    objRef = esp - 1;
-                                    switch (objRef->ObjectType)
+                                    var obj = esp - 1;
+                                    int val;
+                                    switch (obj->ObjectType)
                                     {
                                         case ObjectTypes.Long:
-                                            intVal = (int)*(long*)&objRef->Value;
+                                            val = (int)*(long*)&obj->Value;
                                             break;
                                         case ObjectTypes.Float:
-                                            intVal = (int)*(float*)&objRef->Value;
+                                            val = (int)*(float*)&obj->Value;
                                             break;
                                         case ObjectTypes.Double:
-                                            intVal = (int)*(double*)&objRef->Value;
+                                            val = (int)*(double*)&obj->Value;
                                             break;
                                         case ObjectTypes.Integer:
-                                            intVal = objRef->Value;
+                                            val = obj->Value;
                                             break;
                                         default:
                                             throw new NotImplementedException();
                                     }
-                                    objRef->ObjectType = ObjectTypes.Integer;
-                                    objRef->Value = intVal;
+                                    obj->ObjectType = ObjectTypes.Integer;
+                                    obj->Value = val;
                                 }
                                 break;
                             case OpCodeEnum.Conv_I8:
                             case OpCodeEnum.Conv_Ovf_I8:
                             case OpCodeEnum.Conv_Ovf_I8_Un:
                                 {
-                                    objRef = esp - 1;
-                                    long longVal;
-                                    switch (objRef->ObjectType)
+                                    var obj = esp - 1;
+                                    long val;
+                                    switch (obj->ObjectType)
                                     {
                                         case ObjectTypes.Integer:
-                                            longVal = objRef->Value;
+                                            val = obj->Value;
                                             break;
                                         case ObjectTypes.Long:
                                             ip++;
                                             continue;
                                         case ObjectTypes.Float:
-                                            longVal = (long)*(float*)&objRef->Value;
+                                            val = (long)*(float*)&obj->Value;
                                             break;
                                         case ObjectTypes.Double:
-                                            longVal = (long)*(double*)&objRef->Value;
+                                            val = (long)*(double*)&obj->Value;
                                             break;
                                         default:
                                             throw new NotImplementedException();
                                     }
-                                    objRef->ObjectType = ObjectTypes.Long;
-                                    *(long*)(&objRef->Value) = longVal;
+                                    obj->ObjectType = ObjectTypes.Long;
+                                    *(long*)(&obj->Value) = val;
                                 }
                                 break;
 
@@ -3941,68 +3915,68 @@ namespace ILRuntime.Runtime.Intepreter
                             case OpCodeEnum.Conv_Ovf_U8:
                             case OpCodeEnum.Conv_Ovf_U8_Un:
                                 {
-                                    objRef = esp - 1;
-                                    ulong ulongVal;
-                                    switch (objRef->ObjectType)
+                                    var obj = esp - 1;
+                                    ulong val;
+                                    switch (obj->ObjectType)
                                     {
                                         case ObjectTypes.Integer:
-                                            ulongVal = (uint)objRef->Value;
+                                            val = (uint)obj->Value;
                                             break;
                                         case ObjectTypes.Long:
                                             ip++;
                                             continue;
                                         case ObjectTypes.Float:
-                                            ulongVal = (ulong)*(float*)&objRef->Value;
+                                            val = (ulong)*(float*)&obj->Value;
                                             break;
                                         case ObjectTypes.Double:
-                                            ulongVal = (ulong)*(double*)&objRef->Value;
+                                            val = (ulong)*(double*)&obj->Value;
                                             break;
                                         default:
                                             throw new NotImplementedException();
                                     }
-                                    objRef->ObjectType = ObjectTypes.Long;
-                                    *(ulong*)(&objRef->Value) = ulongVal;
+                                    obj->ObjectType = ObjectTypes.Long;
+                                    *(ulong*)(&obj->Value) = val;
                                 }
                                 break;
                             case OpCodeEnum.Conv_R4:
                                 {
-                                    objRef = esp - 1;
-                                    float floatVal;
-                                    switch (objRef->ObjectType)
+                                    var obj = esp - 1;
+                                    float val;
+                                    switch (obj->ObjectType)
                                     {
                                         case ObjectTypes.Long:
-                                            floatVal = (float)*(long*)&objRef->Value;
+                                            val = (float)*(long*)&obj->Value;
                                             break;
                                         case ObjectTypes.Float:
                                             ip++;
                                             continue;
                                         case ObjectTypes.Double:
-                                            floatVal = (float)*(double*)&objRef->Value;
+                                            val = (float)*(double*)&obj->Value;
                                             break;
                                         case ObjectTypes.Integer:
-                                            floatVal = objRef->Value;
+                                            val = obj->Value;
                                             break;
                                         default:
                                             throw new NotImplementedException();
                                     }
-                                    objRef->ObjectType = ObjectTypes.Float;
-                                    *(float*)&objRef->Value = floatVal;
+                                    obj->ObjectType = ObjectTypes.Float;
+                                    *(float*)&obj->Value = val;
                                 }
                                 break;
                             case OpCodeEnum.Conv_R8:
                                 {
-                                    objRef = esp - 1;
-                                    double doubleVal;
-                                    switch (objRef->ObjectType)
+                                    var obj = esp - 1;
+                                    double val;
+                                    switch (obj->ObjectType)
                                     {
                                         case ObjectTypes.Long:
-                                            doubleVal = (double)*(long*)&objRef->Value;
+                                            val = (double)*(long*)&obj->Value;
                                             break;
                                         case ObjectTypes.Float:
-                                            doubleVal = *(float*)&objRef->Value;
+                                            val = *(float*)&obj->Value;
                                             break;
                                         case ObjectTypes.Integer:
-                                            doubleVal = objRef->Value;
+                                            val = obj->Value;
                                             break;
                                         case ObjectTypes.Double:
                                             ip++;
@@ -4010,27 +3984,27 @@ namespace ILRuntime.Runtime.Intepreter
                                         default:
                                             throw new NotImplementedException();
                                     }
-                                    objRef->ObjectType = ObjectTypes.Double;
-                                    *(double*)&objRef->Value = doubleVal;
+                                    obj->ObjectType = ObjectTypes.Double;
+                                    *(double*)&obj->Value = val;
                                 }
                                 break;
                             case OpCodeEnum.Conv_R_Un:
                                 {
-                                    objRef = esp - 1;
+                                    var obj = esp - 1;
                                     bool isDouble = false;
-                                    float floatVal = 0;
+                                    float val = 0;
                                     double val2 = 0;
-                                    switch (objRef->ObjectType)
+                                    switch (obj->ObjectType)
                                     {
                                         case ObjectTypes.Long:
-                                            val2 = (double)*(ulong*)&objRef->Value;
+                                            val2 = (double)*(ulong*)&obj->Value;
                                             isDouble = true;
                                             break;
                                         case ObjectTypes.Float:
                                             ip++;
                                             continue;
                                         case ObjectTypes.Integer:
-                                            floatVal = (uint)objRef->Value;
+                                            val = (uint)obj->Value;
                                             break;
                                         case ObjectTypes.Double:
                                             ip++;
@@ -4040,13 +4014,13 @@ namespace ILRuntime.Runtime.Intepreter
                                     }
                                     if (isDouble)
                                     {
-                                        objRef->ObjectType = ObjectTypes.Double;
-                                        *(double*)&objRef->Value = val2;
+                                        obj->ObjectType = ObjectTypes.Double;
+                                        *(double*)&obj->Value = val2;
                                     }
                                     else
                                     {
-                                        objRef->ObjectType = ObjectTypes.Float;
-                                        *(float*)&objRef->Value = floatVal;
+                                        obj->ObjectType = ObjectTypes.Float;
+                                        *(float*)&obj->Value = val;
                                     }
                                 }
                                 break;
@@ -4061,18 +4035,18 @@ namespace ILRuntime.Runtime.Intepreter
                                 break;
                             case OpCodeEnum.Dup:
                                 {
-                                    objRef = esp - 1;
-                                    if (objRef->ObjectType == ObjectTypes.ValueTypeObjectReference)
+                                    var obj = esp - 1;
+                                    if (obj->ObjectType == ObjectTypes.ValueTypeObjectReference)
                                     {
-                                        CloneStackValueType(objRef, esp, mStack);
+                                        CloneStackValueType(obj, esp, mStack);
                                     }
                                     else
                                     {
-                                        *esp = *objRef;
+                                        *esp = *obj;
                                         if (esp->ObjectType >= ObjectTypes.Object)
                                         {
                                             esp->Value = mStack.Count;
-                                            mStack.Add(mStack[objRef->Value]);
+                                            mStack.Add(mStack[obj->Value]);
                                         }
                                     }
                                     esp++;
@@ -4082,9 +4056,9 @@ namespace ILRuntime.Runtime.Intepreter
 
                             case OpCodeEnum.Throw:
                                 {
-                                    objRef = GetObjectAndResolveReference(esp - 1);
-                                    var ex = mStack[objRef->Value] as Exception;
-                                    Free(objRef);
+                                    var obj = GetObjectAndResolveReference(esp - 1);
+                                    var ex = mStack[obj->Value] as Exception;
+                                    Free(obj);
                                     esp--;
                                     throw ex;
                                 }
@@ -4127,7 +4101,7 @@ namespace ILRuntime.Runtime.Intepreter
                                         ex.Data["ThisInfo"] = debugger.GetThisInfo(this);
                                     else
                                         ex.Data["ThisInfo"] = "";
-                                    ex.Data["StackTrace"] = debugger.GetStackTrace(this);
+                                    ex.Data["StackTrace"] = debugger.GetStackTrance(this);
                                     ex.Data["LocalInfo"] = debugger.GetLocalVariableInfo(this);
                                 }
                                 //Clear call stack
@@ -4183,9 +4157,9 @@ namespace ILRuntime.Runtime.Intepreter
 
         void CloneStackValueType(StackObject* src, StackObject* dst, IList<object> mStack)
         {
-            StackObject* descriptor = ILIntepreter.ResolveReference(src);
+            StackObject* descriptor = *(StackObject**)&src->Value;
             stack.AllocValueType(dst, AppDomain.GetType(descriptor->Value));
-            StackObject* dstDescriptor = ILIntepreter.ResolveReference(dst);
+            StackObject* dstDescriptor = *(StackObject**)&dst->Value;
             int cnt = descriptor->ValueLow;
             for(int i = 0; i < cnt; i++)
             {
@@ -4204,8 +4178,8 @@ namespace ILRuntime.Runtime.Intepreter
 
         void CopyStackValueType(StackObject* src, StackObject* dst, IList<object> mStack)
         {
-            StackObject* descriptor = ILIntepreter.ResolveReference(src);
-            StackObject* dstDescriptor = ILIntepreter.ResolveReference(dst);
+            StackObject* descriptor = *(StackObject**)&src->Value;
+            StackObject* dstDescriptor = *(StackObject**)&dst->Value;
             if (!CanCastTo(descriptor, dstDescriptor))
                 throw new InvalidCastException();
             int cnt = descriptor->ValueLow;
@@ -4269,7 +4243,7 @@ namespace ILRuntime.Runtime.Intepreter
                         if (dst->ObjectType == ObjectTypes.ValueTypeObjectReference)
                         {
                             var ins = mStack[val->Value];
-                            dst = ILIntepreter.ResolveReference(dst);
+                            dst = *(StackObject**)&dst->Value;
 
                             CopyValueTypeToStack(dst, ins, mStack);
                         }
@@ -4312,12 +4286,12 @@ namespace ILRuntime.Runtime.Intepreter
                         var obj = mStack[esp->Value];
                         if (obj is ILTypeInstance)
                         {
-                            var dst = ILIntepreter.ResolveReference(v);
+                            var dst = *(StackObject**)&v->Value;
                             ((ILTypeInstance)obj).CopyValueTypeToStack(dst, mStack);
                         }
                         else
                         {
-                            var dst = ILIntepreter.ResolveReference(v);
+                            var dst = *(StackObject**)&v->Value;
                             var ct = domain.GetType(dst->Value) as CLRType;
                             var binder = ct.ValueTypeBinder;
                             binder.CopyValueTypeToStack(obj, dst, mStack);
@@ -4954,23 +4928,12 @@ namespace ILRuntime.Runtime.Intepreter
             else
                 throw new NotImplementedException();
         }
-#if NET_4_6 || NET_STANDARD_2_0
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-#endif
-        public static StackObject* ResolveReference(StackObject* esp)
-        {
-            var addr = *(long*)&esp->Value;
-            return (StackObject*)addr;
-        }
 
-#if NET_4_6 || NET_STANDARD_2_0
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-#endif
         public static StackObject* GetObjectAndResolveReference(StackObject* esp)
         {
             if (esp->ObjectType == ObjectTypes.StackObjectReference)
             {
-                return ResolveReference(esp);
+                return *(StackObject**)&esp->Value;
             }
             else
                 return esp;
@@ -5040,9 +5003,6 @@ namespace ILRuntime.Runtime.Intepreter
             }
             return obj;
         }
-#if NET_4_6 || NET_STANDARD_2_0
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-#endif
         public static StackObject* PushOne(StackObject* esp)
         {
             esp->ObjectType = ObjectTypes.Integer;
@@ -5050,9 +5010,6 @@ namespace ILRuntime.Runtime.Intepreter
             return esp + 1;
         }
 
-#if NET_4_6 || NET_STANDARD_2_0
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-#endif
         public static StackObject* PushZero(StackObject* esp)
         {
             esp->ObjectType = ObjectTypes.Integer;
@@ -5060,9 +5017,6 @@ namespace ILRuntime.Runtime.Intepreter
             return esp + 1;
         }
 
-#if NET_4_6 || NET_STANDARD_2_0
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-#endif
         public static StackObject* PushNull(StackObject* esp)
         {
             esp->ObjectType = ObjectTypes.Null;
@@ -5075,7 +5029,7 @@ namespace ILRuntime.Runtime.Intepreter
         {
             if (esp->ObjectType == ObjectTypes.ValueTypeObjectReference && domain != null)
             {
-                var dst = ILIntepreter.ResolveReference(esp);
+                var dst = *(StackObject**)&esp->Value;
                 var vt = domain.GetType(dst->Value);
 
                 if (obj is ILTypeInstance)
@@ -5196,25 +5150,16 @@ namespace ILRuntime.Runtime.Intepreter
         }
 
         //Don't ask me why add this funky method for this, otherwise Unity won't calculate the right value
-#if NET_4_6 || NET_STANDARD_2_0
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-#endif
         public static StackObject* Add(StackObject* a, int b)
         {
             return (StackObject*)((long)a + sizeof(StackObject) * b);
         }
 
-#if NET_4_6 || NET_STANDARD_2_0
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-#endif
         public static StackObject* Minus(StackObject* a, int b)
         {
             return (StackObject*)((long)a - sizeof(StackObject) * b);
         }
 
-#if NET_4_6 || NET_STANDARD_2_0
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-#endif
         public void Free(StackObject* esp)
         {
             if (esp->ObjectType >= ObjectTypes.Object)
@@ -5233,7 +5178,7 @@ namespace ILRuntime.Runtime.Intepreter
         {
             if (esp->ObjectType == ObjectTypes.ValueTypeObjectReference)
             {
-                var addr = ILIntepreter.ResolveReference(esp);
+                var addr = *(StackObject**)&esp->Value;
                 if (addr <= ValueTypeBasePointer)//Only Stack allocation after base pointer should be freed, local variable are freed automatically
                     stack.FreeValueTypeObject(esp);
             }

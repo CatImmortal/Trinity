@@ -9,7 +9,7 @@ namespace ETModel
 	{
 		public AppType AppType;
 		
-		protected AService Service;
+		private AService Service;
 
 		private readonly Dictionary<long, Session> sessions = new Dictionary<long, Session>();
 
@@ -17,23 +17,30 @@ namespace ETModel
 
 		public IMessageDispatcher MessageDispatcher { get; set; }
 
-		public void Awake(NetworkProtocol protocol, int packetSize = Packet.PacketSizeLength2)
+		public void Awake(NetworkProtocol protocol)
 		{
-			switch (protocol)
+			try
 			{
-				case NetworkProtocol.KCP:
-					this.Service = new KService() { Parent = this };
-					break;
-				case NetworkProtocol.TCP:
-					this.Service = new TService(packetSize) { Parent = this };
-					break;
-				case NetworkProtocol.WebSocket:
-					this.Service = new WService() { Parent = this };
-					break;
+				switch (protocol)
+				{
+					case NetworkProtocol.KCP:
+						this.Service = new KService();
+						break;
+					case NetworkProtocol.TCP:
+						this.Service = new TService();
+						break;
+					case NetworkProtocol.WebSocket:
+						this.Service = new WService();
+						break;
+				}
+			}
+			catch (Exception e)
+			{
+				throw new Exception($"{e}");
 			}
 		}
 
-		public void Awake(NetworkProtocol protocol, string address, int packetSize = Packet.PacketSizeLength2)
+		public void Awake(NetworkProtocol protocol, string address)
 		{
 			try
 			{
@@ -42,15 +49,15 @@ namespace ETModel
 				{
 					case NetworkProtocol.KCP:
 						ipEndPoint = NetworkHelper.ToIPEndPoint(address);
-						this.Service = new KService(ipEndPoint, this.OnAccept) { Parent = this };
+						this.Service = new KService(ipEndPoint, this.OnAccept);
 						break;
 					case NetworkProtocol.TCP:
 						ipEndPoint = NetworkHelper.ToIPEndPoint(address);
-						this.Service = new TService(packetSize, ipEndPoint, this.OnAccept) { Parent = this };
+						this.Service = new TService(ipEndPoint, this.OnAccept);
 						break;
 					case NetworkProtocol.WebSocket:
 						string[] prefixs = address.Split(';');
-						this.Service = new WService(prefixs, this.OnAccept) { Parent = this };
+						this.Service = new WService(prefixs, this.OnAccept);
 						break;
 				}
 			}
@@ -137,7 +144,7 @@ namespace ETModel
 				session.Dispose();
 			}
 
-			this.Service.Dispose();
+			this.Service?.Dispose();
 		}
 	}
 }

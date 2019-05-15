@@ -1,11 +1,11 @@
 ﻿using System;
-#if !SERVER
-using System.Collections.Generic;		
-#endif
+using System.Collections.Generic;
 
 namespace Trinity.Hotfix
 {
-	// 客户端为了0GC需要消息池，服务端消息需要跨协程不需要消息池
+    /// <summary>
+    /// 消息池（客户端为了0GC需要消息池，服务端消息需要跨协程不需要消息池）
+    /// </summary>
     public class MessagePool
     {
 	    public static MessagePool Instance { get; } = new MessagePool();

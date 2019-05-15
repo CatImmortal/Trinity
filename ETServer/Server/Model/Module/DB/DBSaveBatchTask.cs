@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace ETModel
 {
 	[ObjectSystem]
-	public class DbSaveBatchTaskSystem : AwakeSystem<DBSaveBatchTask, List<ComponentWithId>, string, ETTaskCompletionSource>
+	public class DbSaveBatchTaskSystem : AwakeSystem<DBSaveBatchTask, List<ComponentWithId>, string, TaskCompletionSource<bool>>
 	{
-		public override void Awake(DBSaveBatchTask self, List<ComponentWithId> components, string collectionName, ETTaskCompletionSource tcs)
+		public override void Awake(DBSaveBatchTask self, List<ComponentWithId> components, string collectionName, TaskCompletionSource<bool> tcs)
 		{
 			self.Components = components;
 			self.CollectionName = collectionName;
@@ -22,9 +23,9 @@ namespace ETModel
 
 		public List<ComponentWithId> Components;
 
-		public ETTaskCompletionSource Tcs;
+		public TaskCompletionSource<bool> Tcs;
 	
-		public override async ETTask Run()
+		public override async Task Run()
 		{
 			DBComponent dbComponent = Game.Scene.GetComponent<DBComponent>();
 
@@ -46,7 +47,7 @@ namespace ETModel
 					this.Tcs.SetException(new Exception($"保存数据失败! {CollectionName} {this.Components.ListToString()}", e));
 				}
 			}
-			this.Tcs.SetResult();
+			this.Tcs.SetResult(true);
 		}
 	}
 }

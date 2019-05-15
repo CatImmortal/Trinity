@@ -1,4 +1,4 @@
-﻿/* Copyright 2013-present MongoDB Inc.
+﻿/* Copyright 2013-2015 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -36,7 +36,6 @@ namespace MongoDB.Driver.Core.Operations
         private BsonDocument _filter;
         private readonly DatabaseNamespace _databaseNamespace;
         private readonly MessageEncoderSettings _messageEncoderSettings;
-        private bool? _nameOnly;
 
         // constructors
         /// <summary>
@@ -87,18 +86,6 @@ namespace MongoDB.Driver.Core.Operations
             get { return _messageEncoderSettings; }
         }
 
-        /// <summary>
-        /// Gets or sets the name only option.
-        /// </summary>
-        /// <value>
-        /// The name only option.
-        /// </value>
-        public bool? NameOnly
-        {
-            get { return _nameOnly; }
-            set { _nameOnly = value; }
-        }
-
         // public methods
         /// <inheritdoc/>
         public IAsyncCursor<BsonDocument> Execute(IReadBinding binding, CancellationToken cancellationToken)
@@ -109,7 +96,7 @@ namespace MongoDB.Driver.Core.Operations
             using (var channelSource = binding.GetReadChannelSource(cancellationToken))
             {
                 var operation = CreateOperation();
-                var result = operation.Execute(channelSource, binding.ReadPreference, binding.Session, cancellationToken);
+                var result = operation.Execute(channelSource, binding.ReadPreference, cancellationToken);
                 return CreateCursor(channelSource, operation.Command, result);
             }
         }
@@ -123,7 +110,7 @@ namespace MongoDB.Driver.Core.Operations
             using (var channelSource = await binding.GetReadChannelSourceAsync(cancellationToken).ConfigureAwait(false))
             {
                 var operation = CreateOperation();
-                var result = await operation.ExecuteAsync(channelSource, binding.ReadPreference, binding.Session, cancellationToken).ConfigureAwait(false);
+                var result = await operation.ExecuteAsync(channelSource, binding.ReadPreference, cancellationToken).ConfigureAwait(false);
                 return CreateCursor(channelSource, operation.Command, result);
             }
         }
@@ -134,15 +121,14 @@ namespace MongoDB.Driver.Core.Operations
             var command = new BsonDocument
             {
                 { "listCollections", 1 },
-                { "filter", _filter, _filter != null },
-                { "nameOnly", () => _nameOnly.Value, _nameOnly.HasValue }
+                { "filter", _filter, _filter != null }
             };
             return new ReadCommandOperation<BsonDocument>(_databaseNamespace, command, BsonDocumentSerializer.Instance, _messageEncoderSettings);
         }
 
         private IAsyncCursor<BsonDocument> CreateCursor(IChannelSourceHandle channelSource, BsonDocument command, BsonDocument result)
         {
-            var getMoreChannelSource = new ServerChannelSource(channelSource.Server, channelSource.Session.Fork());
+            var getMoreChannelSource = new ServerChannelSource(channelSource.Server);
             var cursorDocument = result["cursor"].AsBsonDocument;
             var cursor = new AsyncCursor<BsonDocument>(
                 getMoreChannelSource,

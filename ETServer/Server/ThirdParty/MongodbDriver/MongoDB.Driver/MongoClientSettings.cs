@@ -1,4 +1,4 @@
-/* Copyright 2010-present MongoDB Inc.
+/* Copyright 2010-2016 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -50,8 +50,6 @@ namespace MongoDB.Driver
         private UTF8Encoding _readEncoding;
         private ReadPreference _readPreference;
         private string _replicaSetName;
-        private bool _retryWrites;
-        private string _sdamLogFilename;
         private List<MongoServerAddress> _servers;
         private TimeSpan _serverSelectionTimeout;
         private TimeSpan _socketTimeout;
@@ -91,8 +89,6 @@ namespace MongoDB.Driver
             _readEncoding = null;
             _readPreference = ReadPreference.Primary;
             _replicaSetName = null;
-            _retryWrites = false;
-            _sdamLogFilename = null;
             _servers = new List<MongoServerAddress> { new MongoServerAddress("localhost") };
             _serverSelectionTimeout = MongoDefaults.ServerSelectionTimeout;
             _socketTimeout = MongoDefaults.SocketTimeout;
@@ -159,31 +155,8 @@ namespace MongoDB.Driver
         }
 
         /// <summary>
-        /// Gets or sets the credential.
-        /// </summary>
-        public MongoCredential Credential
-        {
-            get
-            {
-                return _credentials.SingleOrDefault();
-            }
-            set
-            {
-                if (_isFrozen) { throw new InvalidOperationException("MongoClientSettings is frozen."); }
-                if (value == null)
-                {
-                    _credentials = new MongoCredentialStore(Enumerable.Empty<MongoCredential>());
-                }
-                else
-                {
-                    _credentials = new MongoCredentialStore(new[] { value });
-                }
-            }
-        }
-        /// <summary>
         /// Gets or sets the credentials.
         /// </summary>
-        [Obsolete("Use Credential instead. Using multiple credentials is deprecated.")]
         public IEnumerable<MongoCredential> Credentials
         {
             get { return _credentials; }
@@ -241,7 +214,7 @@ namespace MongoDB.Driver
             set
             {
                 if (_isFrozen) { throw new InvalidOperationException("MongoClientSettings is frozen."); }
-                _heartbeatTimeout = Ensure.IsInfiniteOrGreaterThanZero(value, nameof(value));
+                _heartbeatTimeout = Ensure.IsGreaterThanZero(value, nameof(value));
             }
         }
 
@@ -376,32 +349,6 @@ namespace MongoDB.Driver
             {
                 if (_isFrozen) { throw new InvalidOperationException("MongoClientSettings is frozen."); }
                 _replicaSetName = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets whether to retry writes.
-        /// </summary>
-        public bool RetryWrites
-        {
-            get { return _retryWrites; }
-            set
-            {
-                if (_isFrozen) { throw new InvalidOperationException("MongoClientSettings is frozen."); }
-                _retryWrites = value;
-            }
-        }
-        
-        /// <summary>
-        /// Gets or set the name of the SDAM log file. Null turns logging off. stdout will log to console.
-        /// </summary>
-        public string SdamLogFilename
-        {
-            get { return _sdamLogFilename; }
-            set
-            {
-                if (_isFrozen) { throw new InvalidOperationException("MongoClientSettings is frozen."); }
-                _sdamLogFilename = value;
             }
         }
 
@@ -588,17 +535,6 @@ namespace MongoDB.Driver
         }
 
         // public static methods
-        
-        /// <summary>
-        /// Gets a MongoClientSettings object intialized with values from a connection string.
-        /// </summary>
-        /// <param name="connectionString">The connection string.</param>
-        /// <returns>A MongoClientSettings.</returns>
-        public static MongoClientSettings FromConnectionString(string connectionString)
-        {
-            return FromUrl(new MongoUrl(connectionString));
-        }
-        
         /// <summary>
         /// Gets a MongoClientSettings object intialized with values from a MongoURL.
         /// </summary>
@@ -606,11 +542,6 @@ namespace MongoDB.Driver
         /// <returns>A MongoClientSettings.</returns>
         public static MongoClientSettings FromUrl(MongoUrl url)
         {
-            if (url.Scheme == ConnectionStringScheme.MongoDBPlusSrv)
-            {
-                url = url.Resolve();
-            }
-
             var credential = url.GetCredential();
 
             var clientSettings = new MongoClientSettings();
@@ -630,7 +561,7 @@ namespace MongoDB.Driver
                         credential = credential.WithMechanismProperty(property.Key, property.Value);
                     }
                 }
-                clientSettings.Credential = credential;
+                clientSettings.Credentials = new[] { credential };
             }
             clientSettings.GuidRepresentation = url.GuidRepresentation;
             clientSettings.HeartbeatInterval = url.HeartbeatInterval;
@@ -644,7 +575,6 @@ namespace MongoDB.Driver
             clientSettings.ReadEncoding = null; // ReadEncoding must be provided in code
             clientSettings.ReadPreference = (url.ReadPreference == null) ? ReadPreference.Primary : url.ReadPreference;
             clientSettings.ReplicaSetName = url.ReplicaSetName;
-            clientSettings.RetryWrites = url.RetryWrites.GetValueOrDefault(false);
             clientSettings.LocalThreshold = url.LocalThreshold;
             clientSettings.Servers = new List<MongoServerAddress>(url.Servers);
             clientSettings.ServerSelectionTimeout = url.ServerSelectionTimeout;
@@ -684,9 +614,7 @@ namespace MongoDB.Driver
             clone._readEncoding = _readEncoding;
             clone._readPreference = _readPreference;
             clone._replicaSetName = _replicaSetName;
-            clone._retryWrites = _retryWrites;
             clone._localThreshold = _localThreshold;
-            clone._sdamLogFilename = _sdamLogFilename;
             clone._servers = new List<MongoServerAddress>(_servers);
             clone._serverSelectionTimeout = _serverSelectionTimeout;
             clone._socketTimeout = _socketTimeout;
@@ -741,9 +669,7 @@ namespace MongoDB.Driver
                 object.Equals(_readConcern, rhs._readConcern) &&
                 _readPreference == rhs._readPreference &&
                 _replicaSetName == rhs._replicaSetName &&
-                _retryWrites == rhs._retryWrites &&
                 _localThreshold == rhs._localThreshold &&
-                _sdamLogFilename == rhs._sdamLogFilename &&
                 _servers.SequenceEqual(rhs._servers) &&
                 _serverSelectionTimeout == rhs._serverSelectionTimeout &&
                 _socketTimeout == rhs._socketTimeout &&
@@ -816,9 +742,7 @@ namespace MongoDB.Driver
                 .Hash(_readEncoding)
                 .Hash(_readPreference)
                 .Hash(_replicaSetName)
-                .Hash(_retryWrites)
                 .Hash(_localThreshold)
-                .Hash(_sdamLogFilename)
                 .HashElements(_servers)
                 .Hash(_serverSelectionTimeout)
                 .Hash(_socketTimeout)
@@ -866,12 +790,7 @@ namespace MongoDB.Driver
             sb.AppendFormat("ReadConcern={0};", _readConcern);
             sb.AppendFormat("ReadPreference={0};", _readPreference);
             sb.AppendFormat("ReplicaSetName={0};", _replicaSetName);
-            sb.AppendFormat("RetryWrites={0}", _retryWrites);
             sb.AppendFormat("LocalThreshold={0};", _localThreshold);
-            if (_sdamLogFilename != null)
-            {
-                sb.AppendFormat("SDAMLogFileName={0};", _sdamLogFilename);
-            }
             sb.AppendFormat("Servers={0};", string.Join(",", _servers.Select(s => s.ToString()).ToArray()));
             sb.AppendFormat("ServerSelectionTimeout={0};", _serverSelectionTimeout);
             sb.AppendFormat("SocketTimeout={0};", _socketTimeout);
@@ -909,7 +828,6 @@ namespace MongoDB.Driver
                 _maxConnectionPoolSize,
                 _minConnectionPoolSize,
                 _replicaSetName,
-                _sdamLogFilename,
                 _servers.ToList(),
                 _serverSelectionTimeout,
                 _socketTimeout,

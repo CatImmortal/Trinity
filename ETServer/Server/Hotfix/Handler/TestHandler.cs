@@ -1,5 +1,7 @@
-﻿using ETModel;
-
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using ETModel;
 namespace ETHotfix
 {
     [MessageHandler(AppType.AllServer)]
@@ -7,7 +9,7 @@ namespace ETHotfix
     {
         protected override void Run(Session session, TestMessage message)
         {
-            Log.Info(message.Info);
+            Log.Info(message.Num.ToString());
         }
     }
 }

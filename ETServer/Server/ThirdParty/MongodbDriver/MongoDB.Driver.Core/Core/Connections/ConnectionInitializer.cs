@@ -1,4 +1,4 @@
-/* Copyright 2013-present MongoDB Inc.
+/* Copyright 2013-2016 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -13,8 +13,6 @@
 * limitations under the License.
 */
 
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Bson;
@@ -40,9 +38,9 @@ namespace MongoDB.Driver.Core.Connections
         public ConnectionDescription InitializeConnection(IConnection connection, CancellationToken cancellationToken)
         {
             Ensure.IsNotNull(connection, nameof(connection));
-            var isMasterCommand = CreateInitialIsMasterCommand(connection.Settings.Authenticators);
-            var isMasterProtocol = IsMasterHelper.CreateProtocol(isMasterCommand);
-            var isMasterResult = IsMasterHelper.GetResult(connection, isMasterProtocol, cancellationToken);
+
+            var isMasterProtocol = CreateIsMasterProtocol();
+            var isMasterResult = new IsMasterResult(isMasterProtocol.Execute(connection, cancellationToken));
 
             var buildInfoProtocol = CreateBuildInfoProtocol();
             var buildInfoResult = new BuildInfoResult(buildInfoProtocol.Execute(connection, cancellationToken));
@@ -69,9 +67,9 @@ namespace MongoDB.Driver.Core.Connections
         public async Task<ConnectionDescription> InitializeConnectionAsync(IConnection connection, CancellationToken cancellationToken)
         {
             Ensure.IsNotNull(connection, nameof(connection));
-            var isMasterCommand = CreateInitialIsMasterCommand(connection.Settings.Authenticators);
-            var isMasterProtocol = IsMasterHelper.CreateProtocol(isMasterCommand);
-            var isMasterResult = await IsMasterHelper.GetResultAsync(connection, isMasterProtocol, cancellationToken).ConfigureAwait(false);
+
+            var isMasterProtocol = CreateIsMasterProtocol();
+            var isMasterResult = new IsMasterResult(await isMasterProtocol.ExecuteAsync(connection, cancellationToken).ConfigureAwait(false));
 
             var buildInfoProtocol = CreateBuildInfoProtocol();
             var buildInfoResult = new BuildInfoResult(await buildInfoProtocol.ExecuteAsync(connection, cancellationToken).ConfigureAwait(false));
@@ -100,11 +98,11 @@ namespace MongoDB.Driver.Core.Connections
         {
             var buildInfoCommand = new BsonDocument("buildInfo", 1);
             var buildInfoProtocol = new CommandWireProtocol<BsonDocument>(
-                databaseNamespace: DatabaseNamespace.Admin,
-                command: buildInfoCommand,
-                slaveOk: true,
-                resultSerializer: BsonDocumentSerializer.Instance,
-                messageEncoderSettings: null);
+                DatabaseNamespace.Admin,
+                buildInfoCommand,
+                true,
+                BsonDocumentSerializer.Instance,
+               null);
             return buildInfoProtocol;
         }
 
@@ -112,19 +110,38 @@ namespace MongoDB.Driver.Core.Connections
         {
             var getLastErrorCommand = new BsonDocument("getLastError", 1);
             var getLastErrorProtocol = new CommandWireProtocol<BsonDocument>(
-                databaseNamespace: DatabaseNamespace.Admin,
-                command: getLastErrorCommand,
-                slaveOk: true,
-                resultSerializer: BsonDocumentSerializer.Instance,
-                messageEncoderSettings: null);
+                DatabaseNamespace.Admin,
+                getLastErrorCommand,
+                true,
+                BsonDocumentSerializer.Instance,
+                null);
             return getLastErrorProtocol;
         }
-        
-        private BsonDocument CreateInitialIsMasterCommand(IReadOnlyList<IAuthenticator> authenticators)
+
+        internal BsonDocument CreateIsMasterCommand()
         {
-            var command = IsMasterHelper.CreateCommand();
-            IsMasterHelper.AddClientDocumentToCommand(command, _clientDocument);
-            return IsMasterHelper.CustomizeCommand(command, authenticators);
+            return CreateIsMasterCommand(_clientDocument);
+        }
+
+        internal BsonDocument CreateIsMasterCommand(BsonDocument clientDocument)
+        {
+            return new BsonDocument
+            {
+                { "isMaster", 1 },
+                { "client", clientDocument, clientDocument != null }
+            };
+        }
+
+        private CommandWireProtocol<BsonDocument> CreateIsMasterProtocol()
+        {
+            var isMasterCommand = CreateIsMasterCommand();
+            var isMasterProtocol = new CommandWireProtocol<BsonDocument>(
+                DatabaseNamespace.Admin,
+                isMasterCommand,
+                true,
+                BsonDocumentSerializer.Instance,
+                null);
+            return isMasterProtocol;
         }
 
         private ConnectionDescription UpdateConnectionIdWithServerValue(ConnectionDescription description, BsonDocument getLastErrorResult)

@@ -5,18 +5,18 @@ using ETModel;
 namespace ETHotfix
 {
 	[ObjectSystem]
-	public class MessageDispatcherComponentAwakeSystem : AwakeSystem<MessageDispatcherComponent>
+	public class MessageDispatherComponentAwakeSystem : AwakeSystem<MessageDispatherComponent>
 	{
-		public override void Awake(MessageDispatcherComponent self)
+		public override void Awake(MessageDispatherComponent self)
 		{
 			self.Load();
 		}
 	}
 
 	[ObjectSystem]
-	public class MessageDispatcherComponentLoadSystem : LoadSystem<MessageDispatcherComponent>
+	public class MessageDispatherComponentLoadSystem : LoadSystem<MessageDispatherComponent>
 	{
-		public override void Load(MessageDispatcherComponent self)
+		public override void Load(MessageDispatherComponent self)
 		{
 			self.Load();
 		}
@@ -25,9 +25,9 @@ namespace ETHotfix
 	/// <summary>
 	/// 消息分发组件
 	/// </summary>
-	public static class MessageDispatcherComponentHelper
+	public static class MessageDispatherComponentEx
 	{
-		public static void Load(this MessageDispatcherComponent self)
+		public static void Load(this MessageDispatherComponent self)
 		{
 			self.Handlers.Clear();
 
@@ -67,7 +67,7 @@ namespace ETHotfix
 			}
 		}
 
-		public static void RegisterHandler(this MessageDispatcherComponent self, ushort opcode, IMHandler handler)
+		public static void RegisterHandler(this MessageDispatherComponent self, ushort opcode, IMHandler handler)
 		{
 			if (!self.Handlers.ContainsKey(opcode))
 			{
@@ -76,7 +76,7 @@ namespace ETHotfix
 			self.Handlers[opcode].Add(handler);
 		}
 
-		public static void Handle(this MessageDispatcherComponent self, Session session, MessageInfo messageInfo)
+		public static void Handle(this MessageDispatherComponent self, Session session, MessageInfo messageInfo)
 		{
 			List<IMHandler> actions;
 			if (!self.Handlers.TryGetValue(messageInfo.Opcode, out actions))

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace ETModel
 {
@@ -21,7 +22,7 @@ namespace ETModel
 
 		public const int MaxFailTimes = 5;
 		
-		public ETTaskCompletionSource<ActorTask> Tcs;
+		public TaskCompletionSource<ActorTask> Tcs;
 
 		public override void Dispose()
 		{

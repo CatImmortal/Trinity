@@ -504,7 +504,7 @@ namespace ILRuntime.Runtime.CLRBinding
             {
                 case ObjectTypes.StackObjectReference:
                     {
-                        var ___dst = ILIntepreter.ResolveReference(ptr_of_this_method);");
+                        var ___dst = *(StackObject**)&ptr_of_this_method->Value;");
 
                         if (pt.IsValueType && !pt.IsPrimitive && valueTypeBinders != null && valueTypeBinders.Contains(pt))
                         {

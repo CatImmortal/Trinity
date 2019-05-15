@@ -1,4 +1,4 @@
-/* Copyright 2013-present MongoDB Inc.
+/* Copyright 2013-2016 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ namespace MongoDB.Driver.Core.Misc
             }
         }
 
-#if NET452
+#if NET45
         /// <summary>
         /// Gets the object data required to serialize an end point.
         /// </summary>
@@ -178,11 +178,6 @@ namespace MongoDB.Driver.Core.Misc
         /// <returns>True if the string representation was parsed successfully.</returns>
         public static bool TryParse(string value, out EndPoint result)
         {
-            return TryParse(value, 27017, out result);
-        }
-        
-        internal static bool TryParse(string value, int defaultPort, out EndPoint result)
-        {
             result = null;
 
             if (value != null)
@@ -193,7 +188,7 @@ namespace MongoDB.Driver.Core.Misc
                 {
                     var addressString = match.Groups["address"].Value;
                     var portString = match.Groups["port"].Value;
-                    var port = defaultPort;
+                    var port = 27017;
                     if (portString.Length != 0 && !int.TryParse(portString, out port))
                     {
                         return false;
@@ -219,7 +214,7 @@ namespace MongoDB.Driver.Core.Misc
                 {
                     var host = match.Groups["host"].Value;
                     var portString = match.Groups["port"].Value;
-                    var port = defaultPort;
+                    var port = 27017;
                     if (portString.Length != 0 && !int.TryParse(portString, out port))
                     {
                         return false;

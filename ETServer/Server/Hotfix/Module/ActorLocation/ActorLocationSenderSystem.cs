@@ -1,14 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using ETModel;
 
 namespace ETHotfix
 {
     [ObjectSystem]
-    public class ActorLocationSenderAwakeSystem : AwakeSystem<ActorLocationSender>
+    public class ActorLocationSenderAwakeSystem : AwakeSystem<ActorLocationSender, long>
     {
-        public override void Awake(ActorLocationSender self)
+        public override void Awake(ActorLocationSender self, long id)
         {
             self.LastSendTime = TimeHelper.Now();
+	        self.Id = id;
             self.Tcs = null;
             self.FailTimes = 0;
             self.ActorId = 0;
@@ -18,18 +22,15 @@ namespace ETHotfix
     [ObjectSystem]
     public class ActorLocationSenderStartSystem : StartSystem<ActorLocationSender>
     {
-	    public override void Start(ActorLocationSender self)
-	    {
-		    StartAsync(self).Coroutine();
-	    }
-	    
-        public async ETVoid StartAsync(ActorLocationSender self)
+        public override async void Start(ActorLocationSender self)
         {
             self.ActorId = await Game.Scene.GetComponent<LocationProxyComponent>().Get(self.Id);
 
-            self.Address = StartConfigComponent.Instance.GetInnerAddress(IdGenerater.GetAppId(self.ActorId));
+            self.Address = StartConfigComponent.Instance
+                    .Get(IdGenerater.GetAppIdFromId(self.ActorId))
+                    .GetComponent<InnerConfig>().IPEndPoint;
 
-            self.UpdateAsync().Coroutine();
+            self.UpdateAsync();
         }
     }
 	
@@ -90,19 +91,19 @@ namespace ETHotfix
 			t.SetResult(task);
 		}
 
-		private static ETTask<ActorTask> GetAsync(this ActorLocationSender self)
+		private static Task<ActorTask> GetAsync(this ActorLocationSender self)
 		{
 			if (self.WaitingTasks.Count > 0)
 			{
 				ActorTask task = self.WaitingTasks.Peek();
-				return ETTask.FromResult(task);
+				return Task.FromResult(task);
 			}
 
-			self.Tcs = new ETTaskCompletionSource<ActorTask>();
+			self.Tcs = new TaskCompletionSource<ActorTask>();
 			return self.Tcs.Task;
 		}
 
-		public static async ETVoid UpdateAsync(this ActorLocationSender self)
+		public static async void UpdateAsync(this ActorLocationSender self)
 		{
 			try
 			{
@@ -133,7 +134,7 @@ namespace ETHotfix
 			}
 		}
 
-		private static async ETTask RunTask(this ActorLocationSender self, ActorTask task)
+		private static async Task RunTask(this ActorLocationSender self, ActorTask task)
 		{
 			ActorMessageSender actorMessageSender = Game.Scene.GetComponent<ActorMessageSenderComponent>().Get(self.ActorId);
 			IActorResponse response = await actorMessageSender.Call(task.ActorRequest);
@@ -158,7 +159,9 @@ namespace ETHotfix
 					// 等待0.5s再发送
 					await Game.Scene.GetComponent<TimerComponent>().WaitAsync(500);
 					self.ActorId = await Game.Scene.GetComponent<LocationProxyComponent>().Get(self.Id);
-					self.Address = StartConfigComponent.Instance.GetInnerAddress(IdGenerater.GetAppId(self.ActorId));
+					self.Address = StartConfigComponent.Instance
+							.Get(IdGenerater.GetAppIdFromId(self.ActorId))
+							.GetComponent<InnerConfig>().IPEndPoint;
 					self.AllowGet();
 					return;
 				
@@ -197,13 +200,13 @@ namespace ETHotfix
 		    self.Add(task);
 	    }
 
-		public static ETTask<IActorLocationResponse> Call(this ActorLocationSender self, IActorLocationRequest request)
+		public static Task<IActorLocationResponse> Call(this ActorLocationSender self, IActorLocationRequest request)
 		{
 			if (request == null)
 			{
 				throw new Exception($"actor location call message is null");
 			}
-			ETTaskCompletionSource<IActorLocationResponse> tcs = new ETTaskCompletionSource<IActorLocationResponse>();
+			TaskCompletionSource<IActorLocationResponse> tcs = new TaskCompletionSource<IActorLocationResponse>();
 			ActorTask task = new ActorTask(request, tcs);
 			self.Add(task);
 			return task.Tcs.Task;

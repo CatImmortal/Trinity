@@ -1,8 +1,10 @@
 ﻿// 不要在这个文件加[ProtoInclude]跟[BsonKnowType]标签,加到InnerMessage.cs或者OuterMessage.cs里面去
 namespace Trinity.Hotfix
 {
-	// 不需要返回消息
-	public interface IActorMessage: IMessage
+    /// <summary>
+    /// Actor消息
+    /// </summary>
+	public interface IActorMessage: IRequest
 	{
 		long ActorId { get; set; }
 	}
@@ -14,5 +16,10 @@ namespace Trinity.Hotfix
 
 	public interface IActorResponse : IResponse
 	{
+	}
+
+	public interface IFrameMessage : IMessage
+	{
+		long Id { get; set; }
 	}
 }

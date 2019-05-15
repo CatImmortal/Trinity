@@ -1,10 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <ApplicationIcon />
     <StartupObject />
-    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -16,25 +15,6 @@
     <OutputPath>..\..\..\Bin\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\ByteArray.cs" Link="ByteArray.cs" />
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\ByteString.cs" Link="ByteString.cs" />
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\CodedInputStream.cs" Link="CodedInputStream.cs" />
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\CodedOutputStream.ComputeSize.cs" Link="CodedOutputStream.ComputeSize.cs" />
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\CodedOutputStream.cs" Link="CodedOutputStream.cs" />
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\FieldCodec.cs" Link="FieldCodec.cs" />
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\ICustomDiagnosticMessage.cs" Link="ICustomDiagnosticMessage.cs" />
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\IMessage.cs" Link="IMessage.cs" />
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\InvalidProtocolBufferException.cs" Link="InvalidProtocolBufferException.cs" />
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\LimitedInputStream.cs" Link="LimitedInputStream.cs" />
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\MessageExtensions.cs" Link="MessageExtensions.cs" />
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\MessageParser.cs" Link="MessageParser.cs" />
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\PropertyInfoExtensions.cs" Link="PropertyInfoExtensions.cs" />
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\ProtoPreconditions.cs" Link="ProtoPreconditions.cs" />
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\RepeatedField.cs" Link="RepeatedField.cs" />
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\StreamExtensions.cs" Link="StreamExtensions.cs" />
-    <Compile Include="..\..\..\..\Assets\GameMain\Libraries\Google.Protobuf\WireFormat.cs" Link="WireFormat.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\MongoDBDriver\MongoDB.Bson\MongoDB.Bson.csproj" />
+    <ProjectReference Include="..\MongodbDriver\DotNetCoreDriver\MongoDB.Bson\MongoDB.Bson.csproj" />
   </ItemGroup>
 </Project>

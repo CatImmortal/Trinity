@@ -1,19 +1,7 @@
-﻿using UnityEngine;
-
-namespace Trinity.Hotfix
+﻿namespace Trinity.Hotfix
 {
 	public static class Game
 	{
-		private static EventSystem eventSystem;
-
-		public static EventSystem EventSystem
-		{
-			get
-			{
-				return eventSystem ?? (eventSystem = new EventSystem());
-			}
-		}
-		
 		private static Scene scene;
 
 		public static Scene Scene
@@ -24,8 +12,18 @@ namespace Trinity.Hotfix
 				{
 					return scene;
 				}
-				scene = new Scene() { Name = "ClientH" };
+				scene = new Scene();
 				return scene;
+			}
+		}
+
+		private static EventSystem eventSystem;
+
+		public static EventSystem EventSystem
+		{
+			get
+			{
+				return eventSystem ?? (eventSystem = new EventSystem());
 			}
 		}
 
@@ -35,24 +33,16 @@ namespace Trinity.Hotfix
 		{
 			get
 			{
-				if (objectPool != null)
-				{
-					return objectPool;
-				}
-				objectPool = new ObjectPool() { Name = "ClientH" };
-				return objectPool;
+				return objectPool ?? (objectPool = new ObjectPool());
 			}
 		}
 
 		public static void Close()
 		{
-			scene?.Dispose();
+			scene.Dispose();
 			scene = null;
-			
-			objectPool?.Dispose();
-			objectPool = null;
-			
 			eventSystem = null;
+			objectPool = null;
 		}
 	}
 }

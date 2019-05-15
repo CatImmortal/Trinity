@@ -1,4 +1,4 @@
-/* Copyright 2013-present MongoDB Inc.
+/* Copyright 2013-2016 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -17,8 +17,10 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Driver.Core.Bindings;
+using MongoDB.Driver.Core.Connections;
 using MongoDB.Driver.Core.Events;
 using MongoDB.Driver.Core.Misc;
+using MongoDB.Driver.Core.WireProtocol;
 using MongoDB.Driver.Core.WireProtocol.Messages.Encoders;
 
 namespace MongoDB.Driver.Core.Operations
@@ -26,13 +28,12 @@ namespace MongoDB.Driver.Core.Operations
     /// <summary>
     /// Represents a delete operation using the delete opcode.
     /// </summary>
-    public class DeleteOpcodeOperation : IWriteOperation<WriteConcernResult>, IExecutableInRetryableWriteContext<WriteConcernResult>
+    public class DeleteOpcodeOperation : IWriteOperation<WriteConcernResult>
     {
         // fields
         private readonly CollectionNamespace _collectionNamespace;
         private readonly MessageEncoderSettings _messageEncoderSettings;
         private readonly DeleteRequest _request;
-        private bool _retryRequested;
         private WriteConcern _writeConcern = WriteConcern.Acknowledged;
 
         // constructors
@@ -87,16 +88,6 @@ namespace MongoDB.Driver.Core.Operations
         }
 
         /// <summary>
-        /// Gets or sets a value indicating whether retry is enabled for the operation.
-        /// </summary>
-        /// <value>A value indicating whether retry is enabled.</value>
-        public bool RetryRequested
-        {
-            get { return _retryRequested; }
-            set { _retryRequested = value; }
-        }
-
-        /// <summary>
         /// Gets or sets the write concern.
         /// </summary>
         /// <value>
@@ -115,25 +106,18 @@ namespace MongoDB.Driver.Core.Operations
             Ensure.IsNotNull(binding, nameof(binding));
 
             using (EventContext.BeginOperation())
-            using (var context = RetryableWriteContext.Create(binding, false, cancellationToken))
+            using (var channelSource = binding.GetWriteChannelSource(cancellationToken))
+            using (var channel = channelSource.GetChannel(cancellationToken))
             {
-                return Execute(context, cancellationToken);
-            }
-        }
-
-        /// <inheritdoc/>
-        public WriteConcernResult Execute(RetryableWriteContext context, CancellationToken cancellationToken)
-        {
-            Ensure.IsNotNull(context, nameof(context));
-
-            if (Feature.WriteCommands.IsSupported(context.Channel.ConnectionDescription.ServerVersion) && _writeConcern.IsAcknowledged)
-            {
-                var emulator = CreateEmulator();
-                return emulator.Execute(context, cancellationToken);
-            }
-            else
-            {
-                return ExecuteProtocol(context.Channel, cancellationToken);
+                if (Feature.WriteCommands.IsSupported(channel.ConnectionDescription.ServerVersion) && _writeConcern.IsAcknowledged)
+                {
+                    var emulator = CreateEmulator();
+                    return emulator.Execute(channel, cancellationToken);
+                }
+                else
+                {
+                    return ExecuteProtocol(channel, cancellationToken);
+                }
             }
         }
 
@@ -143,35 +127,26 @@ namespace MongoDB.Driver.Core.Operations
             Ensure.IsNotNull(binding, nameof(binding));
 
             using (EventContext.BeginOperation())
-            using (var context = await RetryableWriteContext.CreateAsync(binding, false, cancellationToken).ConfigureAwait(false))
+            using (var channelSource = await binding.GetWriteChannelSourceAsync(cancellationToken).ConfigureAwait(false))
+            using (var channel = await channelSource.GetChannelAsync(cancellationToken).ConfigureAwait(false))
             {
-                return await ExecuteAsync(context, cancellationToken).ConfigureAwait(false);
-            }
-        }
-
-        /// <inheritdoc/>
-        public Task<WriteConcernResult> ExecuteAsync(RetryableWriteContext context, CancellationToken cancellationToken)
-        {
-            Ensure.IsNotNull(context, nameof(context));
-
-            if (Feature.WriteCommands.IsSupported(context.Channel.ConnectionDescription.ServerVersion) && _writeConcern.IsAcknowledged)
-            {
-                var emulator = CreateEmulator();
-                return emulator.ExecuteAsync(context, cancellationToken);
-
-            }
-            else
-            {
-                return ExecuteProtocolAsync(context.Channel, cancellationToken);
+                if (Feature.WriteCommands.IsSupported(channel.ConnectionDescription.ServerVersion) && _writeConcern.IsAcknowledged)
+                {
+                    var emulator = CreateEmulator();
+                    return await emulator.ExecuteAsync(channel, cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    return await ExecuteProtocolAsync(channel, cancellationToken).ConfigureAwait(false);
+                }
             }
         }
 
         // private methods
-        private IExecutableInRetryableWriteContext<WriteConcernResult> CreateEmulator()
+        private DeleteOpcodeOperationEmulator CreateEmulator()
         {
             return new DeleteOpcodeOperationEmulator(_collectionNamespace, _request, _messageEncoderSettings)
             {
-                RetryRequested = _retryRequested,
                 WriteConcern = _writeConcern
             };
         }

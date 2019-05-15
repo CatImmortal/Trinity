@@ -3,9 +3,14 @@ using ETModel;
 
 namespace Trinity.Hotfix
 {
-	public interface IMHandler
-	{
-		void Handle(ETModel.Session session, object message);
-		Type GetMessageType();
-	}
+
+    /// <summary>
+    /// 消息处理器接口
+    /// </summary>
+    public interface IMHandler
+    {
+        void Handle(ETModel.Session session, object message);
+        Type GetMessageType();
+    }
+
 }

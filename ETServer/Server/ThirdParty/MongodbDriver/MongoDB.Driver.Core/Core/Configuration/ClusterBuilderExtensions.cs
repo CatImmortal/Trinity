@@ -1,4 +1,4 @@
-/* Copyright 2010-present MongoDB Inc.
+/* Copyright 2010-2016 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -46,7 +46,6 @@ namespace MongoDB.Driver.Core.Configuration
             Ensure.IsNotNullOrEmpty(connectionString, nameof(connectionString));
 
             var parsedConnectionString = new ConnectionString(connectionString);
-
             return ConfigureWithConnectionString(builder, parsedConnectionString);
         }
 
@@ -60,8 +59,6 @@ namespace MongoDB.Driver.Core.Configuration
         {
             Ensure.IsNotNull(builder, nameof(builder));
             Ensure.IsNotNull(connectionString, nameof(connectionString));
-
-            connectionString = connectionString.Resolve();
 
             // TCP
             if (connectionString.ConnectTimeout != null)
@@ -148,7 +145,6 @@ namespace MongoDB.Driver.Core.Configuration
             // Server
 
             // Cluster
-            builder = builder.ConfigureCluster(s => s.With(connectionMode: connectionString.Connect));
             if (connectionString.Hosts.Count > 0)
             {
                 builder = builder.ConfigureCluster(s => s.With(endPoints: Optional.Enumerable(connectionString.Hosts)));
@@ -156,7 +152,6 @@ namespace MongoDB.Driver.Core.Configuration
             if (connectionString.ReplicaSet != null)
             {
                 builder = builder.ConfigureCluster(s => s.With(
-                    connectionMode: ClusterConnectionMode.ReplicaSet,
                     replicaSetName: connectionString.ReplicaSet));
             }
             if (connectionString.ServerSelectionTimeout != null)
@@ -192,19 +187,13 @@ namespace MongoDB.Driver.Core.Configuration
                 {
                     return new DefaultAuthenticator(credential);
                 }
-#pragma warning disable 618
                 else if (connectionString.AuthMechanism == MongoDBCRAuthenticator.MechanismName)
                 {
                     return new MongoDBCRAuthenticator(credential);
-#pragma warning restore 618
                 }
                 else if (connectionString.AuthMechanism == ScramSha1Authenticator.MechanismName)
                 {
                     return new ScramSha1Authenticator(credential);
-                }
-                else if (connectionString.AuthMechanism == ScramSha256Authenticator.MechanismName)
-                {
-                    return new ScramSha256Authenticator(credential);
                 }
                 else if (connectionString.AuthMechanism == PlainAuthenticator.MechanismName)
                 {
@@ -240,7 +229,7 @@ namespace MongoDB.Driver.Core.Configuration
             return "admin";
         }
 
-#if NET452
+#if NET45
         /// <summary>
         /// Configures the cluster to write performance counters.
         /// </summary>
@@ -261,7 +250,7 @@ namespace MongoDB.Driver.Core.Configuration
             return builder.Subscribe(subscriber);
         }
 #endif
-        
+
         /// <summary>
         /// Configures the cluster to trace events to the specified <paramref name="traceSource"/>.
         /// </summary>

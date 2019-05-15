@@ -48,7 +48,7 @@ namespace ETModel
 
 		public static void Msg(object message)
 		{
-			globalLog.Debug(MongoHelper.ToJson(message));
+			Debug(MongoHelper.ToJson(message));
 		}
     }
 }

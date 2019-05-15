@@ -1,4 +1,4 @@
-/* Copyright 2013-present MongoDB Inc.
+/* Copyright 2013-2016 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -17,6 +17,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver.Core.Clusters;
 using MongoDB.Driver.Core.Misc;
@@ -59,17 +62,6 @@ namespace MongoDB.Driver.Core.Connections
                 return null;
             }
         }
-        
-        /// <summary>
-        /// Get whether SaslSupportedMechs was part of the isMaster response.
-        /// </summary>
-        /// <value>
-        /// Whether SaslSupportedMechs was part of the isMaster response.
-        /// </value>
-        public bool HasSaslSupportedMechs
-        {
-            get { return _wrapped.Contains("saslSupportedMechs"); }   
-        }
 
         /// <summary>
         /// Gets a value indicating whether this instance is an arbiter.
@@ -107,33 +99,6 @@ namespace MongoDB.Driver.Core.Connections
                 if (_wrapped.TryGetValue("lastWrite", out value))
                 {
                     return value["lastWriteDate"].ToUniversalTime();
-                }
-
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Gets the logical session timeout.
-        /// </summary>
-        /// <value>
-        /// The logical session timeout.
-        /// </value>
-        public TimeSpan? LogicalSessionTimeout
-        {
-            get
-            {
-                BsonValue value;
-                if (_wrapped.TryGetValue("logicalSessionTimeoutMinutes", out value))
-                {
-                    if (value.BsonType == BsonType.Null)
-                    {
-                        return null;
-                    }
-                    else
-                    {
-                        return TimeSpan.FromMinutes(value.ToDouble());
-                    }
                 }
 
                 return null;
@@ -215,18 +180,6 @@ namespace MongoDB.Driver.Core.Connections
 
                 return null;
             }
-        }
-
-        /// <summary>
-        /// Get the SaslSupportedMechs.
-        /// </summary>
-        /// <value>
-        /// The SaslSupportedMechs. Empty if saslSupportedMechs was an empty list or if saslSupportedMechs was not
-        /// included in the isMaster response.
-        /// </value>
-        public IEnumerable<string> SaslSupportedMechs
-        {
-            get { return _wrapped.GetValue("saslSupportedMechs", new BsonArray()).AsBsonArray.Select(s => s.ToString()); }
         }
 
         /// <summary>

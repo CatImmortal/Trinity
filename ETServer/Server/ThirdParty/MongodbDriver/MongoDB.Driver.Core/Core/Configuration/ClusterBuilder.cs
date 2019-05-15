@@ -1,4 +1,4 @@
-/* Copyright 2010-present MongoDB Inc.
+/* Copyright 2010-2015 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,17 +14,12 @@
 */
 
 using System;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
-using MongoDB.Driver.Core.Authentication;
 using MongoDB.Driver.Core.Clusters;
 using MongoDB.Driver.Core.ConnectionPools;
 using MongoDB.Driver.Core.Connections;
 using MongoDB.Driver.Core.Events;
-using MongoDB.Driver.Core.Events.Diagnostics;
 using MongoDB.Driver.Core.Misc;
 using MongoDB.Driver.Core.Servers;
 
@@ -35,15 +30,11 @@ namespace MongoDB.Driver.Core.Configuration
     /// </summary>
     public class ClusterBuilder
     {
-        // constants
-        private const string __traceSourceName = "MongoDB-SDAM";
-        
         // fields
         private EventAggregator _eventAggregator;
         private ClusterSettings _clusterSettings;
         private ConnectionPoolSettings _connectionPoolSettings;
         private ConnectionSettings _connectionSettings;
-        private SdamLoggingSettings _sdamLoggingSettings;
         private ServerSettings _serverSettings;
         private SslStreamSettings _sslStreamSettings;
         private Func<IStreamFactory, IStreamFactory> _streamFactoryWrapper;
@@ -56,7 +47,6 @@ namespace MongoDB.Driver.Core.Configuration
         public ClusterBuilder()
         {
             _clusterSettings = new ClusterSettings();
-            _sdamLoggingSettings = new SdamLoggingSettings(null);
             _serverSettings = new ServerSettings();
             _connectionPoolSettings = new ConnectionPoolSettings();
             _connectionSettings = new ConnectionSettings();
@@ -65,14 +55,48 @@ namespace MongoDB.Driver.Core.Configuration
             _eventAggregator = new EventAggregator();
         }
 
-        // public methods
+        // methods
         /// <summary>
         /// Builds the cluster.
         /// </summary>
         /// <returns>A cluster.</returns>
         public ICluster BuildCluster()
         {
-            var clusterFactory = CreateClusterFactory();
+            IStreamFactory streamFactory = new TcpStreamFactory(_tcpStreamSettings);
+            if (_sslStreamSettings != null)
+            {
+                streamFactory = new SslStreamFactory(_sslStreamSettings, streamFactory);
+            }
+
+            streamFactory = _streamFactoryWrapper(streamFactory);
+
+            var connectionFactory = new BinaryConnectionFactory(
+                _connectionSettings,
+                streamFactory,
+                _eventAggregator);
+
+            var connectionPoolFactory = new ExclusiveConnectionPoolFactory(
+                _connectionPoolSettings,
+                connectionFactory,
+                _eventAggregator);
+
+            var serverMonitorFactory = new ServerMonitorFactory(
+                _serverSettings,
+                connectionFactory,
+                _eventAggregator);
+
+            var serverFactory = new ServerFactory(
+                _clusterSettings.ConnectionMode,
+                _serverSettings,
+                connectionPoolFactory,
+                serverMonitorFactory,
+                _eventAggregator);
+
+            var clusterFactory = new ClusterFactory(
+                _clusterSettings,
+                serverFactory,
+                _eventAggregator);
+
             return clusterFactory.CreateCluster();
         }
 
@@ -113,28 +137,6 @@ namespace MongoDB.Driver.Core.Configuration
 
             _connectionPoolSettings = configurator(_connectionPoolSettings);
             return this;
-        }
-        
-        /// <summary>
-        /// Configures the SDAM logging settings.
-        /// </summary>
-        /// <param name="configurator">The SDAM logging settings configurator delegate.</param>
-        /// <returns>A reconfigured cluster builder.</returns>
-        public ClusterBuilder ConfigureSdamLogging(Func<SdamLoggingSettings, SdamLoggingSettings> configurator)
-        {
-            _sdamLoggingSettings = configurator(_sdamLoggingSettings);
-            if (!_sdamLoggingSettings.IsLoggingEnabled)
-            {
-                return this;
-            }
-            var traceSource = new TraceSource(__traceSourceName, SourceLevels.All);
-            traceSource.Listeners.Clear(); // remove the default listener
-            var listener = _sdamLoggingSettings.ShouldLogToStdout
-                ? new TextWriterTraceListener(Console.Out)
-                : new TextWriterTraceListener(new FileStream(_sdamLoggingSettings.LogFilename, FileMode.Append));
-            listener.TraceOutputOptions = TraceOptions.DateTime;
-            traceSource.Listeners.Add(listener);
-            return this.Subscribe(new TraceSourceSdamEventSubscriber(traceSource));
         }
 
         /// <summary>
@@ -209,91 +211,6 @@ namespace MongoDB.Driver.Core.Configuration
 
             _eventAggregator.Subscribe(subscriber);
             return this;
-        }
-
-        // private methods
-        private IClusterFactory CreateClusterFactory()
-        {
-            var serverFactory = CreateServerFactory();
-
-            return new ClusterFactory(
-                _clusterSettings,
-                serverFactory,
-                _eventAggregator);
-        }
-
-        private IConnectionPoolFactory CreateConnectionPoolFactory()
-        {
-            var streamFactory = CreateTcpStreamFactory(_tcpStreamSettings);
-
-            var connectionFactory = new BinaryConnectionFactory(
-                _connectionSettings,
-                streamFactory,
-                _eventAggregator);
-
-            return new ExclusiveConnectionPoolFactory(
-                _connectionPoolSettings,
-                connectionFactory,
-                _eventAggregator);
-        }
-
-        private ServerFactory CreateServerFactory()
-        {
-            var connectionPoolFactory = CreateConnectionPoolFactory();
-            var serverMonitorFactory = CreateServerMonitorFactory();
-
-            return new ServerFactory(
-                _clusterSettings.ConnectionMode,
-                _serverSettings,
-                connectionPoolFactory,
-                serverMonitorFactory,
-                _eventAggregator);
-        }
-
-        private IServerMonitorFactory CreateServerMonitorFactory()
-        {
-            var serverMonitorConnectionSettings = _connectionSettings
-                .With(authenticators: new IAuthenticator[] { });
-
-            var heartbeatConnectTimeout = _tcpStreamSettings.ConnectTimeout;
-            if (heartbeatConnectTimeout == TimeSpan.Zero || heartbeatConnectTimeout == Timeout.InfiniteTimeSpan)
-            {
-                heartbeatConnectTimeout = TimeSpan.FromSeconds(30);
-            }
-            var heartbeatSocketTimeout = _serverSettings.HeartbeatTimeout;
-            if (heartbeatSocketTimeout == TimeSpan.Zero || heartbeatSocketTimeout == Timeout.InfiniteTimeSpan)
-            {
-                heartbeatSocketTimeout = heartbeatConnectTimeout;
-            }
-            var serverMonitorTcpStreamSettings = new TcpStreamSettings(_tcpStreamSettings)
-                .With(
-                    connectTimeout: heartbeatConnectTimeout,
-                    readTimeout: heartbeatSocketTimeout,
-                    writeTimeout: heartbeatSocketTimeout
-                );
-
-            var serverMonitorStreamFactory = CreateTcpStreamFactory(serverMonitorTcpStreamSettings);
-
-            var serverMonitorConnectionFactory = new BinaryConnectionFactory(
-                serverMonitorConnectionSettings,
-                serverMonitorStreamFactory,
-                new EventAggregator());
-
-            return new ServerMonitorFactory(
-                _serverSettings,
-                serverMonitorConnectionFactory,
-                _eventAggregator);
-        }
-
-        private IStreamFactory CreateTcpStreamFactory(TcpStreamSettings tcpStreamSettings)
-        {
-            var streamFactory = (IStreamFactory)new TcpStreamFactory(tcpStreamSettings);
-            if (_sslStreamSettings != null)
-            {
-                streamFactory = new SslStreamFactory(_sslStreamSettings, streamFactory);
-            }
-
-            return _streamFactoryWrapper(streamFactory);
         }
     }
 }

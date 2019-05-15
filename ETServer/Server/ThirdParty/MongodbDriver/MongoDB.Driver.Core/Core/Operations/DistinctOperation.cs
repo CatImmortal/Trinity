@@ -1,4 +1,4 @@
-/* Copyright 2013-present MongoDB Inc.
+/* Copyright 2013-2016 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -21,10 +21,8 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver.Core.Bindings;
-using MongoDB.Driver.Core.Connections;
 using MongoDB.Driver.Core.Misc;
 using MongoDB.Driver.Core.WireProtocol.Messages.Encoders;
-using MongoDB.Shared;
 
 namespace MongoDB.Driver.Core.Operations
 {
@@ -159,9 +157,9 @@ namespace MongoDB.Driver.Core.Operations
             Ensure.IsNotNull(binding, nameof(binding));
             using (var channelSource = binding.GetReadChannelSource(cancellationToken))
             using (var channel = channelSource.GetChannel(cancellationToken))
-            using (var channelBinding = new ChannelReadBinding(channelSource.Server, channel, binding.ReadPreference, binding.Session.Fork()))
+            using (var channelBinding = new ChannelReadBinding(channelSource.Server, channel, binding.ReadPreference))
             {
-                var operation = CreateOperation(channel, channelBinding);
+                var operation = CreateOperation(channel.ConnectionDescription.ServerVersion);
                 var values = operation.Execute(channelBinding, cancellationToken);
                 return new SingleBatchAsyncCursor<TValue>(values);
             }
@@ -173,35 +171,34 @@ namespace MongoDB.Driver.Core.Operations
             Ensure.IsNotNull(binding, nameof(binding));
             using (var channelSource = await binding.GetReadChannelSourceAsync(cancellationToken).ConfigureAwait(false))
             using (var channel = await channelSource.GetChannelAsync(cancellationToken).ConfigureAwait(false))
-            using (var channelBinding = new ChannelReadBinding(channelSource.Server, channel, binding.ReadPreference, binding.Session.Fork()))
+            using (var channelBinding = new ChannelReadBinding(channelSource.Server, channel, binding.ReadPreference))
             {
-                var operation = CreateOperation(channel, channelBinding);
+                var operation = CreateOperation(channel.ConnectionDescription.ServerVersion);
                 var values = await operation.ExecuteAsync(channelBinding, cancellationToken).ConfigureAwait(false);
                 return new SingleBatchAsyncCursor<TValue>(values);
             }
         }
 
         // private methods
-        internal BsonDocument CreateCommand(ConnectionDescription connectionDescription, ICoreSession session)
+        internal BsonDocument CreateCommand(SemanticVersion serverVersion)
         {
-            Feature.ReadConcern.ThrowIfNotSupported(connectionDescription.ServerVersion, _readConcern);
-            Feature.Collation.ThrowIfNotSupported(connectionDescription.ServerVersion, _collation);
+            Feature.ReadConcern.ThrowIfNotSupported(serverVersion, _readConcern);
+            Feature.Collation.ThrowIfNotSupported(serverVersion, _collation);
 
-            var readConcern = ReadConcernHelper.GetReadConcernForCommand(session, connectionDescription, _readConcern);
             return new BsonDocument
             {
                 { "distinct", _collectionNamespace.CollectionName },
                 { "key", _fieldName },
                 { "query", _filter, _filter != null },
-                { "maxTimeMS", () => MaxTimeHelper.ToMaxTimeMS(_maxTime.Value), _maxTime.HasValue },
-                { "collation", () => _collation.ToBsonDocument(), _collation != null },
-                { "readConcern", readConcern, readConcern != null }
-            };
+                { "maxTimeMS", () => _maxTime.Value.TotalMilliseconds, _maxTime.HasValue },
+                { "readConcern", () => _readConcern.ToBsonDocument(), !_readConcern.IsServerDefault },
+                { "collation", () => _collation.ToBsonDocument(), _collation != null }
+           };
         }
 
-        private ReadCommandOperation<TValue[]> CreateOperation(IChannel channel, IBinding binding)
+        private ReadCommandOperation<TValue[]> CreateOperation(SemanticVersion serverVersion)
         {
-            var command = CreateCommand(channel.ConnectionDescription, binding.Session);
+            var command = CreateCommand(serverVersion);
             var valueArraySerializer = new ArraySerializer<TValue>(_valueSerializer);
             var resultSerializer = new ElementDeserializer<TValue[]>("values", valueArraySerializer);
             return new ReadCommandOperation<TValue[]>(_collectionNamespace.DatabaseNamespace, command, resultSerializer, _messageEncoderSettings);

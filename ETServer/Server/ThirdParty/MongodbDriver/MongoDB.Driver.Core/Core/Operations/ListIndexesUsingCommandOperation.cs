@@ -1,4 +1,4 @@
-﻿/* Copyright 2013-present MongoDB Inc.
+﻿/* Copyright 2013-2015 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -85,7 +85,7 @@ namespace MongoDB.Driver.Core.Operations
                 var operation = CreateOperation();
                 try
                 {
-                    var result = operation.Execute(channelSource, binding.ReadPreference, binding.Session, cancellationToken);
+                    var result = operation.Execute(channelSource, binding.ReadPreference, cancellationToken);
                     return CreateCursor(channelSource, result, operation.Command);
                 }
                 catch (MongoCommandException ex)
@@ -110,7 +110,7 @@ namespace MongoDB.Driver.Core.Operations
                 var operation = CreateOperation();
                 try
                 {
-                    var result = await operation.ExecuteAsync(channelSource, binding.ReadPreference, binding.Session, cancellationToken).ConfigureAwait(false);
+                    var result = await operation.ExecuteAsync(channelSource, binding.ReadPreference, cancellationToken).ConfigureAwait(false);
                     return CreateCursor(channelSource, result, operation.Command);
                 }
                 catch (MongoCommandException ex)
@@ -134,7 +134,7 @@ namespace MongoDB.Driver.Core.Operations
 
         private IAsyncCursor<BsonDocument> CreateCursor(IChannelSourceHandle channelSource, BsonDocument result, BsonDocument command)
         {
-            var getMoreChannelSource = new ServerChannelSource(channelSource.Server, channelSource.Session.Fork());
+            var getMoreChannelSource = new ServerChannelSource(channelSource.Server);
             var cursorDocument = result["cursor"].AsBsonDocument;
             var cursor = new AsyncCursor<BsonDocument>(
                 getMoreChannelSource,

@@ -2,6 +2,9 @@
 
 namespace Trinity.Hotfix
 {
+    /// <summary>
+    ///热更新层会话组件
+    /// </summary>
 	[ObjectSystem]
 	public class SessionComponentAwakeSystem : AwakeSystem<SessionComponent>
 	{
@@ -15,24 +18,7 @@ namespace Trinity.Hotfix
 	{
 		public static SessionComponent Instance;
 
-		private Session session;
-
-		public Session Session
-		{
-			get
-			{
-				return this.session;
-			}
-			set
-			{
-				this.session = value;
-				
-				if (this.session != null)
-				{
-					this.session.Parent = this;
-				}
-			}
-		}
+		public Session Session;
 
 		public void Awake()
 		{

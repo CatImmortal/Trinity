@@ -406,7 +406,7 @@ namespace ILRuntime.Runtime.Intepreter
                     case ObjectTypes.ValueTypeObjectReference:
                         {
                             var obj = managedObjs[i];
-                            var dst = ILIntepreter.ResolveReference(val);
+                            var dst = *(StackObject**)&val->Value;
                             var vt = type.AppDomain.GetType(dst->Value);
                             if (vt is ILType)
                             {
@@ -449,7 +449,7 @@ namespace ILRuntime.Runtime.Intepreter
 
         internal unsafe void AssignFromStack(StackObject* esp, Enviorment.AppDomain appdomain, IList<object> managedStack)
         {
-            StackObject* val = ILIntepreter.ResolveReference(esp);
+            StackObject* val = *(StackObject**)&esp->Value;
             int cnt = val->ValueLow;
             for (int i = 0; i < cnt; i++)
             {
@@ -475,7 +475,7 @@ namespace ILRuntime.Runtime.Intepreter
                         var domain = type.AppDomain;
                         field.ObjectType = ObjectTypes.Object;
                         field.Value = fieldIdx;
-                        var dst = ILIntepreter.ResolveReference(esp);
+                        var dst = *(StackObject**)&esp->Value;
                         var vt = domain.GetType(dst->Value);
                         if(vt is ILType)
                         {

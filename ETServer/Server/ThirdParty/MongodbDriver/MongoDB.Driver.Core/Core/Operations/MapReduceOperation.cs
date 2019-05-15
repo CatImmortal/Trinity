@@ -1,4 +1,4 @@
-/* Copyright 2013-present MongoDB Inc.
+/* Copyright 2013-2015 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver.Core.Bindings;
-using MongoDB.Driver.Core.Connections;
 using MongoDB.Driver.Core.Misc;
 using MongoDB.Driver.Core.WireProtocol.Messages.Encoders;
 
@@ -94,9 +93,9 @@ namespace MongoDB.Driver.Core.Operations
 
             using (var channelSource = binding.GetReadChannelSource(cancellationToken))
             using (var channel = channelSource.GetChannel(cancellationToken))
-            using (var channelBinding = new ChannelReadBinding(channelSource.Server, channel, binding.ReadPreference, binding.Session.Fork()))
+            using (var channelBinding = new ChannelReadBinding(channelSource.Server, channel, binding.ReadPreference))
             {
-                var operation = CreateOperation(channelBinding.Session, channel.ConnectionDescription);
+                var operation = CreateOperation(channel.ConnectionDescription.ServerVersion);
                 var result = operation.Execute(channelBinding, cancellationToken);
                 return new SingleBatchAsyncCursor<TResult>(result);
             }
@@ -109,33 +108,31 @@ namespace MongoDB.Driver.Core.Operations
 
             using (var channelSource = await binding.GetReadChannelSourceAsync(cancellationToken).ConfigureAwait(false))
             using (var channel = await channelSource.GetChannelAsync(cancellationToken).ConfigureAwait(false))
-            using (var channelBinding = new ChannelReadBinding(channelSource.Server, channel, binding.ReadPreference, binding.Session.Fork()))
+            using (var channelBinding = new ChannelReadBinding(channelSource.Server, channel, binding.ReadPreference))
             {
-                var operation = CreateOperation(channelBinding.Session, channel.ConnectionDescription);
+                var operation = CreateOperation(channel.ConnectionDescription.ServerVersion);
                 var result = await operation.ExecuteAsync(channelBinding, cancellationToken).ConfigureAwait(false);
                 return new SingleBatchAsyncCursor<TResult>(result);
             }
         }
 
         /// <inheritdoc/>
-        protected internal override BsonDocument CreateCommand(ICoreSessionHandle session, ConnectionDescription connectionDescription)
+        protected internal override BsonDocument CreateCommand(SemanticVersion serverVersion)
         {
-            Feature.ReadConcern.ThrowIfNotSupported(connectionDescription.ServerVersion, _readConcern);
+            Feature.ReadConcern.ThrowIfNotSupported(serverVersion, _readConcern);
 
-            var command = base.CreateCommand(session, connectionDescription);
-
-            var readConcern = ReadConcernHelper.GetReadConcernForCommand(session, connectionDescription, _readConcern);
-            if (readConcern != null)
+            var command = base.CreateCommand(serverVersion);
+            if (!_readConcern.IsServerDefault)
             {
-                command.Add("readConcern", readConcern);
+                command["readConcern"] = _readConcern.ToBsonDocument();
             }
 
             return command;
         }
 
-        private ReadCommandOperation<TResult[]> CreateOperation(ICoreSessionHandle session, ConnectionDescription connectionDescription)
+        private ReadCommandOperation<TResult[]> CreateOperation(SemanticVersion serverVersion)
         {
-            var command = CreateCommand(session, connectionDescription);
+            var command = CreateCommand(serverVersion);
             var resultArraySerializer = new ArraySerializer<TResult>(_resultSerializer);
             var resultSerializer = new ElementDeserializer<TResult[]>("results", resultArraySerializer);
             return new ReadCommandOperation<TResult[]>(CollectionNamespace.DatabaseNamespace, command, resultSerializer, MessageEncoderSettings);

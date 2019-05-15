@@ -1,13 +1,14 @@
 ﻿using System;
+using System.Threading.Tasks;
 using MongoDB.Driver;
 
 namespace ETModel
 {
 
 	[ObjectSystem]
-	public class DbSaveTaskAwakeSystem : AwakeSystem<DBSaveTask, ComponentWithId, string, ETTaskCompletionSource>
+	public class DbSaveTaskAwakeSystem : AwakeSystem<DBSaveTask, ComponentWithId, string, TaskCompletionSource<bool>>
 	{
-		public override void Awake(DBSaveTask self, ComponentWithId component, string collectionName, ETTaskCompletionSource tcs)
+		public override void Awake(DBSaveTask self, ComponentWithId component, string collectionName, TaskCompletionSource<bool> tcs)
 		{
 			self.Component = component;
 			self.CollectionName = collectionName;
@@ -21,9 +22,9 @@ namespace ETModel
 
 		public string CollectionName { get; set; }
 
-		public ETTaskCompletionSource Tcs;
+		public TaskCompletionSource<bool> Tcs;
 
-		public override async ETTask Run()
+		public override async Task Run()
 		{
 			DBComponent dbComponent = Game.Scene.GetComponent<DBComponent>();
 
@@ -31,7 +32,7 @@ namespace ETModel
 			{
 				// 执行保存数据库任务
 				await dbComponent.GetCollection(this.CollectionName).ReplaceOneAsync(s => s.Id == this.Component.Id, this.Component, new UpdateOptions {IsUpsert = true});
-				this.Tcs.SetResult();
+				this.Tcs.SetResult(true);
 			}
 			catch (Exception e)
 			{

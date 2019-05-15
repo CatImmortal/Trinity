@@ -1,4 +1,4 @@
-/* Copyright 2010-present MongoDB Inc.
+/* Copyright 2010-2016 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ namespace MongoDB.Bson.IO
         private IElementNameValidator _elementNameValidator = NoOpElementNameValidator.Instance;
         private Stack<IElementNameValidator> _elementNameValidatorStack = new Stack<IElementNameValidator>();
         private BsonWriterSettings _settings;
-        private Stack<BsonWriterSettings> _settingsStack = new Stack<BsonWriterSettings>();
         private BsonWriterState _state;
         private string _name;
         private int _serializationDepth;
@@ -54,9 +53,6 @@ namespace MongoDB.Bson.IO
         }
 
         // public properties
-        /// <inheritdoc />
-        public abstract long Position { get; }
-
         /// <summary>
         /// Gets the current serialization depth.
         /// </summary>
@@ -134,12 +130,6 @@ namespace MongoDB.Bson.IO
             _childElementNameValidatorFactory = () => _elementNameValidator;
         }
 
-        /// <inheritdoc />
-        public void PopSettings()
-        {
-            _settings = _settingsStack.Pop();
-        }
-
         /// <summary>
         /// Pushes the element name validator.
         /// </summary>
@@ -154,16 +144,6 @@ namespace MongoDB.Bson.IO
             _elementNameValidatorStack.Push(_elementNameValidator);
             _elementNameValidator = validator;
             _childElementNameValidatorFactory = () => _elementNameValidator;
-        }
-
-        /// <inheritdoc />
-        public void PushSettings(Action<BsonWriterSettings> configurator)
-        {
-            var newSettings = _settings.Clone();
-            configurator(newSettings);
-            newSettings.Freeze();
-            _settingsStack.Push(_settings);
-            _settings = newSettings;
         }
 
         /// <summary>

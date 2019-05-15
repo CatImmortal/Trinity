@@ -89,11 +89,11 @@ namespace ILRuntime.Runtime.Stack
                     }
                 case ObjectTypes.StackObjectReference:
                     {
-                        return ToObject((ILIntepreter.ResolveReference(esp)), appdomain, mStack);
+                        return ToObject((*(StackObject**)&esp->Value), appdomain, mStack);
                     }
                 case ObjectTypes.ValueTypeObjectReference:
                     {
-                        StackObject* dst = ILIntepreter.ResolveReference(esp);
+                        StackObject* dst = *(StackObject**)&esp->Value;
                         IType type = appdomain.GetType(dst->Value);
                         if (type is ILType)
                         {
@@ -189,7 +189,7 @@ namespace ILRuntime.Runtime.Stack
         public unsafe static void Initialized(StackObject* esp, IType type)
         {
             var t = type.TypeForCLR;
-            if (type.IsPrimitive || type.IsEnum)
+            if (type.IsPrimitive)
             {
                 if (t == typeof(int) || t == typeof(uint) || t == typeof(short) || t == typeof(ushort) || t == typeof(byte) || t == typeof(sbyte) || t == typeof(char) || t == typeof(bool))
                 {

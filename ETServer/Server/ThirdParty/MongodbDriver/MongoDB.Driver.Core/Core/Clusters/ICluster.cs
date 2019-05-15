@@ -1,4 +1,4 @@
-/* Copyright 2013-present MongoDB Inc.
+/* Copyright 2013-2015 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,11 +14,15 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using MongoDB.Driver.Core.Bindings;
 using MongoDB.Driver.Core.Clusters.ServerSelectors;
 using MongoDB.Driver.Core.Configuration;
+using MongoDB.Driver.Core.Events;
 using MongoDB.Driver.Core.Servers;
 
 namespace MongoDB.Driver.Core.Clusters
@@ -61,12 +65,6 @@ namespace MongoDB.Driver.Core.Clusters
 
         // methods
         /// <summary>
-        /// Acquires a core server session.
-        /// </summary>
-        /// <returns>A core server session.</returns>
-        ICoreServerSession AcquireServerSession();
-
-        /// <summary>
         /// Initializes the cluster.
         /// </summary>
         void Initialize();
@@ -86,14 +84,5 @@ namespace MongoDB.Driver.Core.Clusters
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A Task representing the operation. The result of the Task is the selected server.</returns>
         Task<IServer> SelectServerAsync(IServerSelector selector, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Starts a session.
-        /// </summary>
-        /// <param name="options">The options.</param>
-        /// <returns>
-        /// A session.
-        /// </returns>
-        ICoreSessionHandle StartSession(CoreSessionOptions options = null);
     }
 }

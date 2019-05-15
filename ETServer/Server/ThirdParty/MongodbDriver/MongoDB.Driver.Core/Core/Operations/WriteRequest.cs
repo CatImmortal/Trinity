@@ -1,4 +1,4 @@
-/* Copyright 2010-present MongoDB Inc.
+/* Copyright 2010-2015 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,14 +14,13 @@
 */
 
 using System;
-using MongoDB.Driver.Core.Connections;
 
 namespace MongoDB.Driver.Core.Operations
 {
     /// <summary>
     /// Represents a request to write something to the database.
     /// </summary>
-#if NET452
+#if NET45
     [Serializable]
 #endif
     public abstract class WriteRequest
@@ -60,15 +59,5 @@ namespace MongoDB.Driver.Core.Operations
         {
             get { return _requestType; }
         }
-
-        // public methods
-        /// <summary>
-        /// Determines whether the request is retryable on a given connection.
-        /// </summary>
-        /// <param name="connectionDescription">The connection description.</param>
-        /// <returns>
-        ///   <c>true</c> if the request is retryable; otherwise, <c>false</c>.
-        /// </returns>
-        public abstract bool IsRetryable(ConnectionDescription connectionDescription);
     }
 }

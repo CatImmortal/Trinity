@@ -17,13 +17,10 @@ namespace Trinity
         {
             //TODO:注册重定向方法
 
-            //TODO:注册委托
-
-            //GF用到的
+            //TODO:适配委托
             appDomain.DelegateManager.RegisterMethodDelegate<float>();
             appDomain.DelegateManager.RegisterMethodDelegate<object, GameFramework.Event.GameEventArgs>();
 
-            //ET用到的
             appDomain.DelegateManager.RegisterMethodDelegate<List<object>>();
             appDomain.DelegateManager.RegisterMethodDelegate<AChannel, System.Net.Sockets.SocketError>();
             appDomain.DelegateManager.RegisterMethodDelegate<byte[], int, int>();
@@ -32,12 +29,11 @@ namespace Trinity
             appDomain.DelegateManager.RegisterMethodDelegate<Session, byte, ushort, MemoryStream>();
             appDomain.DelegateManager.RegisterMethodDelegate<Session>();
             appDomain.DelegateManager.RegisterMethodDelegate<ILTypeInstance>();
-            appDomain.DelegateManager.RegisterMethodDelegate<Session, ushort, MemoryStream>();
-            //PB用到的
+
             appDomain.DelegateManager.RegisterFunctionDelegate<IMessageAdaptor.Adaptor>();
             appDomain.DelegateManager.RegisterMethodDelegate<IMessageAdaptor.Adaptor>();
 
-            //TODO:注册委托转换器
+            //TODO:注册委托
             appDomain.DelegateManager.RegisterDelegateConvertor<UnityAction>((action) =>
             {
                 return new UnityAction(() =>

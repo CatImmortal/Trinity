@@ -75,19 +75,5 @@ message G2C_PlayerInfo // IResponse
 
 message HotfixTestMessage // IMessage
 {
-	string info = 1;
-}
-
-message RPCHotfixRequest // IRequest
-{
-	int32 RpcId = 90;
-    string info = 1;
-}
-
-message RPCHotfixResponse // IResponse
-{
-	int32 RpcId = 90;
-	int32 Error = 91;
-	string Message = 92;
-	string info = 1;
+	string text = 1;
 }

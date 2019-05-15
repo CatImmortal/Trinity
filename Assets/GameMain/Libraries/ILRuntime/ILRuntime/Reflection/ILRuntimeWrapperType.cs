@@ -154,7 +154,7 @@ namespace ILRuntime.Reflection
 
         protected override PropertyInfo GetPropertyImpl(string name, BindingFlags bindingAttr, Binder binder, Type returnType, Type[] types, ParameterModifier[] modifiers)
         {
-            return et.GetProperty(name, bindingAttr);
+            return et.GetProperty(name, bindingAttr, binder, returnType, types, modifiers);
         }
 
         public override PropertyInfo[] GetProperties(BindingFlags bindingAttr)
@@ -180,18 +180,6 @@ namespace ILRuntime.Reflection
                 c = ((ILRuntimeType)c).ILType.TypeForCLR;
             return et.IsAssignableFrom(c);
         }
-
-        public override bool IsInstanceOfType(object o)
-        {
-            if (o == null)
-            {
-                return false;
-            }
-
-            var instance = o as ILTypeInstance;
-            return IsAssignableFrom(instance != null ? instance.Type.ReflectionType : o.GetType());
-        }
-
         public override Type GetNestedType(string name, BindingFlags bindingAttr)
         {
             return et.GetNestedType(name, bindingAttr);
@@ -243,11 +231,6 @@ namespace ILRuntime.Reflection
             {
                 return et.IsGenericTypeDefinition;
             }
-        }
-
-        public override Type GetGenericTypeDefinition()
-        {
-            return et.GetGenericTypeDefinition();
         }
 
         public override bool IsGenericParameter

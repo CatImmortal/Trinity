@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace ETModel
 {
@@ -14,7 +16,7 @@ namespace ETModel
 		public override void Awake(LocationQueryTask self, long key)
 		{
 			self.Key = key;
-			self.Tcs = new ETTaskCompletionSource<long>();
+			self.Tcs = new TaskCompletionSource<long>();
 		}
 	}
 
@@ -22,9 +24,9 @@ namespace ETModel
 	{
 		public long Key;
 
-		public ETTaskCompletionSource<long> Tcs;
+		public TaskCompletionSource<long> Tcs;
 
-		public ETTask<long> Task
+		public Task<long> Task
 		{
 			get
 			{
@@ -77,7 +79,7 @@ namespace ETModel
 			return instanceId;
 		}
 
-		public async ETVoid Lock(long key, long instanceId, int time = 0)
+		public async void Lock(long key, long instanceId, int time = 0)
 		{
 			if (this.lockDict.ContainsKey(key))
 			{
@@ -161,13 +163,13 @@ namespace ETModel
 			}
 		}
 
-		public ETTask<long> GetAsync(long key)
+		public Task<long> GetAsync(long key)
 		{
 			if (!this.lockDict.ContainsKey(key))
 			{
 				this.locations.TryGetValue(key, out long instanceId);
 				Log.Info($"location get key: {key} {instanceId}");
-				return ETTask.FromResult(instanceId);
+				return Task.FromResult(instanceId);
 			}
 
 			LocationQueryTask task = ComponentFactory.CreateWithParent<LocationQueryTask, long>(this, key);

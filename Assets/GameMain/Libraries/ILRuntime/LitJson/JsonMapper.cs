@@ -714,8 +714,6 @@ namespace LitJson
             };
             RegisterImporter (base_importers_table, typeof (string),
                               typeof (DateTime), importer);
-            
-            RegisterImporter<double, float>(input => Convert.ToSingle(input));
         }
 
         private static void RegisterImporter (
@@ -754,11 +752,6 @@ namespace LitJson
 
             if (obj is String) {
                 writer.Write ((string) obj);
-                return;
-            }
-            
-            if (obj is Single) {
-                writer.Write((float)obj);
                 return;
             }
 

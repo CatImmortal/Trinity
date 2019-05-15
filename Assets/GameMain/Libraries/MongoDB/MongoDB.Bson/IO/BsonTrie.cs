@@ -1,4 +1,4 @@
-/* Copyright 2010-present MongoDB Inc.
+/* Copyright 2010-2015 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -240,12 +240,7 @@ namespace MongoDB.Bson.IO
             }
             else if (_children != null)
             {
-                // 这里做了修改，il2cpp uint跟int比较有bug
-                int index = keyByte - _minChildKeyByte;
-                if (index < 0)
-                {
-                    return null;
-                }
+                var index = (uint)((int)keyByte - _minChildKeyByte);
                 if (index < _childrenIndexes.Length)
                 {
                     index = _childrenIndexes[index];

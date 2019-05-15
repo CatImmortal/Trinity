@@ -1,4 +1,4 @@
-/* Copyright 2015-present MongoDB Inc.
+﻿/* Copyright 2015 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ using MongoDB.Driver.Core.Misc;
 using MongoDB.Driver.Core.Servers;
 using MongoDB.Driver.Core.WireProtocol;
 using MongoDB.Driver.Core.WireProtocol.Messages.Encoders;
-using MongoDB.Shared;
 
 namespace MongoDB.Driver.Core.Operations
 {
@@ -206,7 +205,6 @@ namespace MongoDB.Driver.Core.Operations
         /// <value>
         /// The max scan.
         /// </value>
-        [Obsolete("MaxScan was deprecated in server version 4.0.")]
         public int? MaxScan
         {
             get { return _maxScan; }
@@ -222,7 +220,7 @@ namespace MongoDB.Driver.Core.Operations
         public TimeSpan? MaxTime
         {
             get { return _maxTime; }
-            set { _maxTime = Ensure.IsNullOrInfiniteOrGreaterThanOrEqualToZero(value, nameof(value)); }
+            set { _maxTime = Ensure.IsNullOrGreaterThanZero(value, nameof(value)); }
         }
 
         /// <summary>
@@ -337,7 +335,6 @@ namespace MongoDB.Driver.Core.Operations
         /// <value>
         /// Whether to use snapshot behavior.
         /// </value>
-        [Obsolete("Snapshot was deprecated in server version 3.7.4.")]
         public bool? Snapshot
         {
             get { return _snapshot; }
@@ -411,7 +408,7 @@ namespace MongoDB.Driver.Core.Operations
                 { "$readPreference", readPreferenceDocument, readPreferenceDocument != null },
                 { "$orderby", _sort, _sort != null },
                 { "$comment", _comment, _comment != null },
-                { "$maxTimeMS", () => MaxTimeHelper.ToMaxTimeMS(_maxTime.Value), _maxTime.HasValue },
+                { "$maxTimeMS", () => _maxTime.Value.TotalMilliseconds, _maxTime.HasValue },
                 { "$hint", _hint, _hint != null },
                 { "$max", _max, _max != null },
                 { "$maxScan", () => _maxScan.Value, _maxScan.HasValue },
@@ -522,7 +519,7 @@ namespace MongoDB.Driver.Core.Operations
         // private methods
         private IAsyncCursor<TDocument> CreateCursor(IChannelSourceHandle channelSource, BsonDocument query, CursorBatch<TDocument> batch)
         {
-            var getMoreChannelSource = new ServerChannelSource(channelSource.Server, channelSource.Session.Fork());
+            var getMoreChannelSource = new ServerChannelSource(channelSource.Server);
             return new AsyncCursor<TDocument>(
                 getMoreChannelSource,
                 _collectionNamespace,

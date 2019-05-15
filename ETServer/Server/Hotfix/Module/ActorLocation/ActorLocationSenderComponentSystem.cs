@@ -6,13 +6,8 @@ namespace ETHotfix
     [ObjectSystem]
     public class ActorLocationSenderComponentSystem : StartSystem<ActorLocationSenderComponent>
     {
-        public override void Start(ActorLocationSenderComponent self)
-        {
-            StartAsync(self).Coroutine();
-        }
-        
         // 每10s扫描一次过期的actorproxy进行回收,过期时间是1分钟
-        public async ETVoid StartAsync(ActorLocationSenderComponent self)
+        public override async void Start(ActorLocationSenderComponent self)
         {
             List<long> timeoutActorProxyIds = new List<long>();
 

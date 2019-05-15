@@ -3,6 +3,9 @@ using ETModel;
 
 namespace Trinity.Hotfix
 {
+    /// <summary>
+    /// Actor消息处理器基类
+    /// </summary>
 	public abstract class AMHandler<Message> : IMHandler where Message: class
 	{
 		protected abstract void Run(ETModel.Session session, Message message);
@@ -12,7 +15,7 @@ namespace Trinity.Hotfix
 			Message message = msg as Message;
 			if (message == null)
 			{
-                ETModel.ETLog.Error($"消息类型转换错误: {msg.GetType().Name} to {typeof(Message).Name}");
+				Log.Error($"消息类型转换错误: {msg.GetType().Name} to {typeof(Message).Name}");
 			}
 			this.Run(session, message);
 		}

@@ -1,4 +1,4 @@
-﻿/* Copyright 2013-present MongoDB Inc.
+﻿/* Copyright 2013-2016 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -22,11 +22,9 @@ using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver.Core.Bindings;
-using MongoDB.Driver.Core.Connections;
 using MongoDB.Driver.Core.Events;
 using MongoDB.Driver.Core.Misc;
 using MongoDB.Driver.Core.WireProtocol.Messages.Encoders;
-using MongoDB.Shared;
 
 namespace MongoDB.Driver.Core.Operations
 {
@@ -37,7 +35,6 @@ namespace MongoDB.Driver.Core.Operations
     {
         // fields
         private readonly CollectionNamespace _collectionNamespace;
-        private TimeSpan? _maxTime;
         private readonly MessageEncoderSettings _messageEncoderSettings;
         private readonly IEnumerable<CreateIndexRequest> _requests;
         private WriteConcern _writeConcern = WriteConcern.Acknowledged;
@@ -104,17 +101,6 @@ namespace MongoDB.Driver.Core.Operations
             get { return _writeConcern; }
             set { _writeConcern = Ensure.IsNotNull(value, nameof(value)); }
         }
-        /// <summary>
-        /// Gets or sets the MaxTime
-        /// </summary>
-        /// <value> 
-        /// The maxtime.
-        /// </value>
-        public TimeSpan? MaxTime
-        {
-            get { return _maxTime; }
-            set { _maxTime = Ensure.IsNullOrInfiniteOrGreaterThanOrEqualToZero(value, nameof(value)); }
-        }
 
         // public methods
         /// <inheritdoc/>
@@ -123,10 +109,12 @@ namespace MongoDB.Driver.Core.Operations
             using (EventContext.BeginOperation())
             using (var channelSource = binding.GetWriteChannelSource(cancellationToken))
             using (var channel = channelSource.GetChannel(cancellationToken))
-            using (var channelBinding = new ChannelReadWriteBinding(channelSource.Server, channel, binding.Session.Fork()))
+            using (var channelBinding = new ChannelReadWriteBinding(channelSource.Server, channel))
             {
-                var operation = CreateOperation(channelBinding.Session, channel.ConnectionDescription);
-                return operation.Execute(channelBinding, cancellationToken);
+                var operation = CreateOperation(channel.ConnectionDescription.ServerVersion);
+                var result = operation.Execute(channelBinding, cancellationToken);
+                WriteConcernErrorHelper.ThrowIfHasWriteConcernError(channel.ConnectionDescription.ConnectionId, result);
+                return result;
             }
         }
 
@@ -136,31 +124,30 @@ namespace MongoDB.Driver.Core.Operations
             using (EventContext.BeginOperation())
             using (var channelSource = await binding.GetWriteChannelSourceAsync(cancellationToken).ConfigureAwait(false))
             using (var channel = await channelSource.GetChannelAsync(cancellationToken).ConfigureAwait(false))
-            using (var channelBinding = new ChannelReadWriteBinding(channelSource.Server, channel, binding.Session.Fork()))
+            using (var channelBinding = new ChannelReadWriteBinding(channelSource.Server, channel))
             {
-                var operation = CreateOperation(channelBinding.Session, channel.ConnectionDescription);
-                return await operation.ExecuteAsync(channelBinding, cancellationToken).ConfigureAwait(false);
+                var operation = CreateOperation(channel.ConnectionDescription.ServerVersion);
+                var result = await operation.ExecuteAsync(channelBinding, cancellationToken).ConfigureAwait(false);
+                WriteConcernErrorHelper.ThrowIfHasWriteConcernError(channel.ConnectionDescription.ConnectionId, result);
+                return result;
             }
         }
 
         // private methods
-        internal BsonDocument CreateCommand(ICoreSessionHandle session, ConnectionDescription connectionDescription)
+        internal BsonDocument CreateCommand(SemanticVersion serverVersion)
         {
-            var serverVersion = connectionDescription.ServerVersion;
-            var writeConcern = WriteConcernHelper.GetWriteConcernForCommandThatWrites(session, _writeConcern, serverVersion);
             return new BsonDocument
             {
                 { "createIndexes", _collectionNamespace.CollectionName },
                 { "indexes", new BsonArray(_requests.Select(request => request.CreateIndexDocument(serverVersion))) },
-                { "maxTimeMS", () => MaxTimeHelper.ToMaxTimeMS(_maxTime.Value), _maxTime.HasValue },
-                { "writeConcern", writeConcern, writeConcern != null }
+                { "writeConcern", () => _writeConcern.ToBsonDocument(), Feature.CommandsThatWriteAcceptWriteConcern.ShouldSendWriteConcern(serverVersion, _writeConcern) }
             };
         }
 
-        private WriteCommandOperation<BsonDocument> CreateOperation(ICoreSessionHandle session, ConnectionDescription connectionDescription)
+        private WriteCommandOperation<BsonDocument> CreateOperation(SemanticVersion serverVersion)
         {
             var databaseNamespace = _collectionNamespace.DatabaseNamespace;
-            var command = CreateCommand(session, connectionDescription);
+            var command = CreateCommand(serverVersion);
             var resultSerializer = BsonDocumentSerializer.Instance;
             return new WriteCommandOperation<BsonDocument>(databaseNamespace, command, resultSerializer, _messageEncoderSettings);
         }

@@ -1,4 +1,4 @@
-/* Copyright 2013-present MongoDB Inc.
+/* Copyright 2013-2016 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -18,11 +18,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Bson;
-using MongoDB.Driver.Core.Bindings;
-using MongoDB.Driver.Core.Connections;
 using MongoDB.Driver.Core.Misc;
 using MongoDB.Driver.Core.WireProtocol.Messages.Encoders;
-using MongoDB.Shared;
 
 namespace MongoDB.Driver.Core.Operations
 {
@@ -158,7 +155,7 @@ namespace MongoDB.Driver.Core.Operations
         public TimeSpan? MaxTime
         {
             get { return _maxTime; }
-            set { _maxTime = Ensure.IsNullOrInfiniteOrGreaterThanOrEqualToZero(value, nameof(value)); }
+            set { _maxTime = Ensure.IsNullOrGreaterThanZero(value, nameof(value)); }
         }
 
         /// <summary>
@@ -226,14 +223,10 @@ namespace MongoDB.Driver.Core.Operations
         /// <summary>
         /// Creates the command.
         /// </summary>
-        /// <param name="session">The session.</param>
-        /// <param name="connectionDescription">The connection description.</param>
-        /// <returns>
-        /// The command.
-        /// </returns>
-        protected internal virtual BsonDocument CreateCommand(ICoreSessionHandle session, ConnectionDescription connectionDescription)
+        /// <param name="serverVersion">The server version.</param>
+        /// <returns>The command.</returns>
+        protected internal virtual BsonDocument CreateCommand(SemanticVersion serverVersion)
         {
-            var serverVersion = connectionDescription.ServerVersion;
             Feature.Collation.ThrowIfNotSupported(serverVersion, _collation);
 
             return new BsonDocument
@@ -249,7 +242,7 @@ namespace MongoDB.Driver.Core.Operations
                 { "scope", _scope, _scope != null },
                 { "jsMode", () => _javaScriptMode.Value, _javaScriptMode.HasValue },
                 { "verbose", () => _verbose.Value, _verbose.HasValue },
-                { "maxTimeMS", () => MaxTimeHelper.ToMaxTimeMS(_maxTime.Value), _maxTime.HasValue },
+                { "maxTimeMS", () => _maxTime.Value.TotalMilliseconds, _maxTime.HasValue },
                 { "collation", () => _collation.ToBsonDocument(), _collation != null }
             };
         }

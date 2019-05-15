@@ -1,4 +1,8 @@
-﻿namespace ETModel
+﻿using System;
+using System.Net;
+using System.Threading.Tasks;
+
+namespace ETModel
 {
 	public class BenchmarkComponent: Component
 	{

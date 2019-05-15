@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Reflection;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace ETModel
 {
@@ -120,7 +120,7 @@ namespace ETModel
 
 				this.listener.Start();
 
-				this.Accept().Coroutine();
+				this.Accept();
 			}
 			catch (HttpListenerException e)
 			{
@@ -174,7 +174,7 @@ namespace ETModel
 			}
 		}
 
-		public async ETVoid Accept()
+		public async void Accept()
 		{
 			long instanceId = this.InstanceId;
 			
@@ -195,7 +195,7 @@ namespace ETModel
 		/// 调用处理方法
 		/// </summary>
 		/// <param name="context"></param>
-		private async ETTask InvokeHandler(HttpListenerContext context)
+		private async Task InvokeHandler(HttpListenerContext context)
 		{
 			context.Response.StatusCode = 404;
 
@@ -235,7 +235,7 @@ namespace ETModel
 				// 自动把返回值，以json方式响应。
 				object resp = methodInfo.Invoke(httpHandler, args);
 				object result = resp;
-				if (resp is ETTask<HttpResult> t)
+				if (resp is Task t)
 				{
 					await t;
 					result = t.GetType().GetProperty("Result").GetValue(t, null);
@@ -243,7 +243,7 @@ namespace ETModel
 
 				if (result != null)
 				{
-					using (StreamWriter sw = new StreamWriter(context.Response.OutputStream,Encoding.UTF8))
+					using (StreamWriter sw = new StreamWriter(context.Response.OutputStream))
 					{
 						if (result.GetType() == typeof(string))
 						{

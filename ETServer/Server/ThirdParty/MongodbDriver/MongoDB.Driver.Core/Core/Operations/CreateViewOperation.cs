@@ -1,4 +1,4 @@
-﻿/* Copyright 2016-present MongoDB Inc.
+﻿/* Copyright 2016 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver.Core.Bindings;
-using MongoDB.Driver.Core.Connections;
 using MongoDB.Driver.Core.Misc;
 using MongoDB.Driver.Core.WireProtocol.Messages.Encoders;
 
@@ -151,10 +150,12 @@ namespace MongoDB.Driver.Core.Operations
 
             using (var channelSource = binding.GetWriteChannelSource(cancellationToken))
             using (var channel = channelSource.GetChannel(cancellationToken))
-            using (var channelBinding = new ChannelReadWriteBinding(channelSource.Server, channel, binding.Session.Fork()))
+            using (var channelBinding = new ChannelReadWriteBinding(channelSource.Server, channel))
             {
-                var operation = CreateOperation(channelBinding.Session, channel.ConnectionDescription);
-                return operation.Execute(channelBinding, cancellationToken);
+                var operation = CreateOperation(channel.ConnectionDescription.ServerVersion);
+                var result = operation.Execute(channelBinding, cancellationToken);
+                WriteConcernErrorHelper.ThrowIfHasWriteConcernError(channel.ConnectionDescription.ConnectionId, result);
+                return result;
             }
         }
 
@@ -165,34 +166,34 @@ namespace MongoDB.Driver.Core.Operations
 
             using (var channelSource = await binding.GetWriteChannelSourceAsync(cancellationToken).ConfigureAwait(false))
             using (var channel = await channelSource.GetChannelAsync(cancellationToken).ConfigureAwait(false))
-            using (var channelBinding = new ChannelReadWriteBinding(channelSource.Server, channel, binding.Session.Fork()))
+            using (var channelBinding = new ChannelReadWriteBinding(channelSource.Server, channel))
             {
-                var operation = CreateOperation(channelBinding.Session, channel.ConnectionDescription);
-                return await operation.ExecuteAsync(channelBinding, cancellationToken).ConfigureAwait(false);
+                var operation = CreateOperation(channel.ConnectionDescription.ServerVersion);
+                var result = await operation.ExecuteAsync(channelBinding, cancellationToken).ConfigureAwait(false);
+                WriteConcernErrorHelper.ThrowIfHasWriteConcernError(channel.ConnectionDescription.ConnectionId, result);
+                return result;
             }
         }
 
         // private methods
-        internal BsonDocument CreateCommand(ICoreSessionHandle session, ConnectionDescription connectionDescription)
+        internal BsonDocument CreateCommand(SemanticVersion serverVersion)
         {
-            var serverVersion = connectionDescription.ServerVersion;
             Feature.Views.ThrowIfNotSupported(serverVersion);
             Feature.Collation.ThrowIfNotSupported(serverVersion, _collation);
 
-            var writeConcern = WriteConcernHelper.GetWriteConcernForCommandThatWrites(session, _writeConcern, serverVersion);
             return new BsonDocument
             {
                 { "create", _viewName },
                 { "viewOn", _viewOn },
                 { "pipeline", new BsonArray(_pipeline) },
                 { "collation", () => _collation.ToBsonDocument(), _collation != null },
-                { "writeConcern", writeConcern, writeConcern != null }
+                { "writeConcern", () => _writeConcern.ToBsonDocument(), Feature.CommandsThatWriteAcceptWriteConcern.ShouldSendWriteConcern(serverVersion, _writeConcern) }
             };
         }
 
-        private WriteCommandOperation<BsonDocument> CreateOperation(ICoreSessionHandle session, ConnectionDescription connectionDescription)
+        private WriteCommandOperation<BsonDocument> CreateOperation(SemanticVersion serverVersion)
         {
-            var command = CreateCommand(session, connectionDescription);
+            var command = CreateCommand(serverVersion);
             return new WriteCommandOperation<BsonDocument>(_databaseNamespace, command, BsonDocumentSerializer.Instance, _messageEncoderSettings);
         }
     }

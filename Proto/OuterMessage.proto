@@ -1,14 +1,21 @@
 syntax = "proto3";
 package ETModel;
 
-message C2M_TestRequest // IActorLocationRequest
+message Actor_Test // IActorMessage
+{
+	int32 RpcId = 90;
+	int64 ActorId = 93;
+	string Info = 1;
+}
+
+message Actor_TestRequest // IActorLocationRequest
 {
 	int32 RpcId = 90;
 	int64 ActorId = 93;
 	string request = 1;
 }
 
-message M2C_TestResponse // IActorLocationResponse
+message Actor_TestResponse // IActorLocationResponse
 {
 	int32 RpcId = 90;
 	int32 Error = 91;
@@ -40,52 +47,30 @@ message G2C_EnterMap // IResponse
 	int32 RpcId = 90;
 	int32 Error = 91;
 	string Message = 92;
-	// 自己的unit id
 	int64 UnitId = 1;
-	// 所有的unit
-	repeated UnitInfo Units = 2;
+	int32 Count  = 2;
 }
 
 message UnitInfo
 {
 	int64 UnitId  = 1;
-
-	float X = 2;
-	float Y = 3;
-	float Z = 4;
+	int32 X       = 2;
+	int32 Z       = 3;
 }
 
-message M2C_CreateUnits // IActorMessage
+message Actor_CreateUnits // IActorMessage
 {
 	int32 RpcId = 90;
 	int64 ActorId = 93;
     repeated UnitInfo Units = 1;
 }
 
-message Frame_ClickMap // IActorLocationMessage
+message Frame_ClickMap // IFrameMessage
 {
 	int32 RpcId = 90;
-	int64 ActorId = 93;
 	int64 Id = 94;
-	
-	float X = 1;
-	float Y = 2;
-	float Z = 3;
-}
-
-message M2C_PathfindingResult // IActorMessage
-{
-	int64 ActorId = 93;
-	
-	int64 Id = 1;
-
-	float X = 2;
-	float Y = 3;
-	float Z = 4;
-	
-	repeated float Xs = 5;
-	repeated float Ys = 6;
-	repeated float Zs = 7;
+	int32 X = 1;
+	int32 Z = 2;
 }
 
 
@@ -121,19 +106,19 @@ message M2C_Reload // IResponse
 
 message TestMessage // IMessage
 {
-	string info = 1;
+	int32 num = 1;
 }
 
-message RPCTestRequest // IRequest
+message C2R_RPCTest // IRequest
 {
-	string info = 1;
 	int32 RpcId = 90;
+	string text = 1;
 }
 
-message RPCTestResponse // IResponse
+message R2C_RPCTest // IResponse
 {
-	string info = 1;
 	int32 RpcId = 90;
 	int32 Error = 91;
 	string Message = 92;
+	string text = 1;
 }

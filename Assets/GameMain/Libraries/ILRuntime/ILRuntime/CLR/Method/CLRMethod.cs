@@ -332,8 +332,7 @@ namespace ILRuntime.CLR.Method
                 {
                     case ObjectTypes.StackObjectReference:
                         {
-                            var addr = *(long*)&p->Value;
-                            var dst = (StackObject*)addr;
+                            var dst = *(StackObject**)&p->Value;
                             if (dst->ObjectType >= ObjectTypes.Object)
                             {
                                 var obj = val;

@@ -126,7 +126,7 @@ namespace ILRuntime.Runtime.Stack
                 {
                     StackObject* oriAddr = frame.ValueTypeBasePointer;
                     RelocateValueType(ret, ref frame.ValueTypeBasePointer, ref mStackBase);
-                    *(long*)&ret->Value = (long)oriAddr;
+                    *(StackObject**)&ret->Value = oriAddr;
                 }
                 ret++;
             }
@@ -141,7 +141,7 @@ namespace ILRuntime.Runtime.Stack
 
         void RelocateValueType(StackObject* src, ref StackObject* dst, ref int mStackBase)
         {
-            StackObject* descriptor = ILIntepreter.ResolveReference(src);
+            StackObject* descriptor = *(StackObject**)&src->Value;
             if (descriptor > dst)
                 throw new StackOverflowException();
             *dst = *descriptor;
@@ -168,7 +168,7 @@ namespace ILRuntime.Runtime.Stack
                     case ObjectTypes.ValueTypeObjectReference:
                         var newAddr = endAddr;
                         RelocateValueType(addr, ref endAddr, ref mStackBase);
-                        *(long*)&tarVal->Value = (long)newAddr;
+                        *(StackObject**)&tarVal->Value = newAddr;
                         break;
                 }
             }
@@ -190,7 +190,7 @@ namespace ILRuntime.Runtime.Stack
                 }
                 ptr->ObjectType = ObjectTypes.ValueTypeObjectReference;
                 var dst = valueTypePtr;
-                *(long*)&ptr->Value = (long)dst;
+                *(StackObject**)&ptr->Value = dst;
                 dst->ObjectType = ObjectTypes.ValueTypeDescriptor;
                 dst->Value = type.GetHashCode();
                 dst->ValueLow = fieldCount;
@@ -212,7 +212,7 @@ namespace ILRuntime.Runtime.Stack
                 {
                     var ft = t.FieldTypes[i];
                     StackObject* val = ILIntepreter.Minus(ptr, t.FieldStartIndex + i + 1);
-                    if (ft.IsPrimitive || ft.IsEnum)
+                    if (ft.IsPrimitive)
                         StackObject.Initialized(val, ft);
                     else
                     {
@@ -281,14 +281,14 @@ namespace ILRuntime.Runtime.Stack
                 {
                     var ft = t.FieldTypes[i];
                     StackObject* val = ILIntepreter.Minus(ptr, t.FieldStartIndex + i + 1);
-                    if (ft.IsPrimitive || ft.IsEnum)
+                    if (ft.IsPrimitive)
                         StackObject.Initialized(val, ft);
                     else
                     {
                         switch (val->ObjectType)
                         {
                             case ObjectTypes.ValueTypeObjectReference:
-                                ClearValueTypeObject(ft, ILIntepreter.ResolveReference(val));
+                                ClearValueTypeObject(ft, *(StackObject**)&val->Value);
                                 break;
                             default:
                                 if (ft.IsValueType)
@@ -327,7 +327,7 @@ namespace ILRuntime.Runtime.Stack
                         {
                             case ObjectTypes.ValueTypeObjectReference:
                                 {
-                                    var dst = ILIntepreter.ResolveReference(val);
+                                    var dst = *(StackObject**)&val->Value;
                                     ClearValueTypeObject(vt, dst);
                                 }
                                 break;
@@ -355,7 +355,7 @@ namespace ILRuntime.Runtime.Stack
             CountValueTypeManaged(esp, ref start, ref end, &endAddr);
 
             if (endAddr == valueTypePtr)
-                valueTypePtr = ILIntepreter.ResolveReference(esp);
+                valueTypePtr = *(StackObject**)&esp->Value;
             else
                 throw new NotSupportedException();
             if (start != int.MaxValue)
@@ -375,7 +375,7 @@ namespace ILRuntime.Runtime.Stack
 
         void CountValueTypeManaged(StackObject* esp, ref int start, ref int end, StackObject** endAddr)
         {
-            StackObject* descriptor = ILIntepreter.ResolveReference(esp);
+            StackObject* descriptor = *(StackObject**)&esp->Value;
             int cnt = descriptor->ValueLow;
             *endAddr = ILIntepreter.Minus(descriptor, cnt + 1);
             for (int i = 0; i < cnt; i++)

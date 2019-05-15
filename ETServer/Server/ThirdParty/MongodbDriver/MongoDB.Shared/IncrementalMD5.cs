@@ -1,4 +1,4 @@
-﻿/* Copyright 2016-present MongoDB Inc.
+﻿/* Copyright 2016 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ namespace MongoDB.Shared
     {
         public static IncrementalMD5 Create()
         {
-#if NET452
+#if NET45
             return new IncrementalMD5Net45();
 #else
             return new IncrementalMD5NetStandard16();
@@ -34,7 +34,7 @@ namespace MongoDB.Shared
         public abstract byte[] GetHashAndReset();
     }
 
-#if NET452
+#if NET45
     internal class IncrementalMD5Net45 : IncrementalMD5
     {
         private static readonly byte[] __emptyByteArray = new byte[0];

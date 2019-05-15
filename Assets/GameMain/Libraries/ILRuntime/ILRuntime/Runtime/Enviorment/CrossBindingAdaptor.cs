@@ -188,15 +188,6 @@ namespace ILRuntime.Runtime.Enviorment
             }
         }
 
-
-        public bool IsEnum
-        {
-            get
-            {
-                return type.IsEnum;
-            }
-        }
-
         public bool IsDelegate
         {
             get

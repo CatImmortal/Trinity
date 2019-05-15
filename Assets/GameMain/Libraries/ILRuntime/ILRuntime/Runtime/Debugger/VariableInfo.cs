@@ -20,7 +20,6 @@ namespace ILRuntime.Runtime.Debugger
         Error,
         NotFound,
         Timeout,
-        Pending,
     }
 
     public enum ValueTypes

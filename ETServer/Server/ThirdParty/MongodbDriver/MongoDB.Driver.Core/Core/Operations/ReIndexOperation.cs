@@ -1,4 +1,4 @@
-﻿/* Copyright 2016-present MongoDB Inc.
+﻿/* Copyright 2016-2017 MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -91,10 +91,12 @@ namespace MongoDB.Driver.Core.Operations
 
             using (var channelSource = binding.GetWriteChannelSource(cancellationToken))
             using (var channel = channelSource.GetChannel(cancellationToken))
-            using (var channelBinding = new ChannelReadWriteBinding(channelSource.Server, channel, binding.Session.Fork()))
+            using (var channelBinding = new ChannelReadWriteBinding(channelSource.Server, channel))
             {
                 var operation = CreateOperation(channel.ConnectionDescription.ServerVersion);
-                return operation.Execute(channelBinding, cancellationToken);
+                var result = operation.Execute(binding, cancellationToken);
+                WriteConcernErrorHelper.ThrowIfHasWriteConcernError(channel.ConnectionDescription.ConnectionId, result);
+                return result;
             }
         }
 
@@ -105,10 +107,12 @@ namespace MongoDB.Driver.Core.Operations
 
             using (var channelSource = await binding.GetWriteChannelSourceAsync(cancellationToken).ConfigureAwait(false))
             using (var channel = await channelSource.GetChannelAsync(cancellationToken).ConfigureAwait(false))
-            using (var channelBinding = new ChannelReadWriteBinding(channelSource.Server, channel, binding.Session.Fork()))
+            using (var channelBinding = new ChannelReadWriteBinding(channelSource.Server, channel))
             {
                 var operation = CreateOperation(channel.ConnectionDescription.ServerVersion);
-                return await operation.ExecuteAsync(channelBinding, cancellationToken).ConfigureAwait(false);
+                var result = await operation.ExecuteAsync(binding, cancellationToken).ConfigureAwait(false);
+                WriteConcernErrorHelper.ThrowIfHasWriteConcernError(channel.ConnectionDescription.ConnectionId, result);
+                return result;
             }
         }
 

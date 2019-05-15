@@ -1,16 +1,18 @@
 ﻿namespace ETModel
 {
-	public static class SceneType
+	public enum SceneType
 	{
-		public const string Share = "Share";
-		public const string Game = "Game";
-		public const string Login = "Login";
-		public const string Lobby = "Lobby";
-		public const string Map = "Map";
-		public const string Launcher = "Launcher";
-		public const string Robot = "Robot";
-		public const string RobotClient = "RobotClient";
-		public const string Realm = "Realm";
+		Share,
+		Game,
+		Login,
+		Lobby,
+		Map,
+		Launcher,
+		Robot,
+		BehaviorTreeScene,
+		RobotClient,
+
+		Realm
 	}
 	
 	public sealed class Scene: Entity

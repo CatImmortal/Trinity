@@ -12,16 +12,10 @@ namespace ILRuntime.Reflection
     public class ILRuntimeParameterInfo : ParameterInfo
     {
         IType type;
-        MethodBase method;
-        Mono.Cecil.ParameterDefinition definition;
 
-        public ILRuntimeParameterInfo(Mono.Cecil.ParameterDefinition definition, IType type, MethodBase method)
+        public ILRuntimeParameterInfo(IType type)
         {
             this.type = type;
-            this.method = method;
-            this.MemberImpl = method;
-            this.definition = definition;
-            NameImpl = definition.Name;
         }
         public override Type ParameterType
         {
