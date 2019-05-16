@@ -26,18 +26,7 @@ namespace Trinity.Hotfix
             }
         }
 
-        public static void Update()
-        {
-            try
-            {
-                Game.EventSystem.Update();
-            }
-            catch (Exception e)
-            {
-
-                throw new GameFrameworkException("轮询ET网络时出现异常：", e);
-            }
-        }
+     
 
         public static void Shutdown()
         {

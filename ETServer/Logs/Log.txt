@@ -35,3 +35,25 @@ File name: 'D:\GitHub\Trinity\ETServer\Config\graph.bytes'
 2019-05-16 01:21:48.2913 AllServer 0001 (Session.cs:150) { "_t" : "HotfixRpcRequest", "RpcId" : 1, "Info" : "Hello Server" }
 2019-05-16 01:21:48.2913 AllServer 0001 (HotfixRpcHandler.cs:12) Hello Server
 2019-05-16 01:21:48.3110 AllServer 0001 (Session.cs:269) { "_t" : "HotfixRpcResponse", "RpcId" : 1, "Error" : 0, "Message" : "", "Info" : "Hello Client" }
+2019-05-16 22:35:33.7262 AllServer 0001 (Program.cs:36) server start........................ 1 AllServer
+2019-05-16 22:37:32.1600 AllServer 0001 (Program.cs:36) server start........................ 1 AllServer
+2019-05-16 22:40:25.0623 AllServer 0001 (Program.cs:36) server start........................ 1 AllServer
+2019-05-16 22:40:36.4417 AllServer 0001 (Session.cs:150) { "_t" : "HotfixTestMessage", "Info" : "6666" }
+2019-05-16 22:40:36.4470 AllServer 0001 (HotfixTestMessagehandler.cs:10) 6666
+2019-05-16 22:40:36.4470 AllServer 0001 (Session.cs:150) { "_t" : "HotfixRpcRequest", "RpcId" : 1, "Info" : "Hello Server" }
+2019-05-16 22:40:36.4470 AllServer 0001 (HotfixRpcHandler.cs:12) Hello Server
+2019-05-16 22:40:36.4671 AllServer 0001 (Session.cs:269) { "_t" : "HotfixRpcResponse", "RpcId" : 1, "Error" : 0, "Message" : "", "Info" : "Hello Client" }
+2019-05-16 22:42:41.4059 AllServer 0001 (Program.cs:36) server start........................ 1 AllServer
+2019-05-16 22:42:47.3300 AllServer 0001 (Session.cs:150) { "_t" : "HotfixTestMessage", "Info" : "6666" }
+2019-05-16 22:42:47.3300 AllServer 0001 (HotfixTestMessagehandler.cs:10) 6666
+2019-05-16 22:42:47.3373 AllServer 0001 (Session.cs:150) { "_t" : "HotfixRpcRequest", "RpcId" : 1, "Info" : "Hello Server" }
+2019-05-16 22:42:47.3373 AllServer 0001 (HotfixRpcHandler.cs:12) Hello Server
+2019-05-16 22:42:47.7701 AllServer 0001 (Session.cs:269) { "_t" : "HotfixRpcResponse", "RpcId" : 1, "Error" : 0, "Message" : "", "Info" : "Hello Client" }
+2019-05-16 22:44:29.0611 AllServer 0001 (Program.cs:36) server start........................ 1 AllServer
+2019-05-16 22:51:48.3184 AllServer 0001 (Program.cs:36) server start........................ 1 AllServer
+2019-05-16 23:11:23.2020 AllServer 0001 (Program.cs:36) server start........................ 1 AllServer
+2019-05-16 23:11:34.2275 AllServer 0001 (Session.cs:150) { "_t" : "HotfixTestMessage", "Info" : "6666" }
+2019-05-16 23:11:34.2275 AllServer 0001 (HotfixTestMessagehandler.cs:10) 6666
+2019-05-16 23:11:34.2275 AllServer 0001 (Session.cs:150) { "_t" : "HotfixRpcRequest", "RpcId" : 1, "Info" : "Hello Server" }
+2019-05-16 23:11:34.2275 AllServer 0001 (HotfixRpcHandler.cs:12) Hello Server
+2019-05-16 23:11:34.2500 AllServer 0001 (Session.cs:269) { "_t" : "HotfixRpcResponse", "RpcId" : 1, "Error" : 0, "Message" : "", "Info" : "Hello Client" }

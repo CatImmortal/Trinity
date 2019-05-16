@@ -31,7 +31,7 @@ namespace Trinity.Editor
             //所有DLL内的类型的真实C#类型都是ILTypeInstance
             types.Add(typeof(List<ILRuntime.Runtime.Intepreter.ILTypeInstance>));
 
-            ILRuntime.Runtime.CLRBinding.BindingCodeGenerator.GenerateBindingCode(types, "Assets/GameMain/Scripts/ILRuntime/Generated");
+            ILRuntime.Runtime.CLRBinding.BindingCodeGenerator.GenerateBindingCode(types, "Assets/GameMain/Scripts/CustomComponents/ILRuntime/Generated");
             AssetDatabase.Refresh();
         }
 
@@ -45,7 +45,7 @@ namespace Trinity.Editor
                 domain.LoadAssembly(fs);
                 //Crossbind Adapter is needed to generate the correct binding code
                 ILRuntimeUtility.InitILRuntime(domain);
-                ILRuntime.Runtime.CLRBinding.BindingCodeGenerator.GenerateBindingCode(domain, "Assets/GameMain/Scripts/ILRuntime/Generated");
+                ILRuntime.Runtime.CLRBinding.BindingCodeGenerator.GenerateBindingCode(domain, "Assets/GameMain/Scripts/CustomComponents/ILRuntime/Generated");
                 AssetDatabase.Refresh();
             }
           

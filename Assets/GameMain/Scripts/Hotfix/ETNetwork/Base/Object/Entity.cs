@@ -2,17 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using MongoDB.Bson.Serialization.Attributes;
-
 namespace ETHotfix
 {
 	[BsonIgnoreExtraElements]
 	public class Entity : ComponentWithId
 	{
-		[BsonElement("C")]
-		[BsonIgnoreIfNull]
-		private HashSet<Component> components = new HashSet<Component>();
 
-		[BsonIgnore]
 		private Dictionary<Type, Component> componentDict = new Dictionary<Type, Component>();
 
 		public Entity()
@@ -40,11 +35,10 @@ namespace ETHotfix
 				}
 				catch (Exception e)
 				{
-					Log.Error(e);
-				}
+                    Log.Error(e);
+                }
 			}
-			
-			this.components.Clear();
+
 			this.componentDict.Clear();
 		}
 		
@@ -60,11 +54,6 @@ namespace ETHotfix
 
 			this.componentDict.Add(type, component);
 
-			if (component is ISerializeToEntity)
-			{
-				this.components.Add(component);
-			}
-			
 			return component;
 		}
 
@@ -78,11 +67,6 @@ namespace ETHotfix
 			Component component = ComponentFactory.CreateWithParent(type, this, this.IsFromPool);
 
 			this.componentDict.Add(type, component);
-			
-			if (component is ISerializeToEntity)
-			{
-				this.components.Add(component);
-			}
 			
 			return component;
 		}
@@ -99,10 +83,6 @@ namespace ETHotfix
 
 			this.componentDict.Add(type, component);
 			
-			if (component is ISerializeToEntity)
-			{
-				this.components.Add(component);
-			}
 			
 			return component;
 		}
@@ -119,10 +99,6 @@ namespace ETHotfix
 			
 			this.componentDict.Add(type, component);
 			
-			if (component is ISerializeToEntity)
-			{
-				this.components.Add(component);
-			}
 			
 			return component;
 		}
@@ -139,10 +115,6 @@ namespace ETHotfix
 			
 			this.componentDict.Add(type, component);
 			
-			if (component is ISerializeToEntity)
-			{
-				this.components.Add(component);
-			}
 			
 			return component;
 		}
@@ -159,10 +131,6 @@ namespace ETHotfix
 			
 			this.componentDict.Add(type, component);
 			
-			if (component is ISerializeToEntity)
-			{
-				this.components.Add(component);
-			}
 			
 			return component;
 		}
@@ -181,7 +149,6 @@ namespace ETHotfix
 			}
 
 			this.componentDict.Remove(type);
-			this.components.Remove(component);
 
 			component.Dispose();
 		}
@@ -199,7 +166,6 @@ namespace ETHotfix
 			}
 
 			this.componentDict.Remove(type);
-			this.components.Remove(component);
 
 			component.Dispose();
 		}
@@ -229,27 +195,6 @@ namespace ETHotfix
 			return this.componentDict.Values.ToArray();
 		}
 		
-		public override void EndInit()
-		{
-			try
-			{
-				base.EndInit();
-				
-				this.componentDict.Clear();
 
-				if (this.components != null)
-				{
-					foreach (Component component in this.components)
-					{
-						component.Parent = this;
-						this.componentDict.Add(component.GetType(), component);
-					}
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Error(e);
-			}
-		}
 	}
 }

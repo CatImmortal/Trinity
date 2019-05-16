@@ -10,13 +10,11 @@ namespace ETHotfix
     {
 	    public static MessagePool Instance { get; } = new MessagePool();
 
-#if !SERVER
         private readonly Dictionary<Type, Queue<object>> dictionary = new Dictionary<Type, Queue<object>>();
-#endif
+
 
         public object Fetch(Type type)
         {
-#if !SERVER
 	        Queue<object> queue;
 	        if (!this.dictionary.TryGetValue(type, out queue))
 	        {
@@ -33,9 +31,6 @@ namespace ETHotfix
 		        obj = Activator.CreateInstance(type);	
 	        }
 	        return obj;
-#else
-			return Activator.CreateInstance(type);
-#endif
         }
 
         public T Fetch<T>() where T: class
@@ -46,7 +41,6 @@ namespace ETHotfix
         
         public void Recycle(object obj)
         {
-#if !SERVER
             Type type = obj.GetType();
 	        Queue<object> queue;
             if (!this.dictionary.TryGetValue(type, out queue))
@@ -55,7 +49,6 @@ namespace ETHotfix
 				this.dictionary.Add(type, queue);
             }
             queue.Enqueue(obj);
-#endif
         }
     }
 }

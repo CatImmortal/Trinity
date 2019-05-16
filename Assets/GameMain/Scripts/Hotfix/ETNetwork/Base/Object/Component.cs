@@ -7,24 +7,19 @@ using UnityEngine;
 
 namespace ETHotfix
 {
-	[BsonIgnoreExtraElements]
 	public abstract class Component : Object, IDisposable
 	{
-		[BsonIgnore]
 		public long InstanceId { get; private set; }
 		
 #if !SERVER
         //TODO:此处修改了ET源码
 		//public static GameObject Global { get; } = GameObject.Find("/Global");
         public static GameObject Global { get; } = GameObject.Find("ETNetwork");
-        [BsonIgnore]
 		public GameObject GameObject { get; protected set; }
 #endif
 
-		[BsonIgnore]
 		private bool isFromPool;
 
-		[BsonIgnore]
 		public bool IsFromPool
 		{
 			get
@@ -47,7 +42,6 @@ namespace ETHotfix
 			}
 		}
 
-		[BsonIgnore]
 		public bool IsDisposed
 		{
 			get
@@ -58,7 +52,6 @@ namespace ETHotfix
 
 		private Component parent;
 		
-		[BsonIgnore]
 		public Component Parent
 		{
 			get
@@ -89,7 +82,6 @@ namespace ETHotfix
 			return this.Parent as T;
 		}
 
-		[BsonIgnore]
 		public Entity Entity
 		{
 			get
@@ -120,9 +112,6 @@ namespace ETHotfix
 			{
 				return;
 			}
-			
-			// 触发Destroy事件
-			Game.EventSystem.Destroy(this);
 
 			Game.EventSystem.Remove(this.InstanceId);
 			
@@ -141,11 +130,6 @@ namespace ETHotfix
 				}
 #endif
 			}
-		}
-
-		public override void EndInit()
-		{
-			Game.EventSystem.Deserialize(this);
 		}
 		
 		public override string ToString()

@@ -32,7 +32,7 @@ namespace Trinity.Editor
         //各种类型的代码生成后的路径
         private const string EntityCodePath = "Assets/GameMain/Scripts/Entity";
         private const string HotfixEntityCodePath = "Assets/GameMain/Scripts/Hotfix/Entity";
-        private const string EntityExtensionCodePath = "Assets/GameMain/Scripts/Extensions/Entity";
+        private const string EntityExtensionCodePath = "Assets/GameMain/Scripts/CustomExtensions/Entity";
         private const string UIFormCodePath = "Assets/GameMain/Scripts/UI";
         private const string HotfixUIFormCodePath = "Assets/GameMain/Scripts/Hotfix/UI";
 
