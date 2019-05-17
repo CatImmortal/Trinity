@@ -18,8 +18,6 @@ namespace ETModel
 		private readonly Dictionary<DLLType, Assembly> assemblies = new Dictionary<DLLType, Assembly>();
 		private readonly UnOrderMultiMap<Type, Type> types = new UnOrderMultiMap<Type, Type>();
 
-		private readonly Dictionary<string, List<IEvent>> allEvents = new Dictionary<string, List<IEvent>>();
-
 		private readonly UnOrderMultiMap<Type, IAwakeSystem> awakeSystems = new UnOrderMultiMap<Type, IAwakeSystem>();
 
 		private readonly UnOrderMultiMap<Type, IStartSystem> startSystems = new UnOrderMultiMap<Type, IStartSystem>();
@@ -115,36 +113,12 @@ namespace ETModel
 				}
 			}
 
-			this.allEvents.Clear();
-			foreach (Type type in types[typeof(EventAttribute)])
-			{
-				object[] attrs = type.GetCustomAttributes(typeof(EventAttribute), false);
-
-				foreach (object attr in attrs)
-				{
-					EventAttribute aEventAttribute = (EventAttribute)attr;
-					object obj = Activator.CreateInstance(type);
-					IEvent iEvent = obj as IEvent;
-					if (iEvent == null)
-					{
-						Log.Error($"{obj.GetType().Name} 没有继承IEvent");
-					}
-					this.RegisterEvent(aEventAttribute.Type, iEvent);
-				}
-			}
+			
 
 			this.Load();
 		}
 
-		public void RegisterEvent(string eventId, IEvent e)
-		{
-			if (!this.allEvents.ContainsKey(eventId))
-			{
-				this.allEvents.Add(eventId, new List<IEvent>());
-			}
-			this.allEvents[eventId].Add(e);
-		}
-
+	
 		public Assembly Get(DLLType dllType)
 		{
 			return this.assemblies[dllType];
@@ -554,84 +528,6 @@ namespace ETModel
 			ObjectHelper.Swap(ref this.lateUpdates, ref this.lateUpdates2);
 		}
 
-		public void Run(string type)
-		{
-			List<IEvent> iEvents;
-			if (!this.allEvents.TryGetValue(type, out iEvents))
-			{
-				return;
-			}
-			foreach (IEvent iEvent in iEvents)
-			{
-				try
-				{
-					iEvent?.Handle();
-				}
-				catch (Exception e)
-				{
-					Log.Error(e);
-				}
-			}
-		}
-
-		public void Run<A>(string type, A a)
-		{
-			List<IEvent> iEvents;
-			if (!this.allEvents.TryGetValue(type, out iEvents))
-			{
-				return;
-			}
-			foreach (IEvent iEvent in iEvents)
-			{
-				try
-				{
-					iEvent?.Handle(a);
-				}
-				catch (Exception e)
-				{
-					Log.Error(e);
-				}
-			}
-		}
-
-		public void Run<A, B>(string type, A a, B b)
-		{
-			List<IEvent> iEvents;
-			if (!this.allEvents.TryGetValue(type, out iEvents))
-			{
-				return;
-			}
-			foreach (IEvent iEvent in iEvents)
-			{
-				try
-				{
-					iEvent?.Handle(a, b);
-				}
-				catch (Exception e)
-				{
-					Log.Error(e);
-				}
-			}
-		}
-
-		public void Run<A, B, C>(string type, A a, B b, C c)
-		{
-			List<IEvent> iEvents;
-			if (!this.allEvents.TryGetValue(type, out iEvents))
-			{
-				return;
-			}
-			foreach (IEvent iEvent in iEvents)
-			{
-				try
-				{
-					iEvent?.Handle(a, b, c);
-				}
-				catch (Exception e)
-				{
-					Log.Error(e);
-				}
-			}
-		}
+	
 	}
 }

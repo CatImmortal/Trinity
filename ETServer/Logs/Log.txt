@@ -57,3 +57,15 @@ File name: 'D:\GitHub\Trinity\ETServer\Config\graph.bytes'
 2019-05-16 23:11:34.2275 AllServer 0001 (Session.cs:150) { "_t" : "HotfixRpcRequest", "RpcId" : 1, "Info" : "Hello Server" }
 2019-05-16 23:11:34.2275 AllServer 0001 (HotfixRpcHandler.cs:12) Hello Server
 2019-05-16 23:11:34.2500 AllServer 0001 (Session.cs:269) { "_t" : "HotfixRpcResponse", "RpcId" : 1, "Error" : 0, "Message" : "", "Info" : "Hello Client" }
+2019-05-17 22:54:02.6539 AllServer 0001 (Program.cs:36) server start........................ 1 AllServer
+2019-05-17 22:54:11.6247 AllServer 0001 (Session.cs:150) { "_t" : "HotfixTestMessage", "Info" : "6666" }
+2019-05-17 22:54:11.6652 AllServer 0001 (HotfixTestMessagehandler.cs:10) 6666
+2019-05-17 22:54:11.6652 AllServer 0001 (Session.cs:150) { "_t" : "HotfixRpcRequest", "RpcId" : 1, "Info" : "Hello Server" }
+2019-05-17 22:54:11.6652 AllServer 0001 (HotfixRpcHandler.cs:12) Hello Server
+2019-05-17 22:54:11.6821 AllServer 0001 (Session.cs:269) { "_t" : "HotfixRpcResponse", "RpcId" : 1, "Error" : 0, "Message" : "", "Info" : "Hello Client" }
+2019-05-17 23:26:12.4103 AllServer 0001 (Program.cs:36) server start........................ 1 AllServer
+2019-05-17 23:26:19.1264 AllServer 0001 (Session.cs:150) { "_t" : "HotfixTestMessage", "Info" : "6666" }
+2019-05-17 23:26:19.1309 AllServer 0001 (HotfixTestMessagehandler.cs:10) 6666
+2019-05-17 23:26:19.1309 AllServer 0001 (Session.cs:150) { "_t" : "HotfixRpcRequest", "RpcId" : 1, "Info" : "Hello Server" }
+2019-05-17 23:26:19.1309 AllServer 0001 (HotfixRpcHandler.cs:12) Hello Server
+2019-05-17 23:26:19.1511 AllServer 0001 (Session.cs:269) { "_t" : "HotfixRpcResponse", "RpcId" : 1, "Error" : 0, "Message" : "", "Info" : "Hello Client" }
