@@ -65,8 +65,6 @@ namespace Trinity
             entityComponent.ShowEntity(data.Id, logicType, AssetUtility.GetEntityAsset(drEntity.AssetName), drEntity.EntityGroupName, priority, data);
         }
 
-        
-
         /// <summary>
         /// 生成实体序列ID
         /// </summary>

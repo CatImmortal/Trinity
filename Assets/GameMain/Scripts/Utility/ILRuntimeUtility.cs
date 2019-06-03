@@ -32,7 +32,8 @@ namespace Trinity
             appDomain.DelegateManager.RegisterMethodDelegate<Session, byte, ushort, MemoryStream>();
             appDomain.DelegateManager.RegisterMethodDelegate<Session>();
             appDomain.DelegateManager.RegisterMethodDelegate<ILTypeInstance>();
-            appDomain.DelegateManager.RegisterMethodDelegate<Session, ushort, MemoryStream>();
+            appDomain.DelegateManager.RegisterMethodDelegate<Session, ushort, MemoryStream>();
+
             //PB用
             appDomain.DelegateManager.RegisterFunctionDelegate<IMessageAdaptor.Adaptor>();
             appDomain.DelegateManager.RegisterMethodDelegate<IMessageAdaptor.Adaptor>();
