@@ -92,7 +92,7 @@ namespace Trinity
         {
             m_Id = 0;
             m_TypeId = 0;
-            m_Position = Vector3.zero;
+            m_Position = default(Vector3);
             m_Rotation = default(Quaternion);
         }
     }

@@ -4,14 +4,14 @@ using UnityEngine;
 namespace Trinity.Hotfix
 {
 
-	public class TestEntity2Data : HotfixEntityData
+	public class TestEntityData : HotfixEntityData
 	{
 
-		public TestEntity2Data()
+		public TestEntityData()
 		{
 		}
 
-		public TestEntity2Data Fill(int typeId)
+		public TestEntityData Fill(int typeId)
 		{
 			Fill(GameEntry.Entity.GenerateSerialId(),typeId);
 			return this;

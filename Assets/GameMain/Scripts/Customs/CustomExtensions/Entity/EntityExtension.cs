@@ -13,23 +13,23 @@ namespace Trinity
         // 负值用于本地生成的临时实体（如特效、FakeObject等）
         private static int s_SerialId = 0;
 
-        public static Entity GetGameEntity(this EntityComponent entityComponent, int entityId)
+        public static EntityLogic GetGameEntity(this EntityComponent entityComponent, int entityId)
         {
-            UnityGameFramework.Runtime.Entity entity = entityComponent.GetEntity(entityId);
+            Entity entity = entityComponent.GetEntity(entityId);
             if (entity == null)
             {
                 return null;
             }
 
-            return (Entity)entity.Logic;
+            return (EntityLogic)entity.Logic;
         }
 
-        public static void HideEntity(this EntityComponent entityComponent, Entity entity)
+        public static void HideEntity(this EntityComponent entityComponent, EntityLogic entity)
         {
             entityComponent.HideEntity(entity.Entity);
         }
 
-        public static void AttachEntity(this EntityComponent entityComponent, Entity entity, int ownerId, string parentTransformPath = null, object userData = null)
+        public static void AttachEntity(this EntityComponent entityComponent, EntityLogic entity, int ownerId, string parentTransformPath = null, object userData = null)
         {
             entityComponent.AttachEntity(entity.Entity, ownerId, parentTransformPath, userData);
         }
@@ -53,7 +53,6 @@ namespace Trinity
                 Log.Warning("Data is invalid.");
                 return;
             }
-
             IDataTable<DREntity> dtEntity = GameEntry.DataTable.GetDataTable<DREntity>();
             DREntity drEntity = dtEntity.GetDataRow(data.TypeId);
             if (drEntity == null)

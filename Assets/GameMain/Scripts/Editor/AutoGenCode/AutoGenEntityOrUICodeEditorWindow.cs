@@ -32,7 +32,7 @@ namespace Trinity.Editor
         //各种类型的代码生成后的路径
         private const string EntityCodePath = "Assets/GameMain/Scripts/Entity";
         private const string HotfixEntityCodePath = "Assets/GameMain/Scripts/Hotfix/Entity";
-        private const string EntityExtensionCodePath = "Assets/GameMain/Scripts/CustomExtensions/Entity";
+        private const string EntityExtensionCodePath = "Assets/GameMain/Scripts/Customs/CustomExtensions/Entity";
         private const string UIFormCodePath = "Assets/GameMain/Scripts/UI";
         private const string HotfixUIFormCodePath = "Assets/GameMain/Scripts/Hotfix/UI";
 
@@ -166,7 +166,7 @@ namespace Trinity.Editor
             string codepath = isHotfix ? HotfixEntityCodePath : EntityCodePath;
             string nameSpace = isHotfix ? "Trinity.Hotfix" : "Trinity";
             string dataBaseClass = isHotfix ? "HotfixEntityData" : "EntityData";
-            string logicBaseClass = isHotfix ? "HotfixEntity" : "Entity";
+            string logicBaseClass = isHotfix ? "HotfixEntityLogic" : "EntityLogic";
             string accessModifier = isHotfix ? "public" : "protected";
             string OnInitParams = isHotfix ? "Trinity.HotfixEntity entityLogic, object userData" : "object userData";
             string BaseOnInitParams = isHotfix ? "entityLogic, userData" : "userData";
@@ -309,7 +309,7 @@ namespace Trinity.Editor
                         }
 
                         sw.WriteLine("\t\t}");
-                        
+
                     }
                     sw.WriteLine("");
                     //OnShow方法 获取实体数据
@@ -447,7 +447,7 @@ namespace Trinity.Editor
         private void AutoGenShowEntityCode(bool isHotfix)
         {
             //根据是否为热更新实体来决定一些参数
-            string codepath = isHotfix ? EntityExtensionCodePath : EntityCodePath;
+            string codepath = isHotfix ? HotfixEntityCodePath : EntityExtensionCodePath;
             string nameSpace = isHotfix ? "Trinity.Hotfix" : "Trinity";
 
             //实体逻辑类名-实体数据类名的字典
@@ -477,6 +477,7 @@ namespace Trinity.Editor
                 //生成简便显示热更新实体的封装方法
                 using (StreamWriter sw = new StreamWriter(Utility.Text.Format("{0}/{1}.cs", codepath, "ShowEntityExtension")))
                 {
+                    sw.WriteLine("using System.Threading.Tasks;");
                     sw.WriteLine("using UnityGameFramework.Runtime;");
                     sw.WriteLine("");
 
@@ -507,6 +508,22 @@ namespace Trinity.Editor
                         sw.WriteLine("\t\t}");
 
                         sw.WriteLine("");
+
+                        sw.WriteLine(Utility.Text.Format("\t\tpublic static async Task<Entity> AwaitShow{0}(this EntityComponent entityComponent,{1} data)", item.Key, item.Value));
+                        sw.WriteLine("\t\t{");
+
+                        sw.WriteLine("\t\t\tTrinity.HotfixEntityData tData = GameFramework.ReferencePool.Acquire<Trinity.HotfixEntityData>();");
+                        sw.WriteLine(Utility.Text.Format("\t\t\ttData.Fill(data.Id,data.TypeId,\"{0}\",data);", item.Key));
+                        sw.WriteLine("\t\t\ttData.Position = data.Position;");
+                        sw.WriteLine("\t\t\ttData.Rotation = data.Rotation;");
+                        sw.WriteLine("");
+
+                        sw.WriteLine(Utility.Text.Format("\t\t\tEntity entity = await entityComponent.AwaitShowHotfixEntity(0, tData);"));
+                        sw.WriteLine("\t\t\treturn entity;");
+
+                        sw.WriteLine("\t\t}");
+
+                        sw.WriteLine("");
                     }
 
                     sw.WriteLine("\t}");
@@ -520,6 +537,7 @@ namespace Trinity.Editor
                 //生成简便显示实体的封装方法
                 using (StreamWriter sw = new StreamWriter(Utility.Text.Format("{0}/{1}.cs", codepath, "ShowEntityExtension")))
                 {
+                    sw.WriteLine("using System.Threading.Tasks;");
                     sw.WriteLine("using UnityGameFramework.Runtime;");
                     sw.WriteLine("");
 
@@ -542,6 +560,15 @@ namespace Trinity.Editor
 
                         sw.WriteLine("\t\t\tentityComponent.ShowEntity(typeof({0}), 0, data);", item.Key);
 
+                        sw.WriteLine("\t\t}");
+
+                        sw.WriteLine("");
+
+                        sw.WriteLine(Utility.Text.Format("\t\tpublic static async Task<Entity> AwaitShow{0}(this EntityComponent entityComponent,{1} data)", item.Key, item.Value));
+                        sw.WriteLine("\t\t{");
+
+                        sw.WriteLine("\t\t\tEntity entity = await entityComponent.AwaitShowEntity(typeof({0}), 0, data);", item.Key);
+                        sw.WriteLine("\t\t\treturn entity;");
                         sw.WriteLine("\t\t}");
 
                         sw.WriteLine("");

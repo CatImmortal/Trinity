@@ -17,7 +17,7 @@ namespace Trinity
     {
 
         private static TaskCompletionSource<UIForm> s_UIFormTcs;
-        private static TaskCompletionSource<EntityLogic> s_EntityTcs;
+        private static TaskCompletionSource<Entity> s_EntityTcs;
         private static TaskCompletionSource<bool> s_SceneTcs;
         private static TaskCompletionSource<byte[]> s_WebRequestTcs;
         private static TaskCompletionSource<bool> s_DownloadTcs;
@@ -55,7 +55,7 @@ namespace Trinity
         /// <summary>
         /// 打开界面（可等待）
         /// </summary>
-        public static Task<UIForm> AwaitOpenUIForm(this UIComponent uiComponent,UIFormId uiFormId, object userData = null)
+        public static Task<UIForm> AwaitOpenUIForm(this UIComponent uiComponent, UIFormId uiFormId, object userData = null)
         {
             s_UIFormTcs = new TaskCompletionSource<UIForm>();
             s_UIFormSerialId = GameEntry.UI.OpenUIForm(uiFormId, userData);
@@ -85,11 +85,22 @@ namespace Trinity
         /// <summary>
         /// 显示实体（可等待）
         /// </summary>
-        public static Task<EntityLogic> AwaitShowEntity(this EntityComponent entityComponent, Type logicType, int priority, EntityData data)
+        public static Task<Entity> AwaitShowEntity(this EntityComponent entityComponent, Type logicType, int priority, EntityData data)
         {
-            s_EntityTcs = new TaskCompletionSource<EntityLogic>();
+            s_EntityTcs = new TaskCompletionSource<Entity>();
             s_EntitySerialId = data.Id;
             entityComponent.ShowEntity(logicType, priority, data);
+            return s_EntityTcs.Task;
+        }
+
+        /// <summary>
+        /// 显示热更新层实体（可等待）
+        /// </summary>
+        public static Task<Entity> AwaitShowHotfixEntity(this EntityComponent entityComponent, int priority, HotfixEntityData data)
+        {
+            s_EntityTcs = new TaskCompletionSource<Entity>();
+            s_EntitySerialId = data.Id;
+            entityComponent.ShowHotfixEntity(priority, data);
             return s_EntityTcs.Task;
         }
 
@@ -99,7 +110,7 @@ namespace Trinity
             EntityData data = (EntityData)ne.UserData;
             if (data.Id == s_EntitySerialId)
             {
-                s_EntityTcs.SetResult(ne.Entity.Logic);
+                s_EntityTcs.SetResult(ne.Entity);
                 s_EntityTcs = null;
             }
         }
@@ -168,7 +179,7 @@ namespace Trinity
         /// <summary>
         /// 增加Web请求任务（可等待）
         /// </summary>
-        public static Task<byte[]> AwaitAddWebRequest(this WebRequestComponent webRequestComponent, string webRequestUri,byte[] postData = null)
+        public static Task<byte[]> AwaitAddWebRequest(this WebRequestComponent webRequestComponent, string webRequestUri, byte[] postData = null)
         {
             s_WebRequestTcs = new TaskCompletionSource<byte[]>();
             s_WebRequestSerialId = webRequestComponent.AddWebRequest(webRequestUri, postData);
@@ -223,15 +234,6 @@ namespace Trinity
                 s_DownloadTcs = null;
             }
         }
-
-
-
-
-
-
-
-
-
 
     }
 }

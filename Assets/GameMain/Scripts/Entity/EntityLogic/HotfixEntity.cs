@@ -12,7 +12,7 @@ namespace Trinity
     /// <summary>
     /// 热更新层实体逻辑
     /// </summary>
-    public class HotfixEntity : Entity
+    public class HotfixEntity : EntityLogic
     {
         private HotfixEntityData m_Data;
 
@@ -74,28 +74,28 @@ namespace Trinity
             ReferencePool.Release(m_Data);
         }
 
-        protected override void OnAttached(EntityLogic childEntity, Transform parentTransform, object userData)
+        protected override void OnAttached(UnityGameFramework.Runtime.EntityLogic childEntity, Transform parentTransform, object userData)
         {
             base.OnAttached(childEntity, parentTransform, userData);
 
             m_OnAttached.Invoke(childEntity, parentTransform, userData);
         }
 
-        protected override void OnDetached(EntityLogic childEntity, object userData)
+        protected override void OnDetached(UnityGameFramework.Runtime.EntityLogic childEntity, object userData)
         {
             base.OnDetached(childEntity, userData);
 
             m_OnDetached.Invoke(childEntity,userData);
         }
 
-        protected override void OnAttachTo(EntityLogic parentEntity, Transform parentTransform, object userData)
+        protected override void OnAttachTo(UnityGameFramework.Runtime.EntityLogic parentEntity, Transform parentTransform, object userData)
         {
             base.OnAttachTo(parentEntity, parentTransform, userData);
 
             m_OnAttachTo.Invoke(parentEntity,parentTransform, userData);
         }
 
-        protected override void OnDetachFrom(EntityLogic parentEntity, object userData)
+        protected override void OnDetachFrom(UnityGameFramework.Runtime.EntityLogic parentEntity, object userData)
         {
             base.OnDetachFrom(parentEntity, userData);
 

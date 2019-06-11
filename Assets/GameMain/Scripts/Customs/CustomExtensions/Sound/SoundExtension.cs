@@ -46,7 +46,7 @@ namespace Trinity
             s_MusicSerialId = null;
         }
 
-        public static int? PlaySound(this SoundComponent soundComponent, int soundId, Entity bindingEntity = null, object userData = null)
+        public static int? PlaySound(this SoundComponent soundComponent, int soundId, EntityLogic bindingEntity = null, object userData = null)
         {
             IDataTable<DRSound> dtSound = GameEntry.DataTable.GetDataTable<DRSound>();
             DRSound drSound = dtSound.GetDataRow(soundId);

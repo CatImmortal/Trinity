@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityGameFramework.Runtime;
 using ETModel;
+using GameFramework;
 namespace Trinity
 {
     public class ProcedureTest : ProcedureBase
@@ -26,10 +27,11 @@ namespace Trinity
                 Session session = GameEntry.ETNetwork.CreateSession(GameEntry.ETNetwork.ServerIP);
                 session.Send(new TestMessage() { Info = "6666" });
 
-               TestRpcResponse response = (TestRpcResponse)await session.Call(new TestRpcRequest() { Info = "Hello Server" });
+                TestRpcResponse response = (TestRpcResponse)await session.Call(new TestRpcRequest() { Info = "Hello Server" });
                 Debug.Log(response.Info);
                 session.Dispose();
             }
+
         }
     }
 }

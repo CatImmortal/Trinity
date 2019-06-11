@@ -4,21 +4,21 @@ using UnityEngine;
 namespace Trinity.Hotfix
 {
 
-	public class TestEntity2 : HotfixEntityLogic
+	public class TestEntity : HotfixEntityLogic
 	{
 
-		private TestEntity2Data m_TestEntity2Data;
+		private TestEntityData m_TestEntityData;
 
 		public override void OnShow(object userData)
 		{
 			base.OnShow(userData);
-			m_TestEntity2Data = (TestEntity2Data)userData;
+			m_TestEntityData = (TestEntityData)userData;
 		}
 
 		public override void OnHide(object userData)
 		{
 			base.OnHide(userData);
-			ReferencePool.Release(m_TestEntity2Data);
+			ReferencePool.Release(m_TestEntityData);
 		}
 	}
 }
