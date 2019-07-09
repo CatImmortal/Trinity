@@ -12,7 +12,11 @@ namespace Trinity.Hotfix
         /// <summary>
         /// 主工程的界面逻辑脚本
         /// </summary>
-        protected Trinity.HotfixUGuiForm UIFormLogic;
+        protected Trinity.HotfixUGuiForm UIFormLogic
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// 界面初始化

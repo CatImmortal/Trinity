@@ -15,6 +15,52 @@ namespace Trinity
     /// </summary>
     public class ILRuntimeComponent : GameFrameworkComponent
     {
+        [SerializeField]
+        private bool m_ILRuntimeMode;
+
+        /// <summary>
+        /// 资源加载回调方法集
+        /// </summary>
+        private LoadAssetCallbacks m_LoadAssetCallbacks;
+
+        /// <summary>
+        /// Hotfix.dll是否已加载
+        /// </summary>
+        private bool m_DLLLoaded;
+
+        /// <summary>
+        /// Hotfix.pdb是否已加载
+        /// </summary>
+        private bool m_PDBLoaded;
+
+        /// <summary>
+        /// 保存Hotfix.dll的字节数组
+        /// </summary>
+        private byte[] m_DLL;
+
+        /// <summary>
+        /// 保存Hotfix.pdb的字节数组
+        /// </summary>
+        private byte[] m_PDB;
+
+        private ILInstanceMethod m_Update;
+        private ILInstanceMethod m_ShutDown;
+
+        private MemoryStream m_DLLStream;
+        private MemoryStream m_PDBStream;
+
+
+        /// <summary>
+        /// 是否开启ILRuntime模式
+        /// </summary>
+        public bool ILRuntimeMode
+        {
+            get
+            {
+                return m_ILRuntimeMode;
+            }
+        }
+
         /// <summary>
         /// ILRuntime入口对象
         /// </summary>
@@ -32,43 +78,6 @@ namespace Trinity
             get;
             private set;
         }
-
-        /// <summary>
-        /// 是否开启ILRuntime模式
-        /// </summary>
-        public bool IsILRuntimeMode;
-
-        /// <summary>
-        /// 资源加载回调方法集
-        /// </summary>
-        private LoadAssetCallbacks m_LoadAssetCallbacks;
-
-        /// <summary>
-        /// Hotfix.dll是否已加载
-        /// </summary>
-        private bool m_DLLLoaded = false;
-
-        /// <summary>
-        /// Hotfix.pdb是否已加载
-        /// </summary>
-        private bool m_PDBLoaded = false;
-
-        /// <summary>
-        /// 保存Hotfix.dll的字节数组
-        /// </summary>
-        private byte[] m_DLL;
-
-        /// <summary>
-        /// 保存Hotfix.pdb的字节数组
-        /// </summary>
-        private byte[] m_PDB;
-
-        
-        private ILInstanceMethod m_Update;
-        private ILInstanceMethod m_ShutDown;
-
-        private MemoryStream m_DLLStream;
-        private MemoryStream m_PDBStream;
 
         private void Update()
         {
@@ -91,7 +100,6 @@ namespace Trinity
         /// <summary>
         /// 获取所有热更新层类的Type对象
         /// </summary>
-        /// <returns></returns>
         public List<Type> GetHotfixTypes()
         {
             return AppDomain.LoadedTypes.Values.Select(x => x.ReflectionType).ToList();
@@ -104,7 +112,7 @@ namespace Trinity
         {
             HotfixLoaded = false;
 
-            if (IsILRuntimeMode)
+            if (ILRuntimeMode)
             {
                 AppDomain = new AppDomain();
                 ILRuntimeUtility.InitILRuntime(AppDomain);
@@ -114,9 +122,9 @@ namespace Trinity
                 Log.Info("启动了ILRuntime调试服务器");
 
                 m_LoadAssetCallbacks = new LoadAssetCallbacks(OnLoadHotfixDLLSuccess, OnLoadHotfixDLLFailure);
-                
-                GameEntry.Resource.LoadAsset(AssetUtility.GetHotfixDLLAsset("Hotfix.dll"), typeof(TextAsset), m_LoadAssetCallbacks,1);
-                GameEntry.Resource.LoadAsset(AssetUtility.GetHotfixDLLAsset("Hotfix.pdb"), typeof(TextAsset), m_LoadAssetCallbacks,2);
+
+                GameEntry.Resource.LoadAsset(AssetUtility.GetHotfixDLLAsset("Hotfix.dll"), typeof(TextAsset), m_LoadAssetCallbacks, 1);
+                GameEntry.Resource.LoadAsset(AssetUtility.GetHotfixDLLAsset("Hotfix.pdb"), typeof(TextAsset), m_LoadAssetCallbacks, 2);
             }
 
         }
@@ -128,13 +136,13 @@ namespace Trinity
             {
                 Log.Info("Hotfix.dll加载成功");
                 m_DLLLoaded = true;
-                m_DLL = (asset as TextAsset).bytes;
+                m_DLL = ((TextAsset)asset).bytes;
             }
             else
             {
                 Log.Info("Hotfix.pdb加载成功");
                 m_PDBLoaded = true;
-                m_PDB = (asset as TextAsset).bytes;
+                m_PDB = ((TextAsset)asset).bytes;
             }
 
             if (m_DLLLoaded && m_PDBLoaded)

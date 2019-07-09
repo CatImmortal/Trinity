@@ -26,11 +26,19 @@ namespace Trinity.Hotfix
             }
         }
 
-     
+
 
         public static void Shutdown()
         {
             Game.Close();
+        }
+
+        /// <summary>
+        /// 创建热更新层会话
+        /// </summary>
+        public static Session CreateHotfixSession()
+        {
+            return CreateHotfixSession(GameEntry.ETNetwork.CreateSession(GameEntry.ETNetwork.ServerIP));
         }
 
         /// <summary>
@@ -55,6 +63,14 @@ namespace Trinity.Hotfix
         public static void Send(IMessage message)
         {
             SessionComponent.Instance.Session.Send(message);
+        }
+
+        /// <summary>
+        /// 使用热更新层会话组件保存的会话发送网络消息
+        /// </summary>
+        public static ETModel.ETTask<IResponse> Call(IRequest request)
+        {
+            return SessionComponent.Instance.Session.Call(request);
         }
 
     }

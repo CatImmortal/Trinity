@@ -62,6 +62,16 @@ namespace Trinity
             return s_UIFormTcs.Task;
         }
 
+        /// <summary>
+        /// 打开界面（可等待）
+        /// </summary>
+        public static Task<UIForm> AwaitOpenUIForm(this UIComponent uiComponent, int uiFormId, object userData = null)
+        {
+            s_UIFormTcs = new TaskCompletionSource<UIForm>();
+            s_UIFormSerialId = GameEntry.UI.OpenUIForm(uiFormId, userData);
+            return s_UIFormTcs.Task;
+        }
+
         private static void OnOpenUIFormSuccess(object sender, GameEventArgs e)
         {
             OpenUIFormSuccessEventArgs ne = (OpenUIFormSuccessEventArgs)e;

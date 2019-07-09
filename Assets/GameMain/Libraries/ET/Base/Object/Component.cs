@@ -14,9 +14,7 @@ namespace ETModel
 		public long InstanceId { get; private set; }
 
 #if !SERVER
-        //TODO:此处修改了ET源码
-        //public static GameObject Global { get; } = GameObject.Find("/Global");
-        public static GameObject Global { get; } = GameObject.Find("ETNetwork");
+        //public static GameObject Global { get; } = GameObject.Find("ETNetwork");
 
         [BsonIgnore]
 		public GameObject GameObject { get; protected set; }
@@ -71,16 +69,16 @@ namespace ETModel
 				this.parent = value;
 
 #if !SERVER
-				if (this.parent == null)
-				{
-					this.GameObject.transform.SetParent(Global.transform, false);
-					return;
-				}
+				//if (this.parent == null)
+				//{
+				//	this.GameObject.transform.SetParent(Global.transform, false);
+				//	return;
+				//}
 
-				if (this.GameObject != null && this.parent.GameObject != null)
-				{
-					this.GameObject.transform.SetParent(this.parent.GameObject.transform, false);
-				}
+				//if (this.GameObject != null && this.parent.GameObject != null)
+				//{
+				//	this.GameObject.transform.SetParent(this.parent.GameObject.transform, false);
+				//}
 #endif
 			}
 		}
@@ -103,14 +101,14 @@ namespace ETModel
 		{
 			this.InstanceId = IdGenerater.GenerateInstanceId();
 #if !SERVER
-			if (!this.GetType().IsDefined(typeof(HideInHierarchy), true))
-			{
-				this.GameObject = new GameObject();
-				this.GameObject.name = this.GetType().Name;
-				//this.GameObject.layer = LayerNames.GetLayerInt(LayerNames.HIDDEN);
-				this.GameObject.transform.SetParent(Global.transform, false);
-				this.GameObject.AddComponent<ComponentView>().Component = this;
-			}
+			//if (!this.GetType().IsDefined(typeof(HideInHierarchy), true))
+			//{
+			//	this.GameObject = new GameObject();
+			//	this.GameObject.name = this.GetType().Name;
+			//	//this.GameObject.layer = LayerNames.GetLayerInt(LayerNames.HIDDEN);
+			//	this.GameObject.transform.SetParent(Global.transform, false);
+			//	this.GameObject.AddComponent<ComponentView>().Component = this;
+			//}
 #endif
 		}
 

@@ -14,12 +14,16 @@ namespace Trinity.Hotfix
         /// <summary>
         /// 主工程的实体逻辑脚本
         /// </summary>
-        protected Trinity.HotfixEntity EntityLogic;
+        protected HotfixEntity EntityLogic
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// 实体初始化
         /// </summary>
-        public virtual void OnInit(Trinity.HotfixEntity entityLogic, object userData)
+        public virtual void OnInit(HotfixEntity entityLogic, object userData)
         {
             EntityLogic = entityLogic;
         }

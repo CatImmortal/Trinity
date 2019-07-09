@@ -5,6 +5,7 @@
 /Library
 /Temp
 /UnityPackageManager
+.idea/
 obj/
 Bin/
 .vs/

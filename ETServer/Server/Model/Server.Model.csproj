@@ -28,6 +28,9 @@
     <None Remove="graph.bytes" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\..\Assets\GameMain\Libraries\ET\Module\Message\ErrorCode.cs">
+      <Link>Module\Message\ErrorCode.cs</Link>
+    </Compile>
     <Compile Include="..\..\..\Assets\GameMain\Libraries\ET\Module\Message\OuterMessage.cs" Link="Module\Message\OuterMessage.cs" />
     <Compile Include="..\..\..\Assets\GameMain\Libraries\ET\Module\Message\OuterOpcode.cs" Link="Module\Message\OuterOpcode.cs" />
     <Compile Include="..\..\..\Assets\GameMain\Scripts\Hotfix\ETNetwork\Module\Message\HotfixMessage.cs" Link="Module\Message\HotfixMessage.cs" />

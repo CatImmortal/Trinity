@@ -99,14 +99,14 @@ namespace Trinity.Editor
             var delList = new List<int>();
             SerializedProperty property;
             //遍历ReferenceCollector中data list的所有元素，显示在编辑器中
-            for (int i = referenceCollector.data.Count - 1; i >= 0; i--)
+            for (int i = dataProperty.arraySize - 1; i >= 0; i--)
             {
                 GUILayout.BeginHorizontal();
                 //这里的知识点在ReferenceCollector中有说
                 property = dataProperty.GetArrayElementAtIndex(i).FindPropertyRelative("key");
-                EditorGUILayout.TextField(property.stringValue, GUILayout.Width(150));
+                property.stringValue = EditorGUILayout.TextField(property.stringValue, GUILayout.Width(150));
                 property = dataProperty.GetArrayElementAtIndex(i).FindPropertyRelative("gameObject");
-                EditorGUILayout.ObjectField(property.objectReferenceValue, typeof(Object), true);
+                property.objectReferenceValue = EditorGUILayout.ObjectField(property.objectReferenceValue, typeof(Object), true);
                 if (GUILayout.Button("X"))
                 {
                     //将元素添加进删除list

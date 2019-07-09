@@ -25,10 +25,12 @@ namespace Trinity.Hotfix
                 , new ProcedureHotfixTest()
                 );
 
-            m_ProcedureManager.StartProcedure<ProcedureHotfixEntry>();
-
             //初始化ET网络
             ETNetwork.Init();
+
+            m_ProcedureManager.StartProcedure<ProcedureHotfixEntry>();
+
+            
         }
 
         public void Update(float elapseSeconds, float realElapseSeconds)
