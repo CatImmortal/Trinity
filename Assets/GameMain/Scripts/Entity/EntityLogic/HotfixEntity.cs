@@ -30,6 +30,25 @@ namespace Trinity
         private ILInstanceMethod m_OnDetachFrom;
         private ILInstanceMethod m_OnUpdate;
 
+        [SerializeField]
+        private bool m_CanUpdate;
+
+        /// <summary>
+        /// 是否调用Update方法
+        /// </summary>
+        public bool CanUpdate
+        {
+            get
+            {
+                return m_CanUpdate;
+            }
+
+            set
+            {
+                m_CanUpdate = value;
+            }
+        }
+
         protected override void OnInit(object userData)
         {
             base.OnInit(userData);
@@ -104,6 +123,11 @@ namespace Trinity
 
         protected override void OnUpdate(float elapseSeconds, float realElapseSeconds)
         {
+            if (!CanUpdate)
+            {
+                return;
+            }
+
             base.OnUpdate(elapseSeconds, realElapseSeconds);
 
             m_OnUpdate.Invoke(elapseSeconds,realElapseSeconds);

@@ -154,7 +154,7 @@ namespace Trinity
         protected internal override void OnPause()
 #endif
         {
-            base.OnPause();
+            m_CanvasGroup.blocksRaycasts = false;
         }
 
 #if UNITY_2017_3_OR_NEWER
@@ -163,19 +163,7 @@ namespace Trinity
         protected internal override void OnResume()
 #endif
         {
-            base.OnResume();
-
-            m_CanvasGroup.alpha = 0f;
-            StopAllCoroutines();
-            if (gameObject.activeInHierarchy)
-            {
-                StartCoroutine(m_CanvasGroup.FadeToAlpha(1f, FadeTime));
-            }
-            else
-            {
-                m_CanvasGroup.alpha = 1f;
-            }
-
+            m_CanvasGroup.blocksRaycasts = true;
         }
 
 #if UNITY_2017_3_OR_NEWER
@@ -234,6 +222,21 @@ namespace Trinity
         {
             yield return m_CanvasGroup.FadeToAlpha(0f, duration);
             GameEntry.UI.CloseUIForm(this);
+        }
+
+        protected override void InternalSetVisible(bool visible)
+        {
+            if (visible)
+            {
+                m_CanvasGroup.alpha = 1;
+                m_CanvasGroup.blocksRaycasts = true;
+            }
+            else
+            {
+                m_CanvasGroup.alpha = 0;
+                m_CanvasGroup.blocksRaycasts = false;
+            }
+
         }
     }
 }

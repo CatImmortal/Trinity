@@ -177,9 +177,6 @@ namespace Trinity
         /// </summary>
         public void HotfixStart()
         {
-            //防止多次调用
-            HotfixLoaded = false;
-
             string typeFullName = "Trinity.Hotfix.HotfixEntry";
             IType type = AppDomain.LoadedTypes[typeFullName];
             object hotfixInstance = ((ILType)type).Instantiate();

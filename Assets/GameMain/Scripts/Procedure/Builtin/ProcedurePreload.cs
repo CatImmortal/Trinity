@@ -24,7 +24,8 @@ namespace Trinity
 
         private Dictionary<string, bool> m_LoadedFlag = new Dictionary<string, bool>();
 
-        
+        private bool m_CanUpdate = true;
+
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
@@ -78,6 +79,7 @@ namespace Trinity
             {
                 //调用热更新层入口方法,开始热更新层流程
                 GameEntry.ILRuntime.HotfixStart();
+                m_CanUpdate = false;
             }
 
 

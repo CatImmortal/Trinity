@@ -17,6 +17,7 @@ namespace Trinity.Hotfix
     public sealed class FsmManager
     {
         private readonly Dictionary<string, FsmBase> m_Fsms;
+        private readonly List<FsmBase> m_FsmList;
         private readonly List<FsmBase> m_TempFsms;
 
         /// <summary>
@@ -25,6 +26,7 @@ namespace Trinity.Hotfix
         public FsmManager()
         {
             m_Fsms = new Dictionary<string, FsmBase>();
+            m_FsmList = new List<FsmBase>();
             m_TempFsms = new List<FsmBase>();
         }
 
@@ -53,13 +55,15 @@ namespace Trinity.Hotfix
                 return;
             }
 
-            foreach (KeyValuePair<string, FsmBase> fsm in m_Fsms)
+            for (int i = 0; i < m_FsmList.Count; i++)
             {
-                m_TempFsms.Add(fsm.Value);
+                m_TempFsms.Add(m_FsmList[i]);
             }
 
-            foreach (FsmBase fsm in m_TempFsms)
+            for (int i = 0; i < m_TempFsms.Count; i++)
             {
+                FsmBase fsm = m_TempFsms[i];
+
                 if (fsm.IsDestroyed)
                 {
                     continue;
@@ -80,6 +84,7 @@ namespace Trinity.Hotfix
             }
 
             m_Fsms.Clear();
+            m_FsmList.Clear();
             m_TempFsms.Clear();
         }
 
@@ -198,14 +203,15 @@ namespace Trinity.Hotfix
         /// <param name="owner">有限状态机持有者。</param>
         /// <param name="states">有限状态机状态集合。</param>
         /// <returns>要创建的有限状态机。</returns>
-        public IFsm CreateFsm(string name,object owner, params FsmState[] states)
+        public IFsm CreateFsm(string name, object owner, params FsmState[] states)
         {
-            if (HasFsm(owner.GetType(),name))
+            if (HasFsm(owner.GetType(), name))
             {
-                throw new GameFrameworkException(Utility.Text.Format("Already exist FSM '{0}'.", Utility.Text.GetFullName(owner.GetType(),name)));
+                throw new GameFrameworkException(Utility.Text.Format("Already exist FSM '{0}'.", Utility.Text.GetFullName(owner.GetType(), name)));
             }
 
             Fsm fsm = new Fsm(name, owner, states);
+            m_FsmList.Add(fsm);
             m_Fsms.Add(Utility.Text.GetFullName(owner.GetType(), name), fsm);
             return fsm;
         }
@@ -247,14 +253,14 @@ namespace Trinity.Hotfix
         /// <typeparam name="T">有限状态机持有者类型。</typeparam>
         /// <param name="fsm">要销毁的有限状态机。</param>
         /// <returns>是否销毁有限状态机成功。</returns>
-        public bool DestroyFsm(IFsm fsm) 
+        public bool DestroyFsm(IFsm fsm)
         {
             if (fsm == null)
             {
                 throw new GameFrameworkException("FSM is invalid.");
             }
 
-            return InternalDestroyFsm(Utility.Text.GetFullName(fsm.Owner.GetType(),fsm.Name));
+            return InternalDestroyFsm(Utility.Text.GetFullName(fsm.Owner.GetType(), fsm.Name));
         }
 
         /// <summary>
@@ -294,6 +300,7 @@ namespace Trinity.Hotfix
             if (m_Fsms.TryGetValue(fullName, out fsm))
             {
                 fsm.Shutdown();
+                m_FsmList.Remove(fsm);
                 return m_Fsms.Remove(fullName);
             }
 

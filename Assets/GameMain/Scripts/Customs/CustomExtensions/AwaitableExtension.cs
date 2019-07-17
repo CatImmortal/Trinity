@@ -46,7 +46,7 @@ namespace Trinity
             GameEntry.Event.Subscribe(DownloadFailureEventArgs.EventId, OnDownloadFailure);
 
             s_UIFormSerialId = null;
-            s_EntitySerialId = -1;
+            s_EntitySerialId = int.MinValue;
             s_LoadSceneAssetName = null;
             s_WebRequestSerialId = -1;
             s_DownloadSerialId = -1;

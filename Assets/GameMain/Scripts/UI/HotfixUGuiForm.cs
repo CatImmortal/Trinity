@@ -30,6 +30,25 @@ namespace Trinity
         private ILInstanceMethod m_OnUpdate;
         private ILInstanceMethod m_OnDepthChanged;
 
+        [SerializeField]
+        private bool m_CanUpdate;
+
+        /// <summary>
+        /// 是否调用Update方法
+        /// </summary>
+        public bool CanUpdate
+        {
+            get
+            {
+                return m_CanUpdate;
+            }
+
+            set
+            {
+                m_CanUpdate = value;
+            }
+        }
+
         /// <summary>
         /// 界面初始化（热更新层新增界面用）
         /// </summary>
@@ -122,6 +141,11 @@ namespace Trinity
 
         protected override void OnUpdate(float elapseSeconds, float realElapseSeconds)
         {
+            if (!CanUpdate)
+            {
+                return;
+            }
+
             base.OnUpdate(elapseSeconds, realElapseSeconds);
 
             m_OnUpdate?.Invoke(elapseSeconds, realElapseSeconds);
