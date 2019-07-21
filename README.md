@@ -1,7 +1,7 @@
 # Trinity
 基于Unity的纯C#（客户端+服务端+热更新）游戏开发整合方案
 
-客户端：https://github.com/EllanJiang/UnityGameFramework 
+客户端：https://github.com/EllanJiang/GameFramework 
 
 服务端：https://github.com/egametang/ET
 
