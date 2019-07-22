@@ -17,7 +17,7 @@ namespace Trinity
     {
         public string key;
         //Object并非C#基础中的Object，而是 UnityEngine.Object
-        public Object gameObject;
+        public Object Obj;
     }
     //继承IComparer对比器，Ordinal会使用序号排序规则比较字符串，因为是byte级别的比较，所以准确性和性能都不错
     public class ReferenceCollectorDataComparer : IComparer<ReferenceCollectorData>
@@ -34,7 +34,7 @@ namespace Trinity
     public class ReferenceCollector : MonoBehaviour, ISerializationCallbackReceiver
     {
         //用于序列化的List
-        public List<ReferenceCollectorData> data = new List<ReferenceCollectorData>();
+        public List<ReferenceCollectorData> datas = new List<ReferenceCollectorData>();
         //Object并非C#基础中的Object，而是 UnityEngine.Object
         private readonly Dictionary<string, Object> dict = new Dictionary<string, Object>();
 
@@ -49,15 +49,15 @@ namespace Trinity
             SerializedProperty dataProperty = serializedObject.FindProperty("data");
             int i;
             //遍历data，看添加的数据是否存在相同key
-            for (i = 0; i < data.Count; i++)
+            for (i = 0; i < datas.Count; i++)
             {
-                if (data[i].key == key)
+                if (datas[i].key == key)
                 {
                     break;
                 }
             }
             //不等于data.Count意为已经存在于data List中，直接赋值即可
-            if (i != data.Count)
+            if (i != datas.Count)
             {
                 //根据i的值获取dataProperty，也就是data中的对应ReferenceCollectorData，不过在这里，是对Property进行的读取，有点类似json或者xml的节点
                 SerializedProperty element = dataProperty.GetArrayElementAtIndex(i);
@@ -84,14 +84,14 @@ namespace Trinity
             SerializedObject serializedObject = new SerializedObject(this);
             SerializedProperty dataProperty = serializedObject.FindProperty("data");
             int i;
-            for (i = 0; i < data.Count; i++)
+            for (i = 0; i < datas.Count; i++)
             {
-                if (data[i].key == key)
+                if (datas[i].key == key)
                 {
                     break;
                 }
             }
-            if (i != data.Count)
+            if (i != datas.Count)
             {
                 dataProperty.DeleteArrayElementAtIndex(i);
             }
@@ -115,7 +115,7 @@ namespace Trinity
         public void Sort()
         {
             SerializedObject serializedObject = new SerializedObject(this);
-            data.Sort(new ReferenceCollectorDataComparer());
+            datas.Sort(new ReferenceCollectorDataComparer());
             EditorUtility.SetDirty(this);
             serializedObject.ApplyModifiedProperties();
             serializedObject.UpdateIfRequiredOrScript();
@@ -131,6 +131,26 @@ namespace Trinity
             }
             return dictGo as T;
         }
+
+        public T Get<T>(int index) where T : class
+        {
+            if (index >= datas.Count)
+            {
+                Debug.LogError("索引无效");
+                return null;
+            }
+
+            T obj = datas[index].Obj as T;
+
+            if (obj == null)
+            {
+                Debug.LogError("类型无效");
+                return null;
+            }
+
+            return obj;
+        }
+
 
         public Object GetObject(string key)
         {
@@ -149,11 +169,11 @@ namespace Trinity
         public void OnAfterDeserialize()
         {
             dict.Clear();
-            foreach (ReferenceCollectorData referenceCollectorData in data)
+            foreach (ReferenceCollectorData referenceCollectorData in datas)
             {
                 if (!dict.ContainsKey(referenceCollectorData.key))
                 {
-                    dict.Add(referenceCollectorData.key, referenceCollectorData.gameObject);
+                    dict.Add(referenceCollectorData.key, referenceCollectorData.Obj);
                 }
             }
         }
@@ -161,6 +181,11 @@ namespace Trinity
         public Dictionary<string, Object> GetAll()
         {
             return dict;
+        }
+
+        public List<ReferenceCollectorData> GetDatas()
+        {
+            return datas;
         }
     }
 }

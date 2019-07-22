@@ -18,30 +18,37 @@ namespace Trinity.Editor
             Entity,
             UIForm
         }
-        
+
+        private enum GetObjectsType
+        {
+            GetByIndex,
+            GetByName,
+        }
+
         [SerializeField]
         private List<GameObject> m_GameObjects = new List<GameObject>();
-        
+
         private SerializedObject m_SerializedObject;
         private SerializedProperty m_SerializedProperty;
 
         private GenCodeType m_GenCodeType;
-        
+        private GetObjectsType m_GetObjectsType;
+
         /// <summary>
         /// 是否为热更新层代码
         /// </summary>
         private bool m_IsHotfix;
-        
+
         /// <summary>
         /// 是否生成主体逻辑代码
         /// </summary>
         private bool m_IsGenMainLogicCode = true;
-        
+
         /// <summary>
         /// 是否生成GetObject代码
         /// </summary>
-        private bool m_IsGenGetObjectCode = true;
-        
+        private bool m_IsGenGetObjectsCode = true;
+
         /// <summary>
         /// 是否生成实体数据代码
         /// </summary>
@@ -51,21 +58,21 @@ namespace Trinity.Editor
         /// 是否生成显示实体代码
         /// </summary>
         private bool m_IsGenShowEntityCode = true;
-        
+
         //各种类型的代码生成后的路径
         private const string EntityCodePath = "Assets/GameMain/Scripts/Entity";
         private const string HotfixEntityCodePath = "Assets/GameMain/Scripts/Hotfix/Entity";
-        
+
         private const string UIFormCodePath = "Assets/GameMain/Scripts/UI";
         private const string HotfixUIFormCodePath = "Assets/GameMain/Scripts/Hotfix/UI";
-        
+
         [MenuItem("Trinity/代码生成器/实体与界面代码生成器")]
         public static void OpenCodeGeneratorWindow()
         {
-            EntityAndUIFormCodeGenerator window = GetWindow<EntityAndUIFormCodeGenerator>(true,"实体与界面代码生成器");
+            EntityAndUIFormCodeGenerator window = GetWindow<EntityAndUIFormCodeGenerator>(true, "实体与界面代码生成器");
             window.minSize = new Vector2(300f, 300f);
         }
-        
+
         private void OnEnable()
         {
             m_GameObjects.Clear();
@@ -82,13 +89,13 @@ namespace Trinity.Editor
             {
                 m_SerializedObject.ApplyModifiedProperties();
             }
-            
+
             //绘制自动生成代码类型的弹窗
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("自动生成的代码类型：", GUILayout.Width(140f));
             m_GenCodeType = (GenCodeType)EditorGUILayout.EnumPopup(m_GenCodeType, GUILayout.Width(100f));
             EditorGUILayout.EndHorizontal();
-            
+
             //绘制代码生成路径文本
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("自动生成的代码路径：", GUILayout.Width(140f));
@@ -102,20 +109,28 @@ namespace Trinity.Editor
                     break;
             }
             EditorGUILayout.EndHorizontal();
-            
+
             //绘制各个选项
             m_IsHotfix = GUILayout.Toggle(m_IsHotfix, "热更新层代码");
             m_IsGenMainLogicCode = GUILayout.Toggle(m_IsGenMainLogicCode, "生成主体逻辑代码");
-            m_IsGenGetObjectCode = GUILayout.Toggle(m_IsGenGetObjectCode, "生成GetObjects代码");
+
+
+            EditorGUILayout.BeginHorizontal();
+            m_IsGenGetObjectsCode = GUILayout.Toggle(m_IsGenGetObjectsCode, "生成GetObjects代码", GUILayout.Width(150f));
+            if (m_IsGenGetObjectsCode)
+            {
+                m_GetObjectsType = (GetObjectsType)EditorGUILayout.EnumPopup(m_GetObjectsType, GUILayout.Width(100f));
+            }
+            EditorGUILayout.EndHorizontal();
+
             if (m_GenCodeType == GenCodeType.Entity)
             {
-
                 m_IsGenEntityDataCode = GUILayout.Toggle(m_IsGenEntityDataCode, "生成实体数据代码");
                 m_IsGenShowEntityCode = GUILayout.Toggle(m_IsGenShowEntityCode, "生成快捷显示实体代码");
             }
 
             //绘制生成代码的按钮
-            if (GUILayout.Button("生成代码",GUILayout.Width(100f)))
+            if (GUILayout.Button("生成代码", GUILayout.Width(100f)))
             {
                 if (m_GameObjects.Count == 0)
                 {
@@ -134,7 +149,7 @@ namespace Trinity.Editor
 
                 AssetDatabase.Refresh();
                 EditorUtility.DisplayDialog("提示", "代码生成完毕", "OK");
-                
+
             }
         }
 
@@ -150,26 +165,26 @@ namespace Trinity.Editor
             {
                 if (m_IsGenMainLogicCode)
                 {
-                    GenEntityMainLogicCode(codepath,go,nameSpace,logicBaseClass);
+                    GenEntityMainLogicCode(codepath, go, nameSpace, logicBaseClass);
                 }
 
                 if (m_IsGenEntityDataCode)
                 {
-                    GenEntityDataCode(codepath,go,nameSpace);
+                    GenEntityDataCode(codepath, go, nameSpace);
                 }
 
-                if (m_IsGenGetObjectCode)
+                if (m_IsGenGetObjectsCode)
                 {
-                    GenGetObjectCode(codepath,go,nameSpace,logicBaseClass,getComponent);
+                    GenGetObjectsCode(codepath, go, nameSpace, logicBaseClass, getComponent);
                 }
 
                 if (m_IsGenShowEntityCode)
                 {
-                    GenShowEntityCode(codepath,go,nameSpace);
+                    GenShowEntityCode(codepath, go, nameSpace);
                 }
             }
 
-            
+
         }
 
         private void GenUIFormCode()
@@ -184,16 +199,16 @@ namespace Trinity.Editor
             {
                 if (m_IsGenMainLogicCode)
                 {
-                    GenUIFormMainLogicCode(codepath,go,nameSpace,logicBaseClass);
+                    GenUIFormMainLogicCode(codepath, go, nameSpace, logicBaseClass);
                 }
 
-                if (m_IsGenGetObjectCode)
+                if (m_IsGenGetObjectsCode)
                 {
-                    GenGetObjectCode(codepath,go,nameSpace,logicBaseClass,getComponent);
+                    GenGetObjectsCode(codepath, go, nameSpace, logicBaseClass, getComponent);
                 }
             }
 
-            
+
         }
 
         private void GenEntityMainLogicCode(string codePath, GameObject go, string nameSpace, string logicBaseClass)
@@ -267,7 +282,7 @@ namespace Trinity.Editor
             }
         }
 
-        private void GenEntityDataCode(string codepath ,GameObject go, string nameSpace)
+        private void GenEntityDataCode(string codepath, GameObject go, string nameSpace)
         {
             string dataBaseClass = "EntityData";
             if (m_IsHotfix)
@@ -360,7 +375,7 @@ namespace Trinity.Editor
                 {
                     sw.WriteLine($"\t\t\tentityComponent.ShowEntity(typeof({go.name}), 0, data);");
                 }
-               
+
 
                 sw.WriteLine("\t\t}");
 
@@ -385,7 +400,7 @@ namespace Trinity.Editor
                     sw.WriteLine($"\t\t\tEntity entity = await entityComponent.AwaitShowEntity(typeof({go.name}), 0, data);");
                 }
 
-               
+
                 sw.WriteLine("\t\t\treturn entity;");
 
                 sw.WriteLine("\t\t}");
@@ -400,7 +415,7 @@ namespace Trinity.Editor
 
         }
 
-        private void GenUIFormMainLogicCode(string codePath, GameObject go, string nameSpace,string logicBaseClass)
+        private void GenUIFormMainLogicCode(string codePath, GameObject go, string nameSpace, string logicBaseClass)
         {
             string initParam = string.Empty;
             string baseInitParam = string.Empty;
@@ -412,7 +427,7 @@ namespace Trinity.Editor
                 baseInitParam = "uiFormLogic, ";
                 accessModifier = "public";
             }
-           
+
             using (StreamWriter sw = new StreamWriter($"{codePath}/{go.name}.cs"))
             {
                 sw.WriteLine("using System.Collections;");
@@ -443,7 +458,7 @@ namespace Trinity.Editor
             }
         }
 
-        private void GenGetObjectCode(string codePath, GameObject go, string nameSpace, string logicBaseClass,string getComponent)
+        private void GenGetObjectsCode(string codePath, GameObject go, string nameSpace, string logicBaseClass, string getComponent)
         {
             using (StreamWriter sw = new StreamWriter($"{codePath}/GetObjects/{go.name}.GetObjects.cs"))
             {
@@ -453,14 +468,14 @@ namespace Trinity.Editor
                     sw.WriteLine("using UnityEngine.UI;");
                 }
                 sw.WriteLine("");
-                
+
                 sw.WriteLine("//自动生成于：" + DateTime.Now);
-                
+
                 //命名空间
                 sw.WriteLine("namespace " + nameSpace);
                 sw.WriteLine("{");
                 sw.WriteLine("");
-                
+
                 //类名
                 sw.WriteLine($"\tpublic partial class {go.name} : {logicBaseClass}");
                 sw.WriteLine("\t{");
@@ -469,28 +484,46 @@ namespace Trinity.Editor
                 ReferenceCollector rc = go.GetComponent<ReferenceCollector>();
                 if (rc != null)
                 {
-                     Dictionary<string, Object> dict = rc.GetAll();
-                     
-                     foreach (KeyValuePair<string, Object> kv in dict)
-                     {
-                         sw.WriteLine($"\t\tprivate {kv.Value.GetType().Name} m_{kv.Key};");
-                     }
-                     sw.WriteLine("");
+                    Dictionary<string, Object> dict = rc.GetAll();
 
-                     sw.WriteLine("\t\tprivate void GetObjects()");
-                     sw.WriteLine("\t\t{");
+                    foreach (KeyValuePair<string, Object> kv in dict)
+                    {
+                        sw.WriteLine($"\t\tprivate {kv.Value.GetType().Name} m_{kv.Key};");
+                    }
+                    sw.WriteLine("");
 
-                     //获取RC上的Object
-                     sw.WriteLine($"\t\t\tReferenceCollector rc = {getComponent}<ReferenceCollector>();");
-                     sw.WriteLine("");
+                    sw.WriteLine("\t\tprivate void GetObjects()");
+                    sw.WriteLine("\t\t{");
 
-                     foreach (KeyValuePair<string, Object> kv in dict)
-                     {
-                         string filedName = $"m_{kv.Key}";
-                         sw.WriteLine($"\t\t\t{filedName} = rc.Get<{kv.Value.GetType().Name}>(\"{kv.Key}\");" );
-                     }
+                    //获取RC上的Object
+                    sw.WriteLine($"\t\t\tReferenceCollector rc = {getComponent}<ReferenceCollector>();");
+                    sw.WriteLine("");
 
-                     sw.WriteLine("\t\t}");
+                    if (m_GetObjectsType == GetObjectsType.GetByName)
+                    {
+                        //根据名称获取
+                        foreach (KeyValuePair<string, Object> kv in dict)
+                        {
+                            string filedName = $"m_{kv.Key}";
+                            sw.WriteLine($"\t\t\t{filedName} = rc.Get<{kv.Value.GetType().Name}>(\"{kv.Key}\");");
+                        }
+                    }
+                    else
+                    {
+                        //根据索引获取
+                        List<ReferenceCollectorData> datas = rc.GetDatas();
+                        for (int i = 0; i < datas.Count; i++)
+                        {
+                            ReferenceCollectorData data = datas[i];
+                            string filedName = $"m_{data.key}";
+                            sw.WriteLine($"\t\t\t{filedName} = rc.Get<{data.Obj.GetType().Name}>({i});");
+                        }
+
+                    }
+
+
+
+                    sw.WriteLine("\t\t}");
                 }
 
                 sw.WriteLine("");
