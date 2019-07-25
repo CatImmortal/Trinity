@@ -1,50 +1,33 @@
-using System;
+using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
-//Object并非C#基础中的Object，而是 UnityEngine.Object
+using UnityEditor;
+using System;
 using Object = UnityEngine.Object;
+using ObjData = Trinity.ReferenceCollector.ObjData;
 
 namespace Trinity.Editor
 {
-    //自定义ReferenceCollector类在界面中的显示与功能
     [CustomEditor(typeof(ReferenceCollector))]
-    //没有该属性的编辑器在选中多个物体时会提示“Multi-object editing not supported”
     [CanEditMultipleObjects]
     public class ReferenceCollectorEditor : UnityEditor.Editor
     {
-        //输入在textfield中的字符串
-        private string searchKey
-        {
-            get
-            {
-                return _searchKey;
-            }
-            set
-            {
-                if (_searchKey != value)
-                {
-                    _searchKey = value;
-                    heroPrefab = referenceCollector.Get<Object>(searchKey);
-                }
-            }
-        }
-
-        private ReferenceCollector referenceCollector;
-
-        private Object heroPrefab;
-
-        private string _searchKey = "";
-
+        private SerializedProperty m_ObjDatas;
+        private SerializedProperty m_Objs;
+        private List<ObjData> tempList = new List<ObjData>();
         /// <summary>
         /// 命名前缀与类型的映射
         /// </summary>
         private List<KeyValuePair<string, string>> prefixesMap = new List<KeyValuePair<string, string>>
         {
             new KeyValuePair<string, string>("Trans","Transform"),
+            new KeyValuePair<string, string>("OldAnim","Animation"),
+            new KeyValuePair<string, string>("NewAnim","Animator"),
             new KeyValuePair<string, string>("Rect","RectTransform"),
             new KeyValuePair<string, string>("Group","CanvasGroup"),
             new KeyValuePair<string, string>("VGroup","VerticalLayoutGroup"),
+            new KeyValuePair<string, string>("HGroup","HorizontalLayoutGroup"),
+            new KeyValuePair<string, string>("GGroup","GridLayoutGroup"),
 
             new KeyValuePair<string, string>("Btn","Button"),
             new KeyValuePair<string, string>("Img","Image"),
@@ -54,135 +37,128 @@ namespace Trinity.Editor
 
         };
 
-
-
-
-        private void DelNullReference()
-        {
-            var dataProperty = serializedObject.FindProperty("datas");
-            for (int i = dataProperty.arraySize - 1; i >= 0; i--)
-            {
-                var gameObjectProperty = dataProperty.GetArrayElementAtIndex(i).FindPropertyRelative("obj");
-                if (gameObjectProperty.objectReferenceValue == null)
-                {
-                    dataProperty.DeleteArrayElementAtIndex(i);
-                }
-            }
-        }
-
         private void OnEnable()
         {
-            //将被选中的gameobject所挂载的ReferenceCollector赋值给编辑器类中的ReferenceCollector，方便操作
-            referenceCollector = (ReferenceCollector)target;
+            m_ObjDatas = serializedObject.FindProperty("ObjDatas");
+            m_Objs = serializedObject.FindProperty("m_Objs");
         }
+
 
         public override void OnInspectorGUI()
         {
-            //使ReferenceCollector支持撤销操作，还有Redo，不过没有在这里使用
-            Undo.RecordObject(referenceCollector, "Changed Settings");
-            var datasProperty = serializedObject.FindProperty("datas");
-            //开始水平布局，如果是比较新版本学习U3D的，可能不知道这东西，这个是老GUI系统的知识，除了用在编辑器里，还可以用在生成的游戏中
-            GUILayout.BeginHorizontal();
-            //下面几个if都是点击按钮就会返回true调用里面的东西
+            //绘制功能按钮
+            EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("添加引用"))
             {
-                //添加新的元素，具体的函数注释
-                // Guid.NewGuid().GetHashCode().ToString() 就是新建后默认的key
-                AddReference(datasProperty, Guid.NewGuid().GetHashCode().ToString(), null);
+                AddReference(Guid.NewGuid().GetHashCode().ToString(), null);
+                SyncObjs();
             }
-            if (GUILayout.Button("全部删除"))
-            {
-                datasProperty.ClearArray();
-            }
-            if (GUILayout.Button("删除空引用"))
-            {
-                DelNullReference();
-            }
+
             if (GUILayout.Button("排序"))
             {
-                referenceCollector.Sort();
+                Sort();
             }
+
+            if (GUILayout.Button("全部删除"))
+            {
+                RemoveAll();
+            }
+
+            if (GUILayout.Button("删除空引用"))
+            {
+                RemoveNull();
+            }
+
             if (GUILayout.Button("自动绑定组件"))
             {
                 AutoBindReference();
             }
+
             EditorGUILayout.EndHorizontal();
-            EditorGUILayout.BeginHorizontal();
-            //可以在编辑器中对searchKey进行赋值，只要输入对应的Key值，就可以点后面的删除按钮删除相对应的元素
-            searchKey = EditorGUILayout.TextField(searchKey);
-            //添加的可以用于选中Object的框，这里的object也是(UnityEngine.Object
-            //第三个参数为是否只能引用scene中的Object
-            EditorGUILayout.ObjectField(heroPrefab, typeof(Object), false);
-            if (GUILayout.Button("删除"))
-            {
-                referenceCollector.Remove(searchKey);
-                heroPrefab = null;
-            }
-            GUILayout.EndHorizontal();
-            EditorGUILayout.Space();
 
-            var delList = new List<int>();
-            SerializedProperty property;
-            //遍历ReferenceCollector中data list的所有元素，显示在编辑器中
-            for (int i = datasProperty.arraySize - 1; i >= 0; i--)
-            {
-                GUILayout.BeginHorizontal();
-                //这里的知识点在ReferenceCollector中有说
-                property = datasProperty.GetArrayElementAtIndex(i).FindPropertyRelative("key");
-                property.stringValue = EditorGUILayout.TextField(property.stringValue, GUILayout.Width(150));
-                property = datasProperty.GetArrayElementAtIndex(i).FindPropertyRelative("obj");
-                property.objectReferenceValue = EditorGUILayout.ObjectField(property.objectReferenceValue, typeof(Object), true);
-                if (GUILayout.Button("X"))
-                {
-                    //将元素添加进删除list
-                    delList.Add(i);
-                }
-                GUILayout.EndHorizontal();
-            }
-            var eventType = Event.current.type;
-            //在Inspector 窗口上创建区域，向区域拖拽资源对象，获取到拖拽到区域的对象
-            if (eventType == EventType.DragUpdated || eventType == EventType.DragPerform)
-            {
-                // Show a copy icon on the drag
-                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+            DrawKvData();
 
-                if (eventType == EventType.DragPerform)
-                {
-                    DragAndDrop.AcceptDrag();
-                    foreach (var o in DragAndDrop.objectReferences)
-                    {
-                        AddReference(datasProperty, o.name, o);
-                    }
-                }
+            DrawDragArea();
 
-                Event.current.Use();
-            }
 
-            //遍历删除list，将其删除掉
-            foreach (var i in delList)
-            {
-                datasProperty.DeleteArrayElementAtIndex(i);
-            }
             serializedObject.ApplyModifiedProperties();
             serializedObject.UpdateIfRequiredOrScript();
+
         }
 
-        //添加元素，具体知识点在ReferenceCollector中说了
-        private void AddReference(SerializedProperty dataProperty, string key, Object obj)
+        /// <summary>
+        /// 添加引用
+        /// </summary>
+        private void AddReference(string name, Object obj)
         {
-            int index = dataProperty.arraySize;
-            dataProperty.InsertArrayElementAtIndex(index);
-            var element = dataProperty.GetArrayElementAtIndex(index);
-            element.FindPropertyRelative("key").stringValue = key;
-            element.FindPropertyRelative("obj").objectReferenceValue = obj;
+            int index = m_ObjDatas.arraySize;
+            m_ObjDatas.InsertArrayElementAtIndex(index);
+            SerializedProperty element = m_ObjDatas.GetArrayElementAtIndex(index);
+            element.FindPropertyRelative("Name").stringValue = name;
+            element.FindPropertyRelative("Obj").objectReferenceValue = obj;
+
         }
 
+        /// <summary>
+        /// 排序
+        /// </summary>
+        private void Sort()
+        {
+            ReferenceCollector target = (ReferenceCollector)this.target;
+
+            tempList.Clear();
+            foreach (ObjData data in target.ObjDatas)
+            {
+                tempList.Add(new ObjData(data.Name, data.Obj));
+            }
+            tempList.Sort((x, y) =>
+            {
+                return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
+            });
+
+            m_ObjDatas.ClearArray();
+            foreach (ObjData data in tempList)
+            {
+                AddReference(data.Name, data.Obj);
+            }
+
+            SyncObjs();
+        }
+
+        /// <summary>
+        /// 全部删除
+        /// </summary>
+        private void RemoveAll()
+        {
+            m_ObjDatas.ClearArray();
+
+            SyncObjs();
+        }
+
+        /// <summary>
+        /// 删除空引用
+        /// </summary>
+        private void RemoveNull()
+        {
+            for (int i = m_ObjDatas.arraySize - 1; i >= 0; i--)
+            {
+                SerializedProperty element = m_ObjDatas.GetArrayElementAtIndex(i).FindPropertyRelative("Obj");
+                if (element.objectReferenceValue == null)
+                {
+                    m_ObjDatas.DeleteArrayElementAtIndex(i);
+                }
+            }
+
+            SyncObjs();
+        }
+
+        /// <summary>
+        /// 自动绑定引用
+        /// </summary>
         private void AutoBindReference()
         {
-            SerializedProperty datasProperty = serializedObject.FindProperty("datas");
-            datasProperty.ClearArray();
-
-            Transform[] childs = referenceCollector.gameObject.GetComponentsInChildren<Transform>();
+            m_ObjDatas.ClearArray();
+            Transform[] childs = ((ReferenceCollector)target).gameObject.GetComponentsInChildren<Transform>();
 
             foreach (Transform child in childs)
             {
@@ -200,12 +176,94 @@ namespace Trinity.Editor
                     //前缀识别
                     if (childPrefix == prefix.Key)
                     {
-                        AddReference(datasProperty, child.name, child.GetComponent(prefix.Value));
+                        AddReference(child.name, child.GetComponent(prefix.Value));
                         break;
                     }
                 }
             }
+
+            SyncObjs();
         }
+
+        /// <summary>
+        /// 绘制键值对数据
+        /// </summary>
+        private void DrawKvData()
+        {
+            //绘制key value数据
+
+            int needDeleteIndex = -1;
+
+            EditorGUILayout.BeginVertical();
+            SerializedProperty property;
+
+            for (int i = 0; i < m_ObjDatas.arraySize; i++)
+            {
+
+                EditorGUILayout.BeginHorizontal();
+                property = m_ObjDatas.GetArrayElementAtIndex(i).FindPropertyRelative("Name");
+                property.stringValue = EditorGUILayout.TextField(property.stringValue, GUILayout.Width(150));
+                property = m_ObjDatas.GetArrayElementAtIndex(i).FindPropertyRelative("Obj");
+                property.objectReferenceValue = EditorGUILayout.ObjectField(property.objectReferenceValue, typeof(Object), true);
+
+                if (GUILayout.Button("X"))
+                {
+                    //将元素下标添加进删除list
+                    needDeleteIndex = i;
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+
+            //删除data
+            if (needDeleteIndex != -1)
+            {
+                m_ObjDatas.DeleteArrayElementAtIndex(needDeleteIndex);
+                SyncObjs();
+            }
+
+            EditorGUILayout.EndVertical();
+        }
+
+        /// <summary>
+        /// 绘制资源拖拽区域
+        /// </summary>
+        private void DrawDragArea()
+        {
+            //在Inspector 窗口上创建区域，向区域拖拽资源对象，获取到拖拽到区域的对象
+            EventType eventType = Event.current.type;
+            if (eventType == EventType.DragUpdated || eventType == EventType.DragPerform)
+            {
+                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                if (eventType == EventType.DragPerform)
+                {
+                    DragAndDrop.AcceptDrag();
+                    foreach (Object item in DragAndDrop.objectReferences)
+                    {
+                        AddReference(item.name, item);
+                    }
+                    SyncObjs();
+                }
+
+                Event.current.Use();
+            }
+        }
+
+        /// <summary>
+        /// 同步对象数据
+        /// </summary>
+        private void SyncObjs()
+        {
+            m_Objs.ClearArray();
+
+            SerializedProperty property;
+            for (int i = 0; i < m_ObjDatas.arraySize; i++)
+            {
+                property = m_ObjDatas.GetArrayElementAtIndex(i).FindPropertyRelative("Obj");
+                m_Objs.InsertArrayElementAtIndex(i);
+                m_Objs.GetArrayElementAtIndex(i).objectReferenceValue = property.objectReferenceValue;
+            }
+        }
+
     }
 }
 

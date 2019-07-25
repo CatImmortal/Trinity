@@ -5,7 +5,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
-
+using ObjData = Trinity.ReferenceCollector.ObjData;
 namespace Trinity.Editor
 {
     /// <summary>
@@ -19,12 +19,6 @@ namespace Trinity.Editor
             UIForm
         }
 
-        private enum GetObjectsType
-        {
-            GetByIndex,
-            GetByName,
-        }
-
         [SerializeField]
         private List<GameObject> m_GameObjects = new List<GameObject>();
 
@@ -32,7 +26,6 @@ namespace Trinity.Editor
         private SerializedProperty m_SerializedProperty;
 
         private GenCodeType m_GenCodeType;
-        private GetObjectsType m_GetObjectsType;
 
         /// <summary>
         /// 是否为热更新层代码
@@ -75,7 +68,6 @@ namespace Trinity.Editor
 
         private void OnEnable()
         {
-            m_GameObjects.Clear();
             m_SerializedObject = new SerializedObject(this);
             m_SerializedProperty = m_SerializedObject.FindProperty("m_GameObjects");
         }
@@ -117,10 +109,7 @@ namespace Trinity.Editor
 
             EditorGUILayout.BeginHorizontal();
             m_IsGenGetObjectsCode = GUILayout.Toggle(m_IsGenGetObjectsCode, "生成GetObjects代码", GUILayout.Width(150f));
-            if (m_IsGenGetObjectsCode)
-            {
-                m_GetObjectsType = (GetObjectsType)EditorGUILayout.EnumPopup(m_GetObjectsType, GUILayout.Width(100f));
-            }
+
             EditorGUILayout.EndHorizontal();
 
             if (m_GenCodeType == GenCodeType.Entity)
@@ -484,11 +473,9 @@ namespace Trinity.Editor
                 ReferenceCollector rc = go.GetComponent<ReferenceCollector>();
                 if (rc != null)
                 {
-                    Dictionary<string, Object> dict = rc.GetAll();
-
-                    foreach (KeyValuePair<string, Object> kv in dict)
+                    foreach (ObjData data in rc.ObjDatas)
                     {
-                        sw.WriteLine($"\t\tprivate {kv.Value.GetType().Name} m_{kv.Key};");
+                        sw.WriteLine($"\t\tprivate {data.Obj.GetType().Name} m_{data.Name};");
                     }
                     sw.WriteLine("");
 
@@ -499,29 +486,14 @@ namespace Trinity.Editor
                     sw.WriteLine($"\t\t\tReferenceCollector rc = {getComponent}<ReferenceCollector>();");
                     sw.WriteLine("");
 
-                    if (m_GetObjectsType == GetObjectsType.GetByName)
+                    //根据索引获取
+
+                    for (int i = 0; i < rc.ObjDatas.Count; i++)
                     {
-                        //根据名称获取
-                        foreach (KeyValuePair<string, Object> kv in dict)
-                        {
-                            string filedName = $"m_{kv.Key}";
-                            sw.WriteLine($"\t\t\t{filedName} = rc.Get<{kv.Value.GetType().Name}>(\"{kv.Key}\");");
-                        }
+                        ObjData data = rc.ObjDatas[i];
+                        string filedName = $"m_{data.Name}";
+                        sw.WriteLine($"\t\t\t{filedName} = rc.GetObj<{data.Obj.GetType().Name}>({i});");
                     }
-                    else
-                    {
-                        //根据索引获取
-                        List<ReferenceCollectorData> datas = rc.GetDatas();
-                        for (int i = 0; i < datas.Count; i++)
-                        {
-                            ReferenceCollectorData data = datas[i];
-                            string filedName = $"m_{data.key}";
-                            sw.WriteLine($"\t\t\t{filedName} = rc.Get<{data.Obj.GetType().Name}>({i});");
-                        }
-
-                    }
-
-
 
                     sw.WriteLine("\t\t}");
                 }

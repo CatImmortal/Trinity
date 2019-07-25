@@ -1,12 +1,18 @@
 -nowarn:0067
+-nowarn:0105
+-nowarn:0162
 -nowarn:0168
 -nowarn:0219
 -nowarn:0252
+-nowarn:0253
 -nowarn:0414
 -nowarn:0419
 -nowarn:0472
 -nowarn:0618
 -nowarn:0649
+-nowarn:0659
+-nowarn:0660
+-nowarn:0661
 -nowarn:1234
 -nowarn:1570
 -nowarn:1572
@@ -17,3 +23,4 @@
 -nowarn:1591
 -nowarn:1635
 -nowarn:1711
+-nowarn:3021
