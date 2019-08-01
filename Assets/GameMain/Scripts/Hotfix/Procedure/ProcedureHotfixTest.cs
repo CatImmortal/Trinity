@@ -18,7 +18,7 @@ namespace Trinity.Hotfix
 
             Debug.Log("进入了热更新测试流程");
         }
-
+        UIForm form;
         protected internal override async void OnUpdate(IFsm procedureOwner, float elapseSeconds, float realElapseSeconds)
         {
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
@@ -34,7 +34,19 @@ namespace Trinity.Hotfix
 
             if (Input.GetKeyDown(KeyCode.Q))
             {
-                GameEntry.UI.OpenUIForm(UIFormId.TestForm);
+                Debug.Log("Opening2 : " + Time.realtimeSinceStartup );
+                form = await GameEntry.UI.AwaitOpenUIForm(UIFormId.TestForm);
+                Debug.Log("Opened2 : " + Time.realtimeSinceStartup );
+                GameEntry.UI.CloseUIForm(form);
+
+                // Debug.Log("Opening1 : " + Time.realtimeSinceStartup );
+                // GameEntry.UI.OpenUIForm(UIFormId.TestForm);
+                // Debug.Log("Opened1 : " + Time.realtimeSinceStartup );
+            }
+
+            if (Input.GetKeyDown(KeyCode.W))
+            {
+                GameEntry.UI.CloseUIForm(form);
             }
         }
 

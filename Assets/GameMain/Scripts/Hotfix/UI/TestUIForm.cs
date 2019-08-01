@@ -38,5 +38,10 @@ namespace Trinity.Hotfix
         {
             Log.Info("Test hotfix");
         }
+
+        public override void OnClose(object userdata)
+        {
+            Log.Info("OnClose hotfix");
+        }
     }
 }

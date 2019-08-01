@@ -145,6 +145,7 @@ namespace Trinity
         protected internal override void OnClose(object userData)
 #endif
         {
+            StopAllCoroutines();
             base.OnClose(userData);
         }
 
@@ -236,7 +237,6 @@ namespace Trinity
                 m_CanvasGroup.alpha = 0;
                 m_CanvasGroup.blocksRaycasts = false;
             }
-
         }
     }
 }

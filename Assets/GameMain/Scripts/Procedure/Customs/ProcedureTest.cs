@@ -32,10 +32,6 @@ namespace Trinity
                 session.Dispose();
             }
 
-            if (Input.GetKeyDown(KeyCode.Q))
-            {
-                GameEntry.UI.OpenUIForm(UIFormId.TestForm);
-            }
 
         }
     }
