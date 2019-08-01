@@ -7,6 +7,7 @@
     {
         Undefined = 0,
 
-        TestScene = 1
+        TestScene = 1,
+        LoginScene = 2,
     }
 }

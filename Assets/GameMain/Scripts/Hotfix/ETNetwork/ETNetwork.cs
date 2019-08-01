@@ -16,6 +16,7 @@ namespace Trinity.Hotfix
         {
             try
             {
+                Log.Error("ETNetwork Init");
                 Game.Scene.AddComponent<OpcodeTypeComponent>();
                 Game.Scene.AddComponent<MessageDispatcherComponent>();
             }

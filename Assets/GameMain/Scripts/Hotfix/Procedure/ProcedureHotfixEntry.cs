@@ -15,7 +15,7 @@ namespace Trinity.Hotfix
             Log.Info("进入了热更新入口流程");
 
             //TODO:在这里切换到游戏的正式开始场景
-            procedureOwner.SetData<VarInt>(Trinity.Constant.ProcedureData.NextSceneId, (int)SceneId.TestScene);
+            procedureOwner.SetData<VarInt>(Trinity.Constant.ProcedureData.NextSceneId, (int)SceneId.LoginScene);
             ChangeState<ProcedureChangeScene>(procedureOwner);
         }
     }

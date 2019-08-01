@@ -69,3 +69,68 @@ File name: 'D:\GitHub\Trinity\ETServer\Config\graph.bytes'
 2019-05-17 23:26:19.1309 AllServer 0001 (Session.cs:150) { "_t" : "HotfixRpcRequest", "RpcId" : 1, "Info" : "Hello Server" }
 2019-05-17 23:26:19.1309 AllServer 0001 (HotfixRpcHandler.cs:12) Hello Server
 2019-05-17 23:26:19.1511 AllServer 0001 (Session.cs:269) { "_t" : "HotfixRpcResponse", "RpcId" : 1, "Error" : 0, "Message" : "", "Info" : "Hello Client" }
+2019-07-30 16:03:32.6826   (Program.cs:18) System.IO.FileNotFoundException: Could not find file 'd:\Users\Woodenwolf\Documents\GitHub\Trinity\ETServer\Bin\Hotfix.dll'.
+File name: 'd:\Users\Woodenwolf\Documents\GitHub\Trinity\ETServer\Bin\Hotfix.dll'
+   at System.IO.FileStream.ValidateFileHandle(SafeFileHandle fileHandle)
+   at System.IO.FileStream.CreateFileOpenHandle(FileMode mode, FileShare share, FileOptions options)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize)
+   at System.IO.File.ReadAllBytes(String path)
+   at ETModel.DllHelper.GetHotfixAssembly() in d:\Users\Woodenwolf\Documents\GitHub\Trinity\ETServer\Server\Model\Base\Helper\DllHelper.cs:line 10
+   at App.Program.Main(String[] args) in d:\Users\Woodenwolf\Documents\GitHub\Trinity\ETServer\Server\App\Program.cs:line 18
+2019-07-30 16:21:57.4295   (Program.cs:18) System.IO.FileNotFoundException: Could not find file 'd:\Users\Woodenwolf\Documents\GitHub\Trinity\ETServer\Bin\Hotfix.dll'.
+File name: 'd:\Users\Woodenwolf\Documents\GitHub\Trinity\ETServer\Bin\Hotfix.dll'
+   at System.IO.FileStream.ValidateFileHandle(SafeFileHandle fileHandle)
+   at System.IO.FileStream.CreateFileOpenHandle(FileMode mode, FileShare share, FileOptions options)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize)
+   at System.IO.File.ReadAllBytes(String path)
+   at ETModel.DllHelper.GetHotfixAssembly() in d:\Users\Woodenwolf\Documents\GitHub\Trinity\ETServer\Server\Model\Base\Helper\DllHelper.cs:line 10
+   at App.Program.Main(String[] args) in d:\Users\Woodenwolf\Documents\GitHub\Trinity\ETServer\Server\App\Program.cs:line 18
+2019-07-30 16:23:07.5000 AllServer 0001 (Program.cs:36) server start........................ 1 AllServer
+2019-08-01 14:41:34.0322 AllServer 0001 (Program.cs:36) server start........................ 1 AllServer
+2019-08-01 14:41:42.4176 AllServer 0001 (Session.cs:150) { "_t" : "TestMessage", "Info" : "6666" }
+2019-08-01 14:41:42.4343 AllServer 0001 (TestMessagehandler.cs:10) 6666
+2019-08-01 14:41:42.4385 AllServer 0001 (Session.cs:150) { "_t" : "TestRpcRequest", "RpcId" : 1, "Info" : "Hello Server" }
+2019-08-01 14:41:42.4385 AllServer 0001 (TestRpcHandler.cs:11) Hello Server
+2019-08-01 14:41:42.4385 AllServer 0001 (Session.cs:269) { "_t" : "TestRpcResponse", "RpcId" : 1, "Error" : 0, "Message" : "", "Info" : "Hello Client" }
+2019-08-01 15:13:08.9804 AllServer 0001 (Session.cs:150) { "_t" : "HotfixTestMessage", "Info" : "6666" }
+2019-08-01 15:13:08.9804 AllServer 0001 (HotfixTestMessagehandler.cs:10) 6666
+2019-08-01 15:13:08.9883 AllServer 0001 (Session.cs:150) { "_t" : "HotfixRpcRequest", "RpcId" : 1, "Info" : "Hello Server" }
+2019-08-01 15:13:08.9883 AllServer 0001 (HotfixRpcHandler.cs:12) Hello Server
+2019-08-01 15:13:09.0136 AllServer 0001 (Session.cs:269) { "_t" : "HotfixRpcResponse", "RpcId" : 1, "Error" : 0, "Message" : "", "Info" : "Hello Client" }
+2019-08-01 15:13:12.8837 AllServer 0001 (Session.cs:150) { "_t" : "HotfixTestMessage", "Info" : "6666" }
+2019-08-01 15:13:12.8837 AllServer 0001 (HotfixTestMessagehandler.cs:10) 6666
+2019-08-01 15:13:12.8837 AllServer 0001 (Session.cs:150) { "_t" : "HotfixRpcRequest", "RpcId" : 2, "Info" : "Hello Server" }
+2019-08-01 15:13:12.8837 AllServer 0001 (HotfixRpcHandler.cs:12) Hello Server
+2019-08-01 15:13:12.8923 AllServer 0001 (Session.cs:269) { "_t" : "HotfixRpcResponse", "RpcId" : 2, "Error" : 0, "Message" : "", "Info" : "Hello Client" }
+2019-08-01 15:31:19.4774 AllServer 0001 (Session.cs:150) { "_t" : "HotfixTestMessage", "Info" : "6666" }
+2019-08-01 15:31:19.4774 AllServer 0001 (HotfixTestMessagehandler.cs:10) 6666
+2019-08-01 15:31:19.4774 AllServer 0001 (Session.cs:150) { "_t" : "HotfixRpcRequest", "RpcId" : 1, "Info" : "Hello Server" }
+2019-08-01 15:31:19.4873 AllServer 0001 (HotfixRpcHandler.cs:12) Hello Server
+2019-08-01 15:31:19.4873 AllServer 0001 (Session.cs:269) { "_t" : "HotfixRpcResponse", "RpcId" : 1, "Error" : 0, "Message" : "", "Info" : "Hello Client" }
+2019-08-01 15:43:19.3873 AllServer 0001 (Session.cs:150) { "_t" : "HotfixTestMessage", "Info" : "6666" }
+2019-08-01 15:43:19.3914 AllServer 0001 (HotfixTestMessagehandler.cs:10) 6666
+2019-08-01 15:43:19.3914 AllServer 0001 (Session.cs:150) { "_t" : "HotfixRpcRequest", "RpcId" : 1, "Info" : "Hello Server" }
+2019-08-01 15:43:19.3914 AllServer 0001 (HotfixRpcHandler.cs:12) Hello Server
+2019-08-01 15:43:19.3914 AllServer 0001 (Session.cs:269) { "_t" : "HotfixRpcResponse", "RpcId" : 1, "Error" : 0, "Message" : "", "Info" : "Hello Client" }
+2019-08-01 16:35:11.5776 AllServer 0001 (Session.cs:150) { "_t" : "TestMessage", "Info" : "6666" }
+2019-08-01 16:35:11.5899 AllServer 0001 (TestMessagehandler.cs:10) 6666
+2019-08-01 16:35:11.5899 AllServer 0001 (Session.cs:150) { "_t" : "TestRpcRequest", "RpcId" : 1, "Info" : "Hello Server" }
+2019-08-01 16:35:11.5951 AllServer 0001 (TestRpcHandler.cs:11) Hello Server
+2019-08-01 16:35:11.5951 AllServer 0001 (Session.cs:269) { "_t" : "TestRpcResponse", "RpcId" : 1, "Error" : 0, "Message" : "", "Info" : "Hello Client" }
+2019-08-01 16:36:23.7761 AllServer 0001 (Session.cs:150) { "_t" : "TestMessage", "Info" : "6666" }
+2019-08-01 16:36:23.7843 AllServer 0001 (TestMessagehandler.cs:10) 6666
+2019-08-01 16:36:23.8148 AllServer 0001 (Session.cs:150) { "_t" : "TestRpcRequest", "RpcId" : 1, "Info" : "Hello Server" }
+2019-08-01 16:36:23.8316 AllServer 0001 (TestRpcHandler.cs:11) Hello Server
+2019-08-01 16:36:23.8316 AllServer 0001 (Session.cs:269) { "_t" : "TestRpcResponse", "RpcId" : 1, "Error" : 0, "Message" : "", "Info" : "Hello Client" }
+2019-08-01 16:58:51.9487 AllServer 0001 (Session.cs:150) { "_t" : "HotfixTestMessage", "Info" : "6666" }
+2019-08-01 16:58:51.9487 AllServer 0001 (HotfixTestMessagehandler.cs:10) 6666
+2019-08-01 16:58:51.9577 AllServer 0001 (Session.cs:150) { "_t" : "HotfixRpcRequest", "RpcId" : 1, "Info" : "Hello Server" }
+2019-08-01 16:58:51.9577 AllServer 0001 (HotfixRpcHandler.cs:12) Hello Server
+2019-08-01 16:58:51.9577 AllServer 0001 (Session.cs:269) { "_t" : "HotfixRpcResponse", "RpcId" : 1, "Error" : 0, "Message" : "", "Info" : "Hello Client" }
+2019-08-01 18:02:26.8632 AllServer 0001 (Session.cs:150) { "_t" : "HotfixTestMessage", "Info" : "6666" }
+2019-08-01 18:02:26.8632 AllServer 0001 (HotfixTestMessagehandler.cs:10) 6666
+2019-08-01 18:02:26.8784 AllServer 0001 (Session.cs:150) { "_t" : "HotfixRpcRequest", "RpcId" : 1, "Info" : "Hello Server" }
+2019-08-01 18:02:26.8784 AllServer 0001 (HotfixRpcHandler.cs:12) Hello Server
+2019-08-01 18:02:26.8924 AllServer 0001 (Session.cs:269) { "_t" : "HotfixRpcResponse", "RpcId" : 1, "Error" : 0, "Message" : "", "Info" : "Hello Client" }

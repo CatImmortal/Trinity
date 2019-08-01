@@ -12,3 +12,5 @@
 Bin/
 .vs/
 obj/
+Temp/
+*.log

@@ -68,6 +68,8 @@ namespace Trinity
                 }
             }
 
+            if (!m_CanUpdate) return;
+
             //不使用ILRuntime模式 或者 使用ILRuntime模式并且热更新DLL已加载完成时，进入下一个场景
             if (!GameEntry.ILRuntime.ILRuntimeMode)
             {

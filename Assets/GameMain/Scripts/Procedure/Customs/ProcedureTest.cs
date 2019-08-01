@@ -28,8 +28,13 @@ namespace Trinity
                 session.Send(new TestMessage() { Info = "6666" });
 
                 TestRpcResponse response = (TestRpcResponse)await session.Call(new TestRpcRequest() { Info = "Hello Server" });
-                Debug.Log(response.Info);
+                Debug.Log("Response : " + response.Info);
                 session.Dispose();
+            }
+
+            if (Input.GetKeyDown(KeyCode.Q))
+            {
+                GameEntry.UI.OpenUIForm(UIFormId.TestForm);
             }
 
         }

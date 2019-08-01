@@ -67,9 +67,9 @@ namespace Trinity
         protected override void OnInit(object userData)
         {
             base.OnInit(userData);
-            
+            m_HotfixUGuiFormName = this.GetType().Name;
             string hotfixUGuiFormFullName = Utility.Text.Format("{0}.{1}", "Trinity.Hotfix", m_HotfixUGuiFormName);
-
+            Debug.Log(hotfixUGuiFormFullName);
             //获取热更新层的实例
             IType type = GameEntry.ILRuntime.AppDomain.LoadedTypes[hotfixUGuiFormFullName];
             object hotfixInstance = ((ILType)type).Instantiate();

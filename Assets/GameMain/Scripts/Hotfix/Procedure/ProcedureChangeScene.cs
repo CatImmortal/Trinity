@@ -37,6 +37,7 @@ namespace Trinity.Hotfix
 
             //TODO:在这里配置场景ID与切换到对应流程的方法
             m_TargetProcedureChange.Add((int)SceneId.TestScene, () => ChangeState<ProcedureHotfixTest>(procedureOwner));
+            m_TargetProcedureChange.Add((int)SceneId.LoginScene, () => ChangeState<ProcedureHotfixTest>(procedureOwner));
         }
 
         protected internal override void OnEnter(ProcedureOwner procedureOwner)

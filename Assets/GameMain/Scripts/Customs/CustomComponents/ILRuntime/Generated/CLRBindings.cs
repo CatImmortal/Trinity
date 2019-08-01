@@ -31,11 +31,8 @@ namespace ILRuntime.Runtime.Generated
             System_Collections_IDictionary_Binding.Register(app);
             ETModel_Log_Binding.Register(app);
             ETModel_IdGenerater_Binding.Register(app);
-            UnityEngine_GameObject_Binding.Register(app);
-            UnityEngine_Transform_Binding.Register(app);
             UnityEngine_Object_Binding.Register(app);
             ETModel_MongoHelper_Binding.Register(app);
-            ETModel_ComponentView_Binding.Register(app);
             System_Activator_Binding.Register(app);
             System_Collections_Generic_Dictionary_2_Type_ILTypeInstance_Binding.Register(app);
             System_Collections_Generic_Dictionary_2_Type_ILTypeInstance_Binding_ValueCollection_Binding.Register(app);
@@ -92,10 +89,8 @@ namespace ILRuntime.Runtime.Generated
             UnityEngine_Vector3_Binding.Register(app);
             UnityEngine_Quaternion_Binding.Register(app);
             Trinity_EntityExtension_Binding.Register(app);
-            GameFramework_ReferencePool_Binding.Register(app);
-            Trinity_HotfixEntityData_Binding.Register(app);
-            Trinity_EntityData_Binding.Register(app);
             GameFramework_GameFrameworkException_Binding.Register(app);
+            Trinity_ETNetworkComponent_Binding.Register(app);
             System_Collections_Generic_Dictionary_2_String_ILTypeInstance_Binding.Register(app);
             GameFramework_Utility_Binding_Text_Binding.Register(app);
             System_Collections_Generic_Dictionary_2_String_ILTypeInstance_Binding_Enumerator_Binding.Register(app);
@@ -123,9 +118,9 @@ namespace ILRuntime.Runtime.Generated
             UnityGameFramework_Runtime_VarInt_Binding.Register(app);
             System_Runtime_CompilerServices_AsyncVoidMethodBuilder_Binding.Register(app);
             UnityEngine_Input_Binding.Register(app);
-            Trinity_ETNetworkComponent_Binding.Register(app);
             ETModel_ETTask_1_Google_Protobuf_IMessageAdaptor_Binding_Adaptor_Binding.Register(app);
             ETModel_ETTask_1_Google_Protobuf_IMessageAdaptor_Binding_Adaptor_Binding_Awaiter_Binding.Register(app);
+            Trinity_UIExtension_Binding.Register(app);
             System_Collections_Generic_ICollection_1_KeyValuePair_2_String_ILTypeInstance_Binding.Register(app);
             System_Threading_Monitor_Binding.Register(app);
             System_Collections_Generic_IEnumerable_1_KeyValuePair_2_String_ILTypeInstance_Binding.Register(app);
@@ -133,6 +128,10 @@ namespace ILRuntime.Runtime.Generated
             System_Collections_Generic_IDictionary_2_String_ILTypeInstance_Binding.Register(app);
             System_Collections_Generic_Queue_1_IReference_Binding.Register(app);
             GameFramework_IReference_Binding.Register(app);
+            UnityEngine_Component_Binding.Register(app);
+            Trinity_ReferenceCollector_Binding.Register(app);
+            UnityEngine_UI_Button_Binding.Register(app);
+            UnityEngine_Events_UnityEvent_Binding.Register(app);
 
             ILRuntime.CLR.TypeSystem.CLRType __clrType = null;
         }
