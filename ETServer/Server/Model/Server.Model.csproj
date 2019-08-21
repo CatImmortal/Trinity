@@ -28,13 +28,13 @@
     <None Remove="graph.bytes" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\Assets\GameMain\Libraries\ET\Module\Message\ErrorCode.cs">
+    <Compile Include="..\..\..\Assets\Scripts\Libraries\ET\Module\Message\ErrorCode.cs">
       <Link>Module\Message\ErrorCode.cs</Link>
     </Compile>
-    <Compile Include="..\..\..\Assets\GameMain\Libraries\ET\Module\Message\OuterMessage.cs" Link="Module\Message\OuterMessage.cs" />
-    <Compile Include="..\..\..\Assets\GameMain\Libraries\ET\Module\Message\OuterOpcode.cs" Link="Module\Message\OuterOpcode.cs" />
-    <Compile Include="..\..\..\Assets\GameMain\Scripts\Hotfix\ETNetwork\Module\Message\HotfixMessage.cs" Link="Module\Message\HotfixMessage.cs" />
-    <Compile Include="..\..\..\Assets\GameMain\Scripts\Hotfix\ETNetwork\Module\Message\HotfixOpcode.cs" Link="Module\Message\HotfixOpcode.cs" />
+    <Compile Include="..\..\..\Assets\Scripts\Libraries\ET\Module\Message\OuterMessage.cs" Link="Module\Message\OuterMessage.cs" />
+    <Compile Include="..\..\..\Assets\Scripts\Libraries\ET\Module\Message\OuterOpcode.cs" Link="Module\Message\OuterOpcode.cs" />
+    <Compile Include="..\..\..\Assets\Scripts\Hotfix\ETNetwork\Module\Message\HotfixMessage.cs" Link="Module\Message\HotfixMessage.cs" />
+    <Compile Include="..\..\..\Assets\Scripts\Hotfix\ETNetwork\Module\Message\HotfixOpcode.cs" Link="Module\Message\HotfixOpcode.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.2.1" />

@@ -63,8 +63,4 @@
     <Compile Include="..\MongoDB.Shared\IncrementalMD5.cs" Link="IncrementalMD5.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="..\..\License.txt" Pack="true" PackagePath="$(PackageLicenseFile)" />
-  </ItemGroup>
-
 </Project>
