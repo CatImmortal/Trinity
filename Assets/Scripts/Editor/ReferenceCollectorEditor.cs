@@ -14,12 +14,12 @@ namespace Trinity.Editor
     {
         private SerializedProperty m_ObjDatas;
         private SerializedProperty m_Objs;
-        private List<ObjData> tempList = new List<ObjData>();
+        private List<ObjData> m_TempList = new List<ObjData>();
 
         /// <summary>
         /// 命名前缀与类型的映射
         /// </summary>
-        private List<KeyValuePair<string, string>> prefixesMap = new List<KeyValuePair<string, string>>
+        private List<KeyValuePair<string, string>> m_PrefixesMap = new List<KeyValuePair<string, string>>
         {
             new KeyValuePair<string, string>("Trans","Transform"),
             new KeyValuePair<string, string>("OldAnim","Animation"),
@@ -115,18 +115,18 @@ namespace Trinity.Editor
         {
             ReferenceCollector target = (ReferenceCollector)this.target;
 
-            tempList.Clear();
+            m_TempList.Clear();
             foreach (ObjData data in target.ObjDatas)
             {
-                tempList.Add(new ObjData(data.Name, data.Obj));
+                m_TempList.Add(new ObjData(data.Name, data.Obj));
             }
-            tempList.Sort((x, y) =>
+            m_TempList.Sort((x, y) =>
             {
                 return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
             });
 
             m_ObjDatas.ClearArray();
-            foreach (ObjData data in tempList)
+            foreach (ObjData data in m_TempList)
             {
                 AddReference(data.Name, data.Obj);
             }
@@ -173,7 +173,7 @@ namespace Trinity.Editor
             {
 
                 string childPrefix = string.Empty;
-                foreach (KeyValuePair<string, string> prefix in prefixesMap)
+                foreach (KeyValuePair<string, string> prefix in m_PrefixesMap)
                 {
                     if (child.name.Length <= prefix.Key.Length)
                     {

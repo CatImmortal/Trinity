@@ -99,13 +99,12 @@ namespace Trinity.Hotfix
 
                 m_UsingReferenceCount++;
                 m_AcquireReferenceCount++;
-                lock (m_References)
+
+                if (m_References.Count > 0)
                 {
-                    if (m_References.Count > 0)
-                    {
-                        return (T)m_References.Dequeue();
-                    }
+                    return (T)m_References.Dequeue();
                 }
+
 
                 m_AddReferenceCount++;
                 return new T();
@@ -115,13 +114,12 @@ namespace Trinity.Hotfix
             {
                 m_UsingReferenceCount++;
                 m_AcquireReferenceCount++;
-                lock (m_References)
+
+                if (m_References.Count > 0)
                 {
-                    if (m_References.Count > 0)
-                    {
-                        return m_References.Dequeue();
-                    }
+                    return m_References.Dequeue();
                 }
+
 
                 m_AddReferenceCount++;
                 return (IReference)Activator.CreateInstance(m_ReferenceType);
@@ -130,15 +128,14 @@ namespace Trinity.Hotfix
             public void Release(IReference reference)
             {
                 reference.Clear();
-                lock (m_References)
-                {
-                    if (m_References.Contains(reference))
-                    {
-                        throw new GameFrameworkException("The reference has been released.");
-                    }
 
-                    m_References.Enqueue(reference);
+                if (m_References.Contains(reference))
+                {
+                    throw new GameFrameworkException("The reference has been released.");
                 }
+
+                m_References.Enqueue(reference);
+
 
                 m_ReleaseReferenceCount++;
                 m_UsingReferenceCount--;
@@ -151,52 +148,48 @@ namespace Trinity.Hotfix
                     throw new GameFrameworkException("Type is invalid.");
                 }
 
-                lock (m_References)
+
+                m_AddReferenceCount += count;
+                while (count-- > 0)
                 {
-                    m_AddReferenceCount += count;
-                    while (count-- > 0)
-                    {
-                        m_References.Enqueue(new T());
-                    }
+                    m_References.Enqueue(new T());
                 }
+
             }
 
             public void Add(int count)
             {
-                lock (m_References)
+
+                m_AddReferenceCount += count;
+                while (count-- > 0)
                 {
-                    m_AddReferenceCount += count;
-                    while (count-- > 0)
-                    {
-                        m_References.Enqueue((IReference)Activator.CreateInstance(m_ReferenceType));
-                    }
+                    m_References.Enqueue((IReference)Activator.CreateInstance(m_ReferenceType));
                 }
+
             }
 
             public void Remove(int count)
             {
-                lock (m_References)
-                {
-                    if (count > m_References.Count)
-                    {
-                        count = m_References.Count;
-                    }
 
-                    m_RemoveReferenceCount += count;
-                    while (count-- > 0)
-                    {
-                        m_References.Dequeue();
-                    }
+                if (count > m_References.Count)
+                {
+                    count = m_References.Count;
                 }
+
+                m_RemoveReferenceCount += count;
+                while (count-- > 0)
+                {
+                    m_References.Dequeue();
+                }
+
             }
 
             public void RemoveAll()
             {
-                lock (m_References)
-                {
-                    m_RemoveReferenceCount += m_References.Count;
-                    m_References.Clear();
-                }
+
+                m_RemoveReferenceCount += m_References.Count;
+                m_References.Clear();
+
             }
         }
     }

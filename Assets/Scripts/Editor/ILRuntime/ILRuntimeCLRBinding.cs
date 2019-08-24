@@ -44,7 +44,7 @@ namespace Trinity.Editor
             {
                 domain.LoadAssembly(fs);
                 //Crossbind Adapter is needed to generate the correct binding code
-                ILRuntimeUtility.InitILRuntime(domain);
+                ILRuntimeHelper.InitILRuntime(domain);
                 ILRuntime.Runtime.CLRBinding.BindingCodeGenerator.GenerateBindingCode(domain, "Assets/Scripts/GameMain/Customs/CustomComponents/ILRuntime/Generated");
                 AssetDatabase.Refresh();
             }

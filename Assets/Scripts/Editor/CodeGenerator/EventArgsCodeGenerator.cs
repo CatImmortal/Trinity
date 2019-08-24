@@ -7,7 +7,7 @@ using System.IO;
 
 namespace Trinity.Editor
 {
-   
+
     /// <summary>
     /// 事件参数类代码生成器
     /// </summary>
@@ -79,8 +79,8 @@ namespace Trinity.Editor
         private string m_ClassName;
 
         //事件代码生成后的路径
-        private const string EventCodePath = "Assets/Scripts/GameMain/Event";
-        private const string HotfixEventCodePath = "Assets/Scripts/Hotfix/Event";
+        private const string EventCodePath = "Assets/Scripts/GameMain/EventArgs";
+        private const string HotfixEventCodePath = "Assets/Scripts/Hotfix/EventArgs";
         private void OnEnable()
         {
             m_EventArgsDatas.Clear();
@@ -175,7 +175,7 @@ namespace Trinity.Editor
             //根据是否为热更新层事件来决定一些参数
             string codepath = m_IsHotfixEvent ? HotfixEventCodePath : EventCodePath;
             string nameSpace = m_IsHotfixEvent ? "Trinity.Hotfix" : "Trinity";
-
+            string baseClass = m_IsHotfixEvent ? "HotfixGameEventArgs" : "GameEventArgs";
             using (StreamWriter sw = new StreamWriter($"{codepath}/{m_ClassName}.cs"))
             {
                 sw.WriteLine("using UnityEngine;");
@@ -190,7 +190,7 @@ namespace Trinity.Editor
                 sw.WriteLine("");
 
                 //类名
-                sw.WriteLine($"\tpublic class {m_ClassName} : GameEventArgs");
+                sw.WriteLine($"\tpublic class {m_ClassName} : {baseClass}");
                 sw.WriteLine("\t{");
                 sw.WriteLine("");
 

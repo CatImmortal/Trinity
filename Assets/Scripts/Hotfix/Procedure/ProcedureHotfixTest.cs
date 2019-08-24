@@ -24,7 +24,7 @@ namespace Trinity.Hotfix
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
             if (Input.GetKeyDown(KeyCode.A))
             {
-                Session session = ETNetwork.CreateHotfixSession(GameEntry.ETNetwork.CreateSession(GameEntry.ETNetwork.ServerIP));
+                Session session = HotfixGameEntry.ETNetwork.CreateHotfixSession();
                 session.Send(new HotfixTestMessage() { Info = "6666" });
 
                 HotfixRpcResponse response = (HotfixRpcResponse)await session.Call(new HotfixRpcRequest() { Info = "Hello Server" });

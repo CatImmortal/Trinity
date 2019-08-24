@@ -115,7 +115,7 @@ namespace Trinity
             if (ILRuntimeMode)
             {
                 AppDomain = new AppDomain();
-                ILRuntimeUtility.InitILRuntime(AppDomain);
+                ILRuntimeHelper.InitILRuntime(AppDomain);
 
                 //启动调试服务器
                 AppDomain.DebugService.StartDebugService(56000);

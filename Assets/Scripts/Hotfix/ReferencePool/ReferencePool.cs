@@ -38,14 +38,12 @@ namespace Trinity.Hotfix
             int index = 0;
             ReferencePoolInfo[] results = null;
 
-            lock (s_ReferenceCollections)
+            results = new ReferencePoolInfo[s_ReferenceCollections.Count];
+            foreach (KeyValuePair<string, ReferenceCollection> referenceCollection in s_ReferenceCollections)
             {
-                results = new ReferencePoolInfo[s_ReferenceCollections.Count];
-                foreach (KeyValuePair<string, ReferenceCollection> referenceCollection in s_ReferenceCollections)
-                {
-                    results[index++] = new ReferencePoolInfo(referenceCollection.Key, referenceCollection.Value.UnusedReferenceCount, referenceCollection.Value.UsingReferenceCount, referenceCollection.Value.AcquireReferenceCount, referenceCollection.Value.ReleaseReferenceCount, referenceCollection.Value.AddReferenceCount, referenceCollection.Value.RemoveReferenceCount);
-                }
+                results[index++] = new ReferencePoolInfo(referenceCollection.Key, referenceCollection.Value.UnusedReferenceCount, referenceCollection.Value.UsingReferenceCount, referenceCollection.Value.AcquireReferenceCount, referenceCollection.Value.ReleaseReferenceCount, referenceCollection.Value.AddReferenceCount, referenceCollection.Value.RemoveReferenceCount);
             }
+
 
             return results;
         }
@@ -55,15 +53,14 @@ namespace Trinity.Hotfix
         /// </summary>
         public static void ClearAll()
         {
-            lock (s_ReferenceCollections)
-            {
-                foreach (KeyValuePair<string, ReferenceCollection> referenceCollection in s_ReferenceCollections)
-                {
-                    referenceCollection.Value.RemoveAll();
-                }
 
-                s_ReferenceCollections.Clear();
+            foreach (KeyValuePair<string, ReferenceCollection> referenceCollection in s_ReferenceCollections)
+            {
+                referenceCollection.Value.RemoveAll();
             }
+
+            s_ReferenceCollections.Clear();
+
         }
 
         /// <summary>
@@ -205,14 +202,13 @@ namespace Trinity.Hotfix
 
             string fullName = referenceType.FullName;
             ReferenceCollection referenceCollection = null;
-            lock (s_ReferenceCollections)
+
+            if (!s_ReferenceCollections.TryGetValue(fullName, out referenceCollection))
             {
-                if (!s_ReferenceCollections.TryGetValue(fullName, out referenceCollection))
-                {
-                    referenceCollection = new ReferenceCollection(referenceType);
-                    s_ReferenceCollections.Add(fullName, referenceCollection);
-                }
+                referenceCollection = new ReferenceCollection(referenceType);
+                s_ReferenceCollections.Add(fullName, referenceCollection);
             }
+
 
             return referenceCollection;
         }
