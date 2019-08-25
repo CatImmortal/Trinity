@@ -1,14 +1,12 @@
-﻿using ETHotfix;
-using UnityEngine;
-using Trinity.Hotfix;
-using Log = UnityGameFramework.Runtime.Log;
+﻿
+using UnityGameFramework.Runtime;
 
 namespace Trinity.Hotfix
 {
     /// <summary>
     /// 热更新层游戏入口
     /// </summary>
-    public class HotfixGameEntry
+    public static class HotfixGameEntry
     {
 
         /// <summary>
@@ -47,8 +45,7 @@ namespace Trinity.Hotfix
             private set;
         }
 
-
-        public void Start()
+        public static void Start()
         {
             Log.Info("热更新层启动!");
 
@@ -57,26 +54,27 @@ namespace Trinity.Hotfix
             Event = new EventManager();
             ETNetwork = new ETNetworkManager();
 
-            //初始化流程管理器并开始流程
+            //初始化ET网络
+            ETNetwork.Init();
+
+            //初始化流程管理器
             //TODO:可修改为使用反射获取到所有流程然后注册
             Procedure.Initialize(Fsm
                 , new ProcedureHotfixEntry()
                 , new ProcedureChangeScene()
                 );
 
+            //开始热更新层入口流程
             Procedure.StartProcedure<ProcedureHotfixEntry>();
-
-            //初始化ET网络
-            ETNetwork.Init();
         }
 
-        public void Update(float elapseSeconds, float realElapseSeconds)
+        public static void Update(float elapseSeconds, float realElapseSeconds)
         {
             Fsm.Update(elapseSeconds, realElapseSeconds);
             Event.Update(elapseSeconds, realElapseSeconds);
         }
 
-        public void ShutDown()
+        public static void Shutdown()
         {
             Procedure.Shutdown();
             Fsm.Shutdown();

@@ -21,12 +21,15 @@ namespace Trinity
         private static TaskCompletionSource<bool> s_SceneTcs;
         private static TaskCompletionSource<byte[]> s_WebRequestTcs;
         private static TaskCompletionSource<bool> s_DownloadTcs;
+        private static TaskCompletionSource<object> s_LoadAssetTcs;
+
 
         private static int? s_UIFormSerialId;
         private static int s_EntitySerialId;
         private static string s_LoadSceneAssetName;
         private static int s_WebRequestSerialId;
         private static int s_DownloadSerialId;
+        private static LoadAssetCallbacks s_LoadAssetCallbacks;
 
         static AwaitableExtension()
         {
@@ -48,27 +51,28 @@ namespace Trinity
             s_UIFormSerialId = null;
             s_EntitySerialId = int.MinValue;
             s_LoadSceneAssetName = null;
-            s_WebRequestSerialId = -1;
-            s_DownloadSerialId = -1;
+            s_WebRequestSerialId = int.MinValue;
+            s_DownloadSerialId = int.MinValue;
+            s_LoadAssetCallbacks = new LoadAssetCallbacks(OnLoadAssetSuccess, OnLoadAssetFailure);
         }
 
         /// <summary>
         /// 打开界面（可等待）
         /// </summary>
-        public static Task<UIForm> AwaitOpenUIForm(this UIComponent uiComponent, UIFormId uiFormId, object userData = null)
+        public static Task<UIForm> AwaitOpenUIForm(this UIComponent self, UIFormId uiFormId, object userData = null)
         {
             s_UIFormTcs = new TaskCompletionSource<UIForm>();
-            s_UIFormSerialId = GameEntry.UI.OpenUIForm(uiFormId, userData);
+            s_UIFormSerialId = self.OpenUIForm(uiFormId, userData);
             return s_UIFormTcs.Task;
         }
 
         /// <summary>
         /// 打开界面（可等待）
         /// </summary>
-        public static Task<UIForm> AwaitOpenUIForm(this UIComponent uiComponent, int uiFormId, object userData = null)
+        public static Task<UIForm> AwaitOpenUIForm(this UIComponent self, int uiFormId, object userData = null)
         {
             s_UIFormTcs = new TaskCompletionSource<UIForm>();
-            s_UIFormSerialId = GameEntry.UI.OpenUIForm(uiFormId, userData);
+            s_UIFormSerialId = self.OpenUIForm(uiFormId, userData);
             return s_UIFormTcs.Task;
         }
 
@@ -95,22 +99,22 @@ namespace Trinity
         /// <summary>
         /// 显示实体（可等待）
         /// </summary>
-        public static Task<Entity> AwaitShowEntity(this EntityComponent entityComponent, Type logicType, int priority, EntityData data)
+        public static Task<Entity> AwaitShowEntity(this EntityComponent self, Type logicType, int priority, EntityData data)
         {
             s_EntityTcs = new TaskCompletionSource<Entity>();
             s_EntitySerialId = data.Id;
-            entityComponent.ShowEntity(logicType, priority, data);
+            self.ShowEntity(logicType, priority, data);
             return s_EntityTcs.Task;
         }
 
         /// <summary>
         /// 显示热更新层实体（可等待）
         /// </summary>
-        public static Task<Entity> AwaitShowHotfixEntity(this EntityComponent entityComponent, int priority, HotfixEntityData data)
+        public static Task<Entity> AwaitShowHotfixEntity(this EntityComponent self, int priority, HotfixEntityData data)
         {
             s_EntityTcs = new TaskCompletionSource<Entity>();
             s_EntitySerialId = data.Id;
-            entityComponent.ShowHotfixEntity(priority, data);
+            self.ShowHotfixEntity(priority, data);
             return s_EntityTcs.Task;
         }
 
@@ -139,11 +143,11 @@ namespace Trinity
         /// <summary>
         /// 加载场景（可等待）
         /// </summary>
-        public static Task<bool> AwaitLoadScene(this SceneComponent sceneComponent, string sceneAssetName)
+        public static Task<bool> AwaitLoadScene(this SceneComponent self, string sceneAssetName)
         {
             s_SceneTcs = new TaskCompletionSource<bool>();
             s_LoadSceneAssetName = sceneAssetName;
-            GameEntry.Scene.LoadScene(sceneAssetName);
+            self.LoadScene(sceneAssetName);
             return s_SceneTcs.Task;
         }
         private static void OnLoadSceneSuccess(object sender, GameEventArgs e)
@@ -166,33 +170,57 @@ namespace Trinity
             }
         }
 
+
+        /// <summary>
+        /// 加载多个资源（可等待）
+        /// </summary>
+        public static async Task<object[]> AwaitLoadAssets(this ResourceComponent self, string[] assetNames)
+        {
+            object[] assets = new object[assetNames.Length]; ;
+
+            for (int i = 0; i < assetNames.Length; i++)
+            {
+                assets[i] = await self.AwaitLoadAsset<object>(assetNames[i]);
+            }
+
+            return assets;
+        }
+
         /// <summary>
         /// 加载资源（可等待）
         /// </summary>
-        public static Task<T> AwaitLoadAsset<T>(this ResourceComponent resourceComponent, string assetName) where T : class
+        public static async Task<T> AwaitLoadAsset<T>(this ResourceComponent self, string assetName)
         {
-            TaskCompletionSource<T> loadAssetTcs = new TaskCompletionSource<T>();
-            GameEntry.Resource.LoadAsset(assetName, new LoadAssetCallbacks(
-                (tempAssetName, asset, duration, userData) => {
-                    loadAssetTcs.SetResult(asset as T);
-                },
-                (tempAssetName, status, errorMessage, userData) => {
-                    loadAssetTcs.SetException(new GameFrameworkException(errorMessage));
-                }
-
-            ));
-            return loadAssetTcs.Task;
+            object asset = await self.AwaitInternalLoadAsset<T>(assetName);
+            return (T)asset;
         }
 
+        private static Task<object> AwaitInternalLoadAsset<T>(this ResourceComponent self, string assetName)
+        {
+            s_LoadAssetTcs = new TaskCompletionSource<object>();
 
+            self.LoadAsset(assetName, typeof(T), s_LoadAssetCallbacks);
+
+            return s_LoadAssetTcs.Task;
+        }
+
+        private static void OnLoadAssetSuccess(string assetName, object asset, float duration, object userData)
+        {
+            s_LoadAssetTcs.SetResult(asset);
+        }
+
+        private static void OnLoadAssetFailure(string assetName, LoadResourceStatus status, string errorMessage, object userData)
+        {
+            s_LoadAssetTcs.SetException(new GameFrameworkException(errorMessage));
+        }
 
         /// <summary>
         /// 增加Web请求任务（可等待）
         /// </summary>
-        public static Task<byte[]> AwaitAddWebRequest(this WebRequestComponent webRequestComponent, string webRequestUri, byte[] postData = null)
+        public static Task<byte[]> AwaitAddWebRequest(this WebRequestComponent self, string webRequestUri, byte[] postData = null)
         {
             s_WebRequestTcs = new TaskCompletionSource<byte[]>();
-            s_WebRequestSerialId = webRequestComponent.AddWebRequest(webRequestUri, postData);
+            s_WebRequestSerialId = self.AddWebRequest(webRequestUri, postData);
             return s_WebRequestTcs.Task;
         }
 
@@ -219,10 +247,10 @@ namespace Trinity
         /// <summary>
         /// 增加下载任务（可等待)
         /// </summary>
-        public static Task<bool> AwaitAddDownload(this DownloadComponent downloadComponent, string downloadPath, string downloadUri)
+        public static Task<bool> AwaitAddDownload(this DownloadComponent self, string downloadPath, string downloadUri)
         {
             s_DownloadTcs = new TaskCompletionSource<bool>();
-            s_DownloadSerialId = downloadComponent.AddDownload(downloadPath, downloadUri);
+            s_DownloadSerialId = self.AddDownload(downloadPath, downloadUri);
             return s_DownloadTcs.Task;
         }
 

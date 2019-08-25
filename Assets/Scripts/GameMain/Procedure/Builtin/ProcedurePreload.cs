@@ -24,8 +24,6 @@ namespace Trinity
 
         private Dictionary<string, bool> m_LoadedFlag = new Dictionary<string, bool>();
 
-        private bool m_CanUpdate = true;
-
         protected override void OnEnter(ProcedureOwner procedureOwner)
         {
             base.OnEnter(procedureOwner);
@@ -56,7 +54,6 @@ namespace Trinity
 
         protected override void OnUpdate(ProcedureOwner procedureOwner, float elapseSeconds, float realElapseSeconds)
         {
-
             base.OnUpdate(procedureOwner, elapseSeconds, realElapseSeconds);
 
             IEnumerator<bool> iter = m_LoadedFlag.Values.GetEnumerator();
@@ -68,18 +65,19 @@ namespace Trinity
                 }
             }
 
-            //不使用ILRuntime模式 或者 使用ILRuntime模式并且热更新DLL已加载完成时，进入下一个场景
+            //不使用ILRuntime模式 进入下一个场景
             if (!GameEntry.ILRuntime.ILRuntimeMode)
             {
                 //TODO:在这里切换到游戏的正式开始场景
                 procedureOwner.SetData<VarInt>(Constant.ProcedureData.NextSceneId, (int)SceneId.TestScene);
                 ChangeState<ProcedureChangeScene>(procedureOwner);
             }
-            else if (GameEntry.ILRuntime.HotfixLoaded)
+            else
             {
-                //调用热更新层入口方法,开始热更新层流程
-                GameEntry.ILRuntime.HotfixStart();
-                m_CanUpdate = false;
+                //加载热更新DLL
+                GameEntry.ILRuntime.LoadHotfixDLL();
+
+                GameEntry.Fsm.DestroyFsm<IProcedureManager>();
             }
 
 
@@ -99,9 +97,6 @@ namespace Trinity
             //LoadDictionary("Default");
 
             //LoadFont("MainFont");
-
-            //加载热更新DLL
-            GameEntry.ILRuntime.LoadHotfixDLL();
         }
 
         private void LoadConfig(string configName)
@@ -122,22 +117,22 @@ namespace Trinity
             GameEntry.Localization.LoadDictionary(dictionaryName, LoadType.Text, this);
         }
 
-        private void LoadFont(string fontName)
-        {
-            m_LoadedFlag.Add(Utility.Text.Format("Font.{0}", fontName), false);
-            GameEntry.Resource.LoadAsset(AssetUtility.GetFontAsset(fontName), Constant.AssetPriority.FontAsset, new LoadAssetCallbacks(
-                (assetName, asset, duration, userData) =>
-                {
-                    m_LoadedFlag[Utility.Text.Format("Font.{0}", fontName)] = true;
-                    UGuiForm.SetMainFont((Font)asset);
-                    Log.Info("Load font '{0}' OK.", fontName);
-                },
+        //private void LoadFont(string fontName)
+        //{
+        //    m_LoadedFlag.Add(Utility.Text.Format("Font.{0}", fontName), false);
+        //    GameEntry.Resource.LoadAsset(AssetUtility.GetFontAsset(fontName), Constant.AssetPriority.FontAsset, new LoadAssetCallbacks(
+        //        (assetName, asset, duration, userData) =>
+        //        {
+        //            m_LoadedFlag[Utility.Text.Format("Font.{0}", fontName)] = true;
+        //            UGuiForm.SetMainFont((Font)asset);
+        //            Log.Info("Load font '{0}' OK.", fontName);
+        //        },
 
-                (assetName, status, errorMessage, userData) =>
-                {
-                    Log.Error("Can not load font '{0}' from '{1}' with error message '{2}'.", fontName, assetName, errorMessage);
-                }));
-        }
+        //        (assetName, status, errorMessage, userData) =>
+        //        {
+        //            Log.Error("Can not load font '{0}' from '{1}' with error message '{2}'.", fontName, assetName, errorMessage);
+        //        }));
+        //}
 
         private void OnLoadConfigSuccess(object sender, GameEventArgs e)
         {

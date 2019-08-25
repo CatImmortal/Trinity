@@ -6,6 +6,7 @@ using ILRuntime.Runtime.Intepreter;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 using UnityEngine.Events;
 using AppDomain = ILRuntime.Runtime.Enviorment.AppDomain;
 
@@ -81,6 +82,10 @@ namespace Trinity
             appDomain.RegisterCrossBindingAdaptor(new IDisposableAdaptor());
             appDomain.RegisterCrossBindingAdaptor(new IAsyncStateMachineAdaptor());
 
+            //TODO:注册值类型绑定
+            appDomain.RegisterValueTypeBinder(typeof(Vector3), new Vector3Binder());
+            appDomain.RegisterValueTypeBinder(typeof(Quaternion), new QuaternionBinder());
+            appDomain.RegisterValueTypeBinder(typeof(Vector2), new Vector2Binder());
 
             //注册LitJson
             LitJson.JsonMapper.RegisterILRuntimeCLRRedirection(appDomain);

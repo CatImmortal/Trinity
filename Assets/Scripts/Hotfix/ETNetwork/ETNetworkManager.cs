@@ -20,8 +20,6 @@ namespace Trinity.Hotfix
             }
         }
 
-
-
         public void Shutdown()
         {
             Game.Close();

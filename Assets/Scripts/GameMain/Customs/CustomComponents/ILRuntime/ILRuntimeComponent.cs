@@ -1,4 +1,5 @@
 ﻿using GameFramework.Resource;
+using ILRuntime.CLR.Method;
 using ILRuntime.CLR.TypeSystem;
 using System;
 using System.Collections.Generic;
@@ -18,37 +19,9 @@ namespace Trinity
         [SerializeField]
         private bool m_ILRuntimeMode;
 
-        /// <summary>
-        /// 资源加载回调方法集
-        /// </summary>
-        private LoadAssetCallbacks m_LoadAssetCallbacks;
+        private IMethod m_Update;
 
-        /// <summary>
-        /// Hotfix.dll是否已加载
-        /// </summary>
-        private bool m_DLLLoaded;
-
-        /// <summary>
-        /// Hotfix.pdb是否已加载
-        /// </summary>
-        private bool m_PDBLoaded;
-
-        /// <summary>
-        /// 保存Hotfix.dll的字节数组
-        /// </summary>
-        private byte[] m_DLL;
-
-        /// <summary>
-        /// 保存Hotfix.pdb的字节数组
-        /// </summary>
-        private byte[] m_PDB;
-
-        private ILInstanceMethod m_Update;
-        private ILInstanceMethod m_ShutDown;
-
-        private MemoryStream m_DLLStream;
-        private MemoryStream m_PDBStream;
-
+        private IMethod m_Shutdown;
 
         /// <summary>
         /// 是否开启ILRuntime模式
@@ -70,23 +43,29 @@ namespace Trinity
             private set;
         }
 
-        /// <summary>
-        /// 热更新DLL是否已加载完成
-        /// </summary>
-        public bool HotfixLoaded
-        {
-            get;
-            private set;
-        }
-
         private void Update()
         {
-            m_Update?.Invoke(Time.deltaTime, Time.unscaledDeltaTime);
+            if (m_Update == null)
+            {
+                return;
+            }
+
+            using (var ctx = AppDomain.BeginInvoke(m_Update))
+            {
+                ctx.PushFloat(Time.deltaTime);
+                ctx.PushFloat(Time.unscaledDeltaTime);
+                ctx.Invoke();
+            }
         }
 
         private void OnDestroy()
         {
-            m_ShutDown?.Invoke();
+            if (m_Shutdown == null)
+            {
+                return;
+            }
+
+            AppDomain.Invoke(m_Shutdown, null, null);
         }
 
         /// <summary>
@@ -108,86 +87,48 @@ namespace Trinity
         /// <summary>
         /// 加载热更新DLL
         /// </summary>
-        public void LoadHotfixDLL()
+        public async void LoadHotfixDLL()
         {
-            HotfixLoaded = false;
+            AppDomain = new AppDomain();
+            ILRuntimeHelper.InitILRuntime(AppDomain);
 
-            if (ILRuntimeMode)
-            {
-                AppDomain = new AppDomain();
-                ILRuntimeHelper.InitILRuntime(AppDomain);
+            TextAsset dllAsset = await GameEntry.Resource.AwaitLoadAsset<TextAsset>(AssetUtility.GetHotfixDLLAsset("Hotfix.dll"));
+            byte[] dll = dllAsset.bytes;
+            Log.Info("hotfix dll加载完毕");
 
-                //启动调试服务器
-                AppDomain.DebugService.StartDebugService(56000);
-                Log.Info("启动了ILRuntime调试服务器");
+#if DEBUG && !DISABLE_ILRUNTIME_DEBUG
+            TextAsset pdbAsset = await GameEntry.Resource.AwaitLoadAsset<TextAsset>(AssetUtility.GetHotfixDLLAsset("Hotfix.pdb"));
+            byte[] pdb = pdbAsset.bytes;
+            Log.Info("hotfix pdb加载完毕");
 
-                m_LoadAssetCallbacks = new LoadAssetCallbacks(OnLoadHotfixDLLSuccess, OnLoadHotfixDLLFailure);
+            AppDomain.LoadAssembly(new MemoryStream(dll), new MemoryStream(pdb), new Mono.Cecil.Pdb.PdbReaderProvider());
+#endif
 
-                GameEntry.Resource.LoadAsset(AssetUtility.GetHotfixDLLAsset("Hotfix.dll"), typeof(TextAsset), m_LoadAssetCallbacks, 1);
-                GameEntry.Resource.LoadAsset(AssetUtility.GetHotfixDLLAsset("Hotfix.pdb"), typeof(TextAsset), m_LoadAssetCallbacks, 2);
-            }
+            AppDomain.LoadAssembly(new MemoryStream(dll));
 
-        }
+            //启动调试服务器
+            AppDomain.DebugService.StartDebugService(56000);
 
-        private void OnLoadHotfixDLLSuccess(string assetName, object asset, float duration, object userData)
-        {
+            //设置Unity主线程ID 这样就可以用Profiler看性能消耗了
+            AppDomain.UnityMainThreadID = System.Threading.Thread.CurrentThread.ManagedThreadId;
 
-            if ((int)userData == 1)
-            {
-                Log.Info("Hotfix.dll加载成功");
-                m_DLLLoaded = true;
-                m_DLL = ((TextAsset)asset).bytes;
-            }
-            else
-            {
-                Log.Info("Hotfix.pdb加载成功");
-                m_PDBLoaded = true;
-                m_PDB = ((TextAsset)asset).bytes;
-            }
-
-            if (m_DLLLoaded && m_PDBLoaded)
-            {
-                HotfixLoaded = true;
-
-                m_DLLLoaded = false;
-                m_PDBLoaded = false;
-
-                m_DLLStream = new MemoryStream(m_DLL);
-                m_PDBStream = new MemoryStream(m_PDB);
-
-                AppDomain.LoadAssembly(m_DLLStream, m_PDBStream, new Mono.Cecil.Pdb.PdbReaderProvider());
-
-            }
-        }
-
-        private void OnLoadHotfixDLLFailure(string assetName, LoadResourceStatus status, string errorMessage, object userData)
-        {
-            if ((int)userData == 1)
-            {
-                Log.Error("Hotfix.dll加载失败：{0}", errorMessage);
-            }
-            else
-            {
-                Log.Error("Hotfix.pdb加载失败：{0}", errorMessage);
-            }
+            HotfixStart();
         }
 
         /// <summary>
         /// 开始执行热更新层代码
         /// </summary>
-        public void HotfixStart()
+        private void HotfixStart()
         {
-            string typeFullName = "Trinity.Hotfix.HotfixEntry";
+            string typeFullName = "Trinity.Hotfix.HotfixGameEntry";
             IType type = AppDomain.LoadedTypes[typeFullName];
-            object hotfixInstance = ((ILType)type).Instantiate();
 
-            AppDomain.Invoke(typeFullName, "Start", hotfixInstance, null);
+            AppDomain.Invoke(typeFullName, "Start", null, null);
 
-            m_Update = new ILInstanceMethod(hotfixInstance, typeFullName, "Update", 2);
-            m_ShutDown = new ILInstanceMethod(hotfixInstance, typeFullName, "ShutDown", 0);
+            m_Update = type.GetMethod("Update", 2);
+            m_Shutdown = type.GetMethod("Shutdown", 0);
+
         }
-
-
     }
 
 }
