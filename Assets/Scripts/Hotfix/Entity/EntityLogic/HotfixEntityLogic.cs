@@ -14,7 +14,7 @@ namespace Trinity.Hotfix
         /// <summary>
         /// 主工程的实体逻辑脚本
         /// </summary>
-        protected HotfixEntity EntityLogic
+        protected Trinity.HotfixEntityLogic EntityLogic
         {
             get;
             private set;
@@ -23,7 +23,7 @@ namespace Trinity.Hotfix
         /// <summary>
         /// 实体初始化
         /// </summary>
-        public virtual void OnInit(HotfixEntity entityLogic, object userData)
+        public virtual void OnInit(Trinity.HotfixEntityLogic entityLogic, object userData)
         {
             EntityLogic = entityLogic;
         }

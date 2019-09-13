@@ -19,6 +19,11 @@ namespace Trinity
         [SerializeField]
         private string m_HotfixUGuiFormName;
 
+        /// <summary>
+        /// 对应的热更新层实体逻辑类实例
+        /// </summary>
+        private object m_HotfixInstance;
+
         //热更新层的方法缓存
         private ILInstanceMethod m_OnOpen;
         private ILInstanceMethod m_OnClose;
@@ -27,32 +32,16 @@ namespace Trinity
         private ILInstanceMethod m_OnCover;
         private ILInstanceMethod m_OnReveal;
         private ILInstanceMethod m_OnRefocus;
-        private ILInstanceMethod m_OnUpdate;
-        private ILInstanceMethod m_OnDepthChanged;
+        private IMethod m_OnUpdate;
+        private IMethod m_OnDepthChanged;
 
-        [SerializeField]
-        private bool m_CanUpdate;
 
-        /// <summary>
-        /// 是否调用Update方法
-        /// </summary>
-        public bool CanUpdate
-        {
-            get
-            {
-                return m_CanUpdate;
-            }
 
-            set
-            {
-                m_CanUpdate = value;
-            }
-        }
 
         /// <summary>
         /// 界面初始化（热更新层新增界面用）
         /// </summary>
-        public void OnHotfixInit(string hotfixUGuiFormName,object userData = null)
+        public void OnHotfixInit(string hotfixUGuiFormName, object userData = null)
         {
             if (string.IsNullOrEmpty(m_HotfixUGuiFormName))
             {
@@ -67,7 +56,7 @@ namespace Trinity
         protected override void OnInit(object userData)
         {
             base.OnInit(userData);
-            
+
             string hotfixUGuiFormFullName = Utility.Text.Format("{0}.{1}", "Trinity.Hotfix", m_HotfixUGuiFormName);
 
             //获取热更新层的实例
@@ -82,11 +71,11 @@ namespace Trinity
             m_OnCover = new ILInstanceMethod(hotfixInstance, hotfixUGuiFormFullName, "OnCover", 0);
             m_OnReveal = new ILInstanceMethod(hotfixInstance, hotfixUGuiFormFullName, "OnReveal", 0);
             m_OnRefocus = new ILInstanceMethod(hotfixInstance, hotfixUGuiFormFullName, "OnRefocus", 1);
-            m_OnUpdate = new ILInstanceMethod(hotfixInstance, hotfixUGuiFormFullName, "OnUpdate", 2);
-            m_OnDepthChanged = new ILInstanceMethod(hotfixInstance, hotfixUGuiFormFullName, "OnDepthChanged", 2);
+            m_OnUpdate = type.GetMethod("OnUpdate", 2);
+            m_OnDepthChanged = type.GetMethod("OnDepthChanged", 2);
 
             //调用热更新层的OnInit
-            GameEntry.ILRuntime.AppDomain.Invoke(hotfixUGuiFormFullName, "OnInit", hotfixInstance, this,userData);
+            GameEntry.ILRuntime.AppDomain.Invoke(hotfixUGuiFormFullName, "OnInit", hotfixInstance, this, userData);
 
         }
 
@@ -141,22 +130,29 @@ namespace Trinity
 
         protected override void OnUpdate(float elapseSeconds, float realElapseSeconds)
         {
-            if (!CanUpdate)
-            {
-                return;
-            }
 
             base.OnUpdate(elapseSeconds, realElapseSeconds);
 
-            m_OnUpdate?.Invoke(elapseSeconds, realElapseSeconds);
-
+            using (var ctx = GameEntry.ILRuntime.AppDomain.BeginInvoke(m_OnUpdate))
+            {
+                ctx.PushObject(m_HotfixInstance);
+                ctx.PushFloat(elapseSeconds);
+                ctx.PushFloat(realElapseSeconds);
+                ctx.Invoke();
+            }
         }
 
         protected override void OnDepthChanged(int uiGroupDepth, int depthInUIGroup)
         {
             base.OnDepthChanged(uiGroupDepth, depthInUIGroup);
 
-            m_OnDepthChanged?.Invoke(uiGroupDepth, depthInUIGroup);
+            using (var ctx = GameEntry.ILRuntime.AppDomain.BeginInvoke(m_OnDepthChanged))
+            {
+                ctx.PushObject(m_HotfixInstance);
+                ctx.PushInteger(uiGroupDepth);
+                ctx.PushInteger(depthInUIGroup);
+                ctx.Invoke();
+            }
         }
     }
 

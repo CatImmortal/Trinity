@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
 using ObjData = Trinity.ReferenceCollector.ObjData;
+
 namespace Trinity.Editor
 {
     /// <summary>
@@ -164,7 +163,7 @@ namespace Trinity.Editor
 
                 if (m_IsGenGetObjectsCode)
                 {
-                    GenGetObjectsCode(codepath, go, nameSpace, logicBaseClass, getComponent);
+                    GenGetObjectsCode(codepath, go, nameSpace, logicBaseClass, getComponent, "Logic");
                 }
 
                 if (m_IsGenShowEntityCode)
@@ -214,6 +213,8 @@ namespace Trinity.Editor
                 accessModifier = "public";
             }
 
+
+
             using (StreamWriter sw = new StreamWriter($"{codePath}/EntityLogic/{go.name}.cs"))
             {
                 sw.WriteLine("using System.Collections;");
@@ -233,7 +234,7 @@ namespace Trinity.Editor
                 sw.WriteLine("");
 
                 //类名
-                sw.WriteLine($"\tpublic partial class {go.name} : {logicBaseClass}");
+                sw.WriteLine($"\tpublic partial class {go.name}Logic : {logicBaseClass}");
                 sw.WriteLine("\t{");
                 sw.WriteLine("");
 
@@ -324,11 +325,16 @@ namespace Trinity.Editor
             }
         }
 
-        private void GenShowEntityCode(string codepath, GameObject go, string nameSpace)
+        private void GenShowEntityCode(string codePath, GameObject go, string nameSpace)
         {
             string entityDataName = go.name + "Data";
 
-            using (StreamWriter sw = new StreamWriter($"{codepath}/ShowEntityExtension/ShowEntityExtension.Show{go.name}.cs"))
+            if (!Directory.Exists($"{codePath}/ShowEntityExtension/"))
+            {
+                Directory.CreateDirectory($"{codePath}/ShowEntityExtension/");
+            }
+
+            using (StreamWriter sw = new StreamWriter($"{codePath}/ShowEntityExtension/ShowEntityExtension.Show{go.name}.cs"))
             {
 
                 sw.WriteLine("using System.Threading.Tasks;");
@@ -353,7 +359,7 @@ namespace Trinity.Editor
                 if (m_IsHotfix)
                 {
                     sw.WriteLine("\t\t\tTrinity.HotfixEntityData tData = GameFramework.ReferencePool.Acquire<Trinity.HotfixEntityData>();");
-                    sw.WriteLine($"\t\t\ttData.Fill(data.Id,data.TypeId,\"{go.name}\",data);");
+                    sw.WriteLine($"\t\t\ttData.Fill(data.Id,data.TypeId,\"{go.name}Logic\",data);");
                     sw.WriteLine("\t\t\ttData.Position = data.Position;");
                     sw.WriteLine("\t\t\ttData.Rotation = data.Rotation;");
                     sw.WriteLine("");
@@ -362,7 +368,7 @@ namespace Trinity.Editor
                 }
                 else
                 {
-                    sw.WriteLine($"\t\t\tentityComponent.ShowEntity(typeof({go.name}), 0, data);");
+                    sw.WriteLine($"\t\t\tentityComponent.ShowEntity(typeof({go.name}Logic), 0, data);");
                 }
 
 
@@ -377,7 +383,7 @@ namespace Trinity.Editor
                 if (m_IsHotfix)
                 {
                     sw.WriteLine("\t\t\tTrinity.HotfixEntityData tData = GameFramework.ReferencePool.Acquire<Trinity.HotfixEntityData>();");
-                    sw.WriteLine($"\t\t\ttData.Fill(data.Id,data.TypeId,\"{go.name}\",data);");
+                    sw.WriteLine($"\t\t\ttData.Fill(data.Id,data.TypeId,\"{go.name}Logic\",data);");
                     sw.WriteLine("\t\t\ttData.Position = data.Position;");
                     sw.WriteLine("\t\t\ttData.Rotation = data.Rotation;");
                     sw.WriteLine("");
@@ -386,7 +392,7 @@ namespace Trinity.Editor
                 }
                 else
                 {
-                    sw.WriteLine($"\t\t\tEntity entity = await entityComponent.AwaitShowEntity(typeof({go.name}), 0, data);");
+                    sw.WriteLine($"\t\t\tEntity entity = await entityComponent.AwaitShowEntity(typeof({go.name}Logic), 0, data);");
                 }
 
 
@@ -447,8 +453,19 @@ namespace Trinity.Editor
             }
         }
 
-        private void GenGetObjectsCode(string codePath, GameObject go, string nameSpace, string logicBaseClass, string getComponent)
+        private void GenGetObjectsCode(string codePath, GameObject go, string nameSpace, string logicBaseClass, string getComponent, string nameEx = "")
         {
+            ReferenceCollector rc = go.GetComponent<ReferenceCollector>();
+            if (rc == null)
+            {
+                return;
+            }
+
+            if (!Directory.Exists($"{codePath}/GetObjects/"))
+            {
+                Directory.CreateDirectory($"{codePath}/GetObjects/");
+            }
+
             using (StreamWriter sw = new StreamWriter($"{codePath}/GetObjects/{go.name}.GetObjects.cs"))
             {
                 sw.WriteLine("using UnityEngine;");
@@ -466,37 +483,36 @@ namespace Trinity.Editor
                 sw.WriteLine("");
 
                 //类名
-                sw.WriteLine($"\tpublic partial class {go.name} : {logicBaseClass}");
+                sw.WriteLine($"\tpublic partial class {go.name}{nameEx} : {logicBaseClass}");
                 sw.WriteLine("\t{");
                 sw.WriteLine("");
 
-                ReferenceCollector rc = go.GetComponent<ReferenceCollector>();
-                if (rc != null)
+
+                foreach (ObjData data in rc.ObjDatas)
                 {
-                    foreach (ObjData data in rc.ObjDatas)
-                    {
-                        sw.WriteLine($"\t\tprivate {data.Obj.GetType().Name} m_{data.Name};");
-                    }
-                    sw.WriteLine("");
-
-                    sw.WriteLine("\t\tprivate void GetObjects()");
-                    sw.WriteLine("\t\t{");
-
-                    //获取RC上的Object
-                    sw.WriteLine($"\t\t\tReferenceCollector rc = {getComponent}<ReferenceCollector>();");
-                    sw.WriteLine("");
-
-                    //根据索引获取
-
-                    for (int i = 0; i < rc.ObjDatas.Count; i++)
-                    {
-                        ObjData data = rc.ObjDatas[i];
-                        string filedName = $"m_{data.Name}";
-                        sw.WriteLine($"\t\t\t{filedName} = rc.GetObj<{data.Obj.GetType().Name}>({i});");
-                    }
-
-                    sw.WriteLine("\t\t}");
+                    sw.WriteLine($"\t\tprivate {data.Obj.GetType().Name} m_{data.Name};");
                 }
+                sw.WriteLine("");
+
+                sw.WriteLine("\t\tprivate void GetObjects()");
+                sw.WriteLine("\t\t{");
+
+                //获取RC上的Object
+                sw.WriteLine($"\t\t\tReferenceCollector rc = {getComponent}<ReferenceCollector>();");
+                sw.WriteLine("");
+
+                //根据索引获取
+
+                for (int i = 0; i < rc.ObjDatas.Count; i++)
+                {
+                    ObjData data = rc.ObjDatas[i];
+                    string filedName = $"m_{data.Name}";
+                    sw.WriteLine($"\t\t\t{filedName} = rc.GetObj<{data.Obj.GetType().Name}>({i});");
+                }
+
+
+
+                sw.WriteLine("\t\t}");
 
                 sw.WriteLine("");
 

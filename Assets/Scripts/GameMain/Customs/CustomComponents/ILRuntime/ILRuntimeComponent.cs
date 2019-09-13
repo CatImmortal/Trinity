@@ -102,13 +102,12 @@ namespace Trinity
             Log.Info("hotfix pdb加载完毕");
 
             AppDomain.LoadAssembly(new MemoryStream(dll), new MemoryStream(pdb), new Mono.Cecil.Pdb.PdbReaderProvider());
-#endif
-
-            AppDomain.LoadAssembly(new MemoryStream(dll));
 
             //启动调试服务器
             AppDomain.DebugService.StartDebugService(56000);
-
+#else
+            AppDomain.LoadAssembly(new MemoryStream(dll));
+#endif
             //设置Unity主线程ID 这样就可以用Profiler看性能消耗了
             AppDomain.UnityMainThreadID = System.Threading.Thread.CurrentThread.ManagedThreadId;
 

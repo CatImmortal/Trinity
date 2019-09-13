@@ -1,12 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using System;
 
 namespace Trinity
 {
     /// <summary>
     /// 热更新层实体数据
     /// </summary>
+    [Serializable]
     public class HotfixEntityData : EntityData
     {
         /// <summary>
@@ -29,7 +28,7 @@ namespace Trinity
 
         public HotfixEntityData()
         {
-            
+
         }
 
         /// <summary>

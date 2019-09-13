@@ -40,7 +40,7 @@ namespace Trinity
         /// </summary>
         public static void ShowHotfixEntity(this EntityComponent entityComponent,int priority, HotfixEntityData data)
         {
-            entityComponent.ShowEntity(typeof(HotfixEntity),priority, data);
+            entityComponent.ShowEntity(typeof(HotfixEntityLogic),priority, data);
         }
         
         /// <summary>
