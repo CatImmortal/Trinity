@@ -173,10 +173,16 @@ namespace Trinity.Editor
         private void GenEventCode()
         {
             //根据是否为热更新层事件来决定一些参数
-            string codepath = m_IsHotfixEvent ? HotfixEventCodePath : EventCodePath;
+            string codePath = m_IsHotfixEvent ? HotfixEventCodePath : EventCodePath;
             string nameSpace = m_IsHotfixEvent ? "Trinity.Hotfix" : "Trinity";
             string baseClass = m_IsHotfixEvent ? "HotfixGameEventArgs" : "GameEventArgs";
-            using (StreamWriter sw = new StreamWriter($"{codepath}/{m_ClassName}.cs"))
+
+            if (!Directory.Exists($"{codePath}/"))
+            {
+                Directory.CreateDirectory($"{codePath}/");
+            }
+
+            using (StreamWriter sw = new StreamWriter($"{codePath}/{m_ClassName}.cs"))
             {
                 sw.WriteLine("using UnityEngine;");
                 sw.WriteLine("using GameFramework.Event;");

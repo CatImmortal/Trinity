@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
-using ObjData = Trinity.ReferenceCollector.ObjData;
+using BindData = Trinity.ComponentAutoBindTool.BindData;
 
 namespace Trinity.Editor
 {
@@ -37,9 +37,9 @@ namespace Trinity.Editor
         private bool m_IsGenMainLogicCode = true;
 
         /// <summary>
-        /// 是否生成GetObject代码
+        /// 是否生成自动绑定组件代码
         /// </summary>
-        private bool m_IsGenGetObjectsCode = true;
+        private bool m_IsGenAutoBindCode = true;
 
         /// <summary>
         /// 是否生成实体数据代码
@@ -107,7 +107,7 @@ namespace Trinity.Editor
 
 
             EditorGUILayout.BeginHorizontal();
-            m_IsGenGetObjectsCode = GUILayout.Toggle(m_IsGenGetObjectsCode, "生成GetObjects代码", GUILayout.Width(150f));
+            m_IsGenAutoBindCode = GUILayout.Toggle(m_IsGenAutoBindCode, "生成自动绑定组件代码", GUILayout.Width(150f));
 
             EditorGUILayout.EndHorizontal();
 
@@ -147,7 +147,6 @@ namespace Trinity.Editor
             string codepath = m_IsHotfix ? HotfixEntityCodePath : EntityCodePath;
             string nameSpace = m_IsHotfix ? "Trinity.Hotfix" : "Trinity";
             string logicBaseClass = m_IsHotfix ? "HotfixEntityLogic" : "EntityLogic";
-            string getComponent = m_IsHotfix ? "EntityLogic.GetComponent" : "GetComponent";
 
             foreach (GameObject go in m_GameObjects)
             {
@@ -161,9 +160,9 @@ namespace Trinity.Editor
                     GenEntityDataCode(codepath, go, nameSpace);
                 }
 
-                if (m_IsGenGetObjectsCode)
+                if (m_IsGenAutoBindCode)
                 {
-                    GenGetObjectsCode(codepath, go, nameSpace, logicBaseClass, getComponent, "Logic");
+                    GenAutoBindCode(codepath, go, nameSpace, "Logic");
                 }
 
                 if (m_IsGenShowEntityCode)
@@ -181,7 +180,7 @@ namespace Trinity.Editor
             string codepath = m_IsHotfix ? HotfixUIFormCodePath : UIFormCodePath;
             string nameSpace = m_IsHotfix ? "Trinity.Hotfix" : "Trinity";
             string logicBaseClass = m_IsHotfix ? "HotfixUGuiForm" : "UGuiForm";
-            string getComponent = m_IsHotfix ? "UIFormLogic.GetComponent" : "GetComponent";
+
 
             foreach (GameObject go in m_GameObjects)
             {
@@ -190,9 +189,9 @@ namespace Trinity.Editor
                     GenUIFormMainLogicCode(codepath, go, nameSpace, logicBaseClass);
                 }
 
-                if (m_IsGenGetObjectsCode)
+                if (m_IsGenAutoBindCode)
                 {
-                    GenGetObjectsCode(codepath, go, nameSpace, logicBaseClass, getComponent);
+                    GenAutoBindCode(codepath, go, nameSpace);
                 }
             }
 
@@ -213,7 +212,10 @@ namespace Trinity.Editor
                 accessModifier = "public";
             }
 
-
+            if (!Directory.Exists($"{codePath}/EntityLogic/"))
+            {
+                Directory.CreateDirectory($"{codePath}/EntityLogic/");
+            }
 
             using (StreamWriter sw = new StreamWriter($"{codePath}/EntityLogic/{go.name}.cs"))
             {
@@ -272,7 +274,7 @@ namespace Trinity.Editor
             }
         }
 
-        private void GenEntityDataCode(string codepath, GameObject go, string nameSpace)
+        private void GenEntityDataCode(string codePath, GameObject go, string nameSpace)
         {
             string dataBaseClass = "EntityData";
             if (m_IsHotfix)
@@ -281,7 +283,12 @@ namespace Trinity.Editor
             }
             string entityDataName = go.name + "Data";
 
-            using (StreamWriter sw = new StreamWriter($"{ codepath}/EntityData/{ entityDataName}.cs"))
+            if (!Directory.Exists($"{codePath}/EntityData/"))
+            {
+                Directory.CreateDirectory($"{codePath}/EntityData/");
+            }
+
+            using (StreamWriter sw = new StreamWriter($"{codePath}/EntityData/{ entityDataName}.cs"))
             {
                 sw.WriteLine("using UnityEngine;");
                 sw.WriteLine("");
@@ -423,6 +430,11 @@ namespace Trinity.Editor
                 accessModifier = "public";
             }
 
+            if (!Directory.Exists($"{codePath}/"))
+            {
+                Directory.CreateDirectory($"{codePath}/");
+            }
+
             using (StreamWriter sw = new StreamWriter($"{codePath}/{go.name}.cs"))
             {
                 sw.WriteLine("using System.Collections;");
@@ -453,20 +465,20 @@ namespace Trinity.Editor
             }
         }
 
-        private void GenGetObjectsCode(string codePath, GameObject go, string nameSpace, string logicBaseClass, string getComponent, string nameEx = "")
+        private void GenAutoBindCode(string codePath, GameObject go, string nameSpace, string nameEx = "")
         {
-            ReferenceCollector rc = go.GetComponent<ReferenceCollector>();
-            if (rc == null)
+            ComponentAutoBindTool bindTool = go.GetComponent<ComponentAutoBindTool>();
+            if (bindTool == null)
             {
                 return;
             }
 
-            if (!Directory.Exists($"{codePath}/GetObjects/"))
+            if (!Directory.Exists($"{codePath}/BindComponents/"))
             {
-                Directory.CreateDirectory($"{codePath}/GetObjects/");
+                Directory.CreateDirectory($"{codePath}/BindComponents/");
             }
 
-            using (StreamWriter sw = new StreamWriter($"{codePath}/GetObjects/{go.name}.GetObjects.cs"))
+            using (StreamWriter sw = new StreamWriter($"{codePath}/BindComponents/{go.name}{nameEx}.BindComponents.cs"))
             {
                 sw.WriteLine("using UnityEngine;");
                 if (m_GenCodeType == GenCodeType.UIForm)
@@ -483,31 +495,31 @@ namespace Trinity.Editor
                 sw.WriteLine("");
 
                 //类名
-                sw.WriteLine($"\tpublic partial class {go.name}{nameEx} : {logicBaseClass}");
+                sw.WriteLine($"\tpublic partial class {go.name}{nameEx}");
                 sw.WriteLine("\t{");
                 sw.WriteLine("");
 
 
-                foreach (ObjData data in rc.ObjDatas)
+                foreach (BindData data in bindTool.BindDatas)
                 {
-                    sw.WriteLine($"\t\tprivate {data.Obj.GetType().Name} m_{data.Name};");
+                    sw.WriteLine($"\t\tprivate {data.BindCom.GetType().Name} m_{data.Name};");
                 }
                 sw.WriteLine("");
 
-                sw.WriteLine("\t\tprivate void GetObjects()");
+                sw.WriteLine("\t\tprivate void GetBindComponents(GameObject go)");
                 sw.WriteLine("\t\t{");
 
-                //获取RC上的Object
-                sw.WriteLine($"\t\t\tReferenceCollector rc = {getComponent}<ReferenceCollector>();");
+                //获取绑定的组件
+                sw.WriteLine($"\t\t\tComponentAutoBindTool autoBindTool = go.GetComponent<ComponentAutoBindTool>();;");
                 sw.WriteLine("");
 
                 //根据索引获取
 
-                for (int i = 0; i < rc.ObjDatas.Count; i++)
+                for (int i = 0; i < bindTool.BindDatas.Count; i++)
                 {
-                    ObjData data = rc.ObjDatas[i];
+                    BindData data = bindTool.BindDatas[i];
                     string filedName = $"m_{data.Name}";
-                    sw.WriteLine($"\t\t\t{filedName} = rc.GetObj<{data.Obj.GetType().Name}>({i});");
+                    sw.WriteLine($"\t\t\t{filedName} = autoBindTool.GetBindComponent<{data.BindCom.GetType().Name}>({i});");
                 }
 
 
