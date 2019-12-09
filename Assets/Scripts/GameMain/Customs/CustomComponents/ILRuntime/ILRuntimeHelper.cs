@@ -23,6 +23,8 @@ namespace Trinity
             //GF用
             appDomain.DelegateManager.RegisterMethodDelegate<float>();
             appDomain.DelegateManager.RegisterMethodDelegate<object, ILTypeInstance>();
+            appDomain.DelegateManager.RegisterMethodDelegate<object, GameFramework.Event.GameEventArgs>();
+
 
             //ET用
             appDomain.DelegateManager.RegisterMethodDelegate<List<object>>();

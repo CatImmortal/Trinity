@@ -2,6 +2,7 @@
 using ILRuntime.CLR.Method;
 using ILRuntime.CLR.TypeSystem;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -111,14 +112,16 @@ namespace Trinity
             //设置Unity主线程ID 这样就可以用Profiler看性能消耗了
             AppDomain.UnityMainThreadID = System.Threading.Thread.CurrentThread.ManagedThreadId;
 
-            HotfixStart();
+            StartCoroutine(HotfixStart());
         }
 
         /// <summary>
         /// 开始执行热更新层代码
         /// </summary>
-        private void HotfixStart()
+        private IEnumerator HotfixStart()
         {
+            yield return null;
+
             string typeFullName = "Trinity.Hotfix.HotfixGameEntry";
             IType type = AppDomain.LoadedTypes[typeFullName];
 

@@ -7,6 +7,9 @@ namespace ILRuntime.Runtime.Generated
     class CLRBindings
     {
 
+        internal static ILRuntime.Runtime.Enviorment.ValueTypeBinder<UnityEngine.Vector3> s_UnityEngine_Vector3_Binding_Binder = null;
+        internal static ILRuntime.Runtime.Enviorment.ValueTypeBinder<UnityEngine.Quaternion> s_UnityEngine_Quaternion_Binding_Binder = null;
+        internal static ILRuntime.Runtime.Enviorment.ValueTypeBinder<UnityEngine.Vector2> s_UnityEngine_Vector2_Binding_Binder = null;
 
         /// <summary>
         /// Initialize the CLR binding, please invoke this AFTER CLR Redirection registration
@@ -88,7 +91,6 @@ namespace ILRuntime.Runtime.Generated
             ETModel_RpcException_Binding.Register(app);
             UnityEngine_Vector3_Binding.Register(app);
             UnityEngine_Quaternion_Binding.Register(app);
-            Trinity_EntityExtension_Binding.Register(app);
             GameFramework_GameFrameworkException_Binding.Register(app);
             Trinity_ETNetworkComponent_Binding.Register(app);
             System_Collections_Generic_Dictionary_2_String_ILTypeInstance_Binding.Register(app);
@@ -130,6 +132,12 @@ namespace ILRuntime.Runtime.Generated
             System_EventHandler_1_ILTypeInstance_Binding.Register(app);
 
             ILRuntime.CLR.TypeSystem.CLRType __clrType = null;
+            __clrType = (ILRuntime.CLR.TypeSystem.CLRType)app.GetType (typeof(UnityEngine.Vector3));
+            s_UnityEngine_Vector3_Binding_Binder = __clrType.ValueTypeBinder as ILRuntime.Runtime.Enviorment.ValueTypeBinder<UnityEngine.Vector3>;
+            __clrType = (ILRuntime.CLR.TypeSystem.CLRType)app.GetType (typeof(UnityEngine.Quaternion));
+            s_UnityEngine_Quaternion_Binding_Binder = __clrType.ValueTypeBinder as ILRuntime.Runtime.Enviorment.ValueTypeBinder<UnityEngine.Quaternion>;
+            __clrType = (ILRuntime.CLR.TypeSystem.CLRType)app.GetType (typeof(UnityEngine.Vector2));
+            s_UnityEngine_Vector2_Binding_Binder = __clrType.ValueTypeBinder as ILRuntime.Runtime.Enviorment.ValueTypeBinder<UnityEngine.Vector2>;
         }
 
         /// <summary>
@@ -137,6 +145,9 @@ namespace ILRuntime.Runtime.Generated
         /// </summary>
         public static void Shutdown(ILRuntime.Runtime.Enviorment.AppDomain app)
         {
+            s_UnityEngine_Vector3_Binding_Binder = null;
+            s_UnityEngine_Quaternion_Binding_Binder = null;
+            s_UnityEngine_Vector2_Binding_Binder = null;
         }
     }
 }

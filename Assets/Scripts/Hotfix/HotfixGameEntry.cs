@@ -62,6 +62,7 @@ namespace Trinity.Hotfix
             Procedure.Initialize(Fsm
                 , new ProcedureHotfixEntry()
                 , new ProcedureChangeScene()
+                , new ProcedureHotfixTest()
                 );
 
             //开始热更新层入口流程
