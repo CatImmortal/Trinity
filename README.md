@@ -8,3 +8,5 @@
 热更新：https://github.com/Ourpalm/ILRuntime
 
 建议对以上三个项目有一定的了解后再使用本项目
+
+QQ交流群：994743016
