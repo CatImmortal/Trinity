@@ -1,6 +1,7 @@
 ﻿using GameFramework.Resource;
 using ILRuntime.CLR.Method;
 using ILRuntime.CLR.TypeSystem;
+using ILRuntime.Mono.Cecil.Pdb;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -102,7 +103,7 @@ namespace Trinity
             byte[] pdb = pdbAsset.bytes;
             Log.Info("hotfix pdb加载完毕");
 
-            AppDomain.LoadAssembly(new MemoryStream(dll), new MemoryStream(pdb), new Mono.Cecil.Pdb.PdbReaderProvider());
+            AppDomain.LoadAssembly(new MemoryStream(dll), new MemoryStream(pdb), new PdbReaderProvider());
 
             //启动调试服务器
             AppDomain.DebugService.StartDebugService(56000);

@@ -6,6 +6,9 @@ using GameFramework.Event;
 using UnityEngine;
 using UnityGameFramework.Runtime;
 using CatJson;
+using ILRuntime.Runtime.Intepreter;
+using ILRuntime.CLR.TypeSystem;
+
 namespace Trinity.Hotfix
 {
     public class ProcedureHotfixTest : ProcedureBase
@@ -34,7 +37,7 @@ namespace Trinity.Hotfix
             data.itemList = new List<TestJson1_Item>() { item, item };
             data.itemDict = new Dictionary<string, TestJson1_Item>() { { "key3", item }, { "key4", item } };
 
-            string json = JsonParser.ToJson(data, typeof(TestJson1_Root));
+            string json = JsonParser.ToJson(data,typeof(TestJson1_Root));
             Debug.Log(json);
         }
 
