@@ -89,10 +89,10 @@ namespace ILRuntime.Runtime.Generated
             System_Threading_CancellationToken_Binding.Register(app);
             ETModel_ErrorCode_Binding.Register(app);
             ETModel_RpcException_Binding.Register(app);
-            UnityEngine_Vector3_Binding.Register(app);
-            UnityEngine_Quaternion_Binding.Register(app);
             GameFramework_GameFrameworkException_Binding.Register(app);
             Trinity_ETNetworkComponent_Binding.Register(app);
+            UnityEngine_Vector3_Binding.Register(app);
+            UnityEngine_Quaternion_Binding.Register(app);
             System_Collections_Generic_Dictionary_2_String_ILTypeInstance_Binding.Register(app);
             GameFramework_Utility_Binding_Text_Binding.Register(app);
             System_Collections_Generic_Dictionary_2_String_ILTypeInstance_Binding_Enumerator_Binding.Register(app);
@@ -118,10 +118,10 @@ namespace ILRuntime.Runtime.Generated
             Trinity_SoundExtension_Binding.Register(app);
             System_Single_Binding.Register(app);
             UnityGameFramework_Runtime_VarInt_Binding.Register(app);
+            System_Collections_Generic_List_1_Int32_Binding.Register(app);
+            System_Collections_Generic_Dictionary_2_String_Int32_Binding.Register(app);
+            CatJson_JsonParser_Binding.Register(app);
             System_Runtime_CompilerServices_AsyncVoidMethodBuilder_Binding.Register(app);
-            UnityEngine_Input_Binding.Register(app);
-            ETModel_ETTask_1_Google_Protobuf_IMessageAdaptor_Binding_Adaptor_Binding.Register(app);
-            ETModel_ETTask_1_Google_Protobuf_IMessageAdaptor_Binding_Adaptor_Binding_Awaiter_Binding.Register(app);
             System_Collections_Generic_ICollection_1_KeyValuePair_2_String_ILTypeInstance_Binding.Register(app);
             System_Collections_Generic_IEnumerable_1_KeyValuePair_2_String_ILTypeInstance_Binding.Register(app);
             System_Collections_Generic_IEnumerator_1_KeyValuePair_2_String_ILTypeInstance_Binding.Register(app);

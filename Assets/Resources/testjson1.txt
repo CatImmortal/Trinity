@@ -1,0 +1,41 @@
+{
+	"b":true,
+	"num":3.14,
+	"str":"hello world",
+	"intList":[
+		1,
+		2,
+		3,
+		4,
+		5
+	],
+	"intDict":{
+		"key1":6,
+		"key2":7,
+		"key3":8
+	},
+	"item":{
+		"num":6.66,
+		"str":"str1"
+	},
+	"itemList":[
+		{
+			"num":7.77,
+			"str":"str21"
+		},
+		{
+			"num":8.88,
+			"str":"str22"
+		}
+	],
+	"itemDict":{
+		"key4":{
+			"num":9.99,
+			"str":"str31"
+		},
+		"key5":{
+			"num":10.101,
+			"str":"str32"
+		}
+	}
+}

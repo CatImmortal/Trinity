@@ -71,7 +71,7 @@ namespace UnityGameFramework.Runtime
                     DrawItem("Supports Texture Wrap Mirror Once", SystemInfo.supportsTextureWrapMirrorOnce.ToString());
 #endif
 #if UNITY_2017_3_OR_NEWER
-                    DrawItem("Supports GPU Fence", SystemInfo.supportsGPUFence.ToString());
+                    DrawItem("Supports GPU Fence", SystemInfo.supportsGraphicsFence.ToString());
                     DrawItem("Supports Async Compute", SystemInfo.supportsAsyncCompute.ToString());
                     DrawItem("Supports Multisampled Textures", SystemInfo.supportsMultisampledTextures.ToString());
 #endif

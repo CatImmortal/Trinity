@@ -52,10 +52,10 @@ namespace Trinity.Hotfix
             Fsm = new FsmManager();
             Procedure = new ProcedureManager();
             Event = new EventManager();
-            ETNetwork = new ETNetworkManager();
+            //ETNetwork = new ETNetworkManager();
 
-            //初始化ET网络
-            ETNetwork.Init();
+            ////初始化ET网络
+            //ETNetwork.Init();
 
             //初始化流程管理器
             //TODO:可修改为使用反射获取到所有流程然后注册
@@ -80,7 +80,7 @@ namespace Trinity.Hotfix
             Procedure.Shutdown();
             Fsm.Shutdown();
             Event.Shutdown();
-            ETNetwork.Shutdown();
+            //ETNetwork.Shutdown();
         }
     }
 }

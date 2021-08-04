@@ -88,7 +88,7 @@ namespace UnityGameFramework.Runtime
                 GUILayout.Label("<b>Other Information</b>");
                 GUILayout.BeginVertical("box");
                 {
-                    DrawItem("Blend Weights:", QualitySettings.blendWeights.ToString());
+                    DrawItem("Blend Weights:", QualitySettings.skinWeights.ToString());
                     DrawItem("VSync Count:", QualitySettings.vSyncCount.ToString());
                     DrawItem("LOD Bias:", QualitySettings.lodBias.ToString());
                     DrawItem("Maximum LOD Level:", QualitySettings.maximumLODLevel.ToString());
