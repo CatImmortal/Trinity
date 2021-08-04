@@ -138,8 +138,6 @@ namespace ILRuntime.Runtime.Intepreter
         object clrInstance;
         Dictionary<ILMethod, IDelegateAdapter> delegates;
 
-        public ILTypeInstance() { }
-
         public ILType Type
         {
             get
@@ -170,7 +168,10 @@ namespace ILRuntime.Runtime.Intepreter
 
         public object CLRInstance { get { return clrInstance; } set { clrInstance = value; } }
 
+        protected ILTypeInstance()
+        {
 
+        }
         public ILTypeInstance(ILType type, bool initializeCLRInstance = true)
         {
             this.type = type;
