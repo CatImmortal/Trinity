@@ -7,7 +7,7 @@ using CatJson;
 public class TestJson1_Root
 {
     public bool b;
-    public float num;
+    public double num;
     public string str;
     public List<int> intList;
     public Dictionary<string, int> intDict;
@@ -19,6 +19,6 @@ public class TestJson1_Root
 public class TestJson1_Item
 {
     public bool b;
-    public float num;
+    public double num;
     public string str;
 }

@@ -63,6 +63,14 @@ namespace CatJson
         }
 
         /// <summary>
+        /// type是否为array或list的type
+        /// </summary>
+        public static bool IsArrayOrList(Type type)
+        {
+            return type.IsArray || (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>));
+        }
+
+        /// <summary>
         /// obj是否为字典类型
         /// </summary>
         public static bool IsDictionary(object obj)

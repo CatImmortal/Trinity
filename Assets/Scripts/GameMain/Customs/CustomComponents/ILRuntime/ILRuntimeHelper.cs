@@ -91,6 +91,8 @@ namespace Trinity
 
             //注册LitJson
             LitJson.JsonMapper.RegisterILRuntimeCLRRedirection(appDomain);
+            //注册catJson
+            CatJson.JsonParser.RegisterILRuntimeCLRRedirection(appDomain);
         }
     }
 }

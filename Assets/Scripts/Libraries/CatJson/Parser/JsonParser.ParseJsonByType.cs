@@ -1,4 +1,7 @@
-﻿using System;
+﻿using ILRuntime.CLR.Utils;
+using ILRuntime.Reflection;
+using ILRuntime.Runtime.Intepreter;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -10,7 +13,7 @@ namespace CatJson
         /// <summary>
         /// 解析json文本为指定类型的对象实例
         /// </summary>
-        public static T ParseJson<T>(string json, bool reflection = true) where T : new()
+        public static T ParseJson<T>(string json, bool reflection = true)
         {
             return (T)ParseJson(json, typeof(T), reflection);
         }
@@ -54,6 +57,11 @@ namespace CatJson
         /// </summary>
         public static object ParseJsonValueByType(TokenType nextTokenType, Type type)
         {
+            if (type is ILRuntimeWrapperType ilrtWrapperType)
+            {
+                type = ilrtWrapperType.CLRType.TypeForCLR;
+            }
+
             if (extensionParseFuncDict.TryGetValue(type, out Func<object> func))
             {
                 //自定义解析
@@ -108,6 +116,11 @@ namespace CatJson
                         int enumInt = int.Parse(str);
                         return Enum.ToObject(type, enumInt);
                     }
+                    if (type is ILRuntimeType ilrtType && ilrtType.ILType.IsEnum)
+                    {
+                        //热更层枚举
+                        return int.Parse(str);
+                    }
                     break;
 
                 case TokenType.String:
@@ -123,15 +136,37 @@ namespace CatJson
                     break;
 
                 case TokenType.LeftBracket:
-                    if (type.IsArray)
+
+                    if (Util.IsArrayOrList(type))
                     {
-                        //数组
-                        return ParseJsonArrayByType(type.GetElementType());
-                    }
-                    if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
-                    {
-                        //List<T>
-                        return ParseJsonArrayByType(type.GetGenericArguments()[0], type);
+                        Type elementType;
+
+                        if (type.IsArray)
+                        {
+                            //数组
+                            if (type is ILRuntimeWrapperType wt)
+                            {
+                                elementType = wt.CLRType.ElementType.ReflectionType;
+                            }
+                            else
+                            {
+                                elementType = type.GetElementType();
+                            }
+                        }
+                        else
+                        {
+                            //List
+                            if (type is ILRuntimeWrapperType wt)
+                            {
+                                elementType = wt.CLRType.GenericArguments[0].Value.ReflectionType;
+                            }
+                            else
+                            {
+                                elementType = type.GenericTypeArguments[0];
+                            }
+                        }
+
+                        return ParseJsonArrayByType(elementType, type);
                     }
 
                     break;
@@ -157,7 +192,8 @@ namespace CatJson
         /// </summary>
         public static object ParseJsonObjectByType(Type type)
         {
-            object obj = Activator.CreateInstance(type);
+            
+            object obj = CreateInstance(type);
 
             if (!propertyInfoDict.ContainsKey(type) && !fieldInfoDict.ContainsKey(type))
             {
@@ -198,29 +234,12 @@ namespace CatJson
         }
 
         /// <summary>
-        /// 解析json对象为字典，key为string类型
-        /// </summary>
-        private static object ParseJsonObjectByDict(Type dictType, Type valueType)
-        {
-            IDictionary dict = (IDictionary)Activator.CreateInstance(dictType);
-
-            ParseJsonObjectProcedure(dict, valueType, (userdata1, userdata2, key, nextTokenType) => {
-                Type t = (Type)userdata2;
-                object value = ParseJsonValueByType(nextTokenType, t);
-                ((IDictionary)userdata1).Add(key.ToString(), value);
-            });
-
-            return dict;
-        }
-
-
-        /// <summary>
         /// 解析Json数组为指定类型的Array或List<T>
         /// </summary>
-        private static object ParseJsonArrayByType(Type elementType, Type listType = null)
+        private static object ParseJsonArrayByType(Type elementType, Type arrayType)
         {
             IList list;
-            if (listType == null)
+            if (arrayType.IsArray)
             {
                 //数组
                 list = new List<object>();
@@ -228,9 +247,8 @@ namespace CatJson
             else
             {
                 //List<T>
-                list = (IList)Activator.CreateInstance(listType);
+                list = (IList)Activator.CreateInstance(arrayType);
             }
-
             ParseJsonArrayProcedure(list, elementType, (userdata1, userdata2, nextTokenType) =>
             {
                 object value = ParseJsonValueByType(nextTokenType, (Type)userdata2);
@@ -238,7 +256,7 @@ namespace CatJson
             });
 
             //返回List<T>
-            if (listType != null)
+            if (!arrayType.IsArray)
             {
                 return list;
             }
@@ -257,6 +275,25 @@ namespace CatJson
 
 
         }
+
+        /// <summary>
+        /// 解析json对象为字典，key为string类型
+        /// </summary>
+        private static object ParseJsonObjectByDict(Type dictType, Type valueType)
+        {
+            IDictionary dict = (IDictionary)Activator.CreateInstance(dictType);
+
+            ParseJsonObjectProcedure(dict, valueType, (userdata1, userdata2, key, nextTokenType) => {
+                Type t = (Type)userdata2;
+                object value = ParseJsonValueByType(nextTokenType, t);
+                ((IDictionary)userdata1).Add(key.ToString(), value);
+            });
+
+            return dict;
+        }
+
+
+     
 
     }
 }

@@ -179,6 +179,7 @@ namespace LitJson
         #region Private Methods
         private static void AddArrayMetadata (Type type)
         {
+
             if (array_metadata.ContainsKey (type))
                 return;
 

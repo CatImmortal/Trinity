@@ -130,6 +130,7 @@ namespace ILRuntime.Runtime.Generated
             System_Collections_Generic_List_1_Int32_Binding.Register(app);
             System_Collections_Generic_Dictionary_2_String_Int32_Binding.Register(app);
             CatJson_JsonParser_Binding.Register(app);
+            LitJson_JsonMapper_Binding.Register(app);
             System_Runtime_CompilerServices_AsyncVoidMethodBuilder_Binding.Register(app);
             System_Collections_Generic_ICollection_1_KeyValuePair_2_String_ILTypeInstance_Binding.Register(app);
             System_Collections_Generic_IEnumerable_1_KeyValuePair_2_String_ILTypeInstance_Binding.Register(app);

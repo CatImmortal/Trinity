@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ILRuntime.Reflection;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -11,7 +12,7 @@ namespace CatJson
         /// <summary>
         /// 将指定类型的对象转换为Json文本
         /// </summary>
-        public static string ToJson<T>(T obj, bool reflection = true) where T : new()
+        public static string ToJson<T>(T obj, bool reflection = true)
         {
             return ToJson(obj, typeof(T),reflection);
         }
@@ -26,7 +27,6 @@ namespace CatJson
                 //触发转换开始回调
                 receiver.OnToJsonStart();
             }
-
 
             if (reflection)
             {
