@@ -47,27 +47,27 @@ namespace CatJson
 
 
         /// <summary>
-        /// type是否为数字类型（byte int long float double)
+        /// obj是否为数字类型（byte int long float double)
         /// </summary>
-        public static bool IsNumber(Type type)
+        public static bool IsNumber(object obj)
         {
-            return type == typeof(byte) || type == typeof(int) || type == typeof(long) || type == typeof(float) || type == typeof(double);
+            return obj is byte || obj is int || obj is long || obj is float || obj is double;
         }
 
         /// <summary>
-        /// type是否为数组或List<T>类型
+        /// obj是否为数组或List类型
         /// </summary>
-        public static bool IsArrayOrList(Type type)
+        public static bool IsArrayOrList(object obj)
         {
-            return type.IsArray || (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>));
+            return obj is Array || obj is IList;
         }
 
         /// <summary>
-        /// type是否为字典类型
+        /// obj是否为字典类型
         /// </summary>
-        public static bool IsDictionary(Type type)
+        public static bool IsDictionary(object obj)
         {
-            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
+            return obj is IDictionary;
         }
 
         /// <summary>
@@ -118,9 +118,9 @@ namespace CatJson
         /// <summary>
         /// value是否为内置基础类型的默认值(null 0 false)
         /// </summary>
-        public static bool IsDefaultValue(Type type,object value)
+        public static bool IsDefaultValue(object value)
         {
-            if (!type.IsValueType)
+            if (!(value is System.ValueType))
             {
                 return value == default;
             }

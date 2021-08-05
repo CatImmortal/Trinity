@@ -36,7 +36,6 @@ namespace Trinity.Hotfix
             data.item = item;
             data.itemList = new List<TestJson1_Item>() { item, item };
             data.itemDict = new Dictionary<string, TestJson1_Item>() { { "key3", item }, { "key4", item } };
-
             string json = JsonParser.ToJson(data,typeof(TestJson1_Root));
             Debug.Log(json);
         }

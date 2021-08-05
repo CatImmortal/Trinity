@@ -185,6 +185,27 @@ namespace CatJson
             fieldInfoDict.Add(type, dict2);
         }
 
+        /// <summary>
+        /// 获取obj的Type
+        /// </summary>
+        private static Type GetObjectType(object obj)
+        {
+            //处理obj是ILRuntime热更层的obj的情况
+            Type type;
+            if (obj is ILRuntime.Runtime.Intepreter.ILTypeInstance)
+            {
+                type = ((ILRuntime.Runtime.Intepreter.ILTypeInstance)obj).Type.ReflectionType;
+            }
+            else if (obj is ILRuntime.Runtime.Enviorment.CrossBindingAdaptorType)
+            {
+                type = ((ILRuntime.Runtime.Enviorment.CrossBindingAdaptorType)obj).ILInstance.Type.ReflectionType;
+            }
+            else
+            {
+                type = obj.GetType();
+            }
+            return type;
+        }
 
     }
 

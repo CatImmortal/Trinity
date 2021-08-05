@@ -27,6 +27,7 @@ namespace CatJson
                 receiver.OnToJsonStart();
             }
 
+
             if (reflection)
             {
                 //反射转换
@@ -73,7 +74,7 @@ namespace CatJson
                     Type piType = item.Value.PropertyType;
                     string piName = item.Value.Name;
 
-                    if (Util.IsDefaultValue(piType,value))
+                    if (Util.IsDefaultValue(value))
                     {
                         //默认值跳过序列化
                         continue;
@@ -97,8 +98,7 @@ namespace CatJson
                     object value = item.Value.GetValue(obj);
                     Type fiType = item.Value.FieldType;
                     string fiName = item.Value.Name;
-
-                    if (Util.IsDefaultValue(fiType, value))
+                    if (Util.IsDefaultValue(value))
                     {
                         //默认值跳过序列化
                         continue;
@@ -149,6 +149,7 @@ namespace CatJson
         /// </summary>
         private static void AppendJsonValue(Type valueType, object value, int depth)
         {
+
             if (extensionToJsonFuncDict.TryGetValue(valueType, out Action<object> action))
             {
                 //自定义转换Json文本方法
@@ -157,14 +158,14 @@ namespace CatJson
             }
 
             //根据属性值的不同类型进行序列化
-            if (Util.IsNumber(valueType))
+            if (Util.IsNumber(value))
             {
                 //数字
                 Util.Append(value.ToString());
                 return;
             }
 
-            if (valueType == typeof(string) || valueType == typeof(char))
+            if (value is string || value is char)
             {
                 //字符串
                 Util.Append("\"");
@@ -173,7 +174,7 @@ namespace CatJson
                 return;
             }
 
-            if (valueType == typeof(bool))
+            if (value is bool)
             {
                 //bool值
                 bool b = (bool)value;
@@ -188,7 +189,7 @@ namespace CatJson
                 return;
             }
 
-            if (valueType.IsEnum)
+            if (value is Enum)
             {
                 //枚举
                 int enumInt = (int)value;
@@ -196,7 +197,7 @@ namespace CatJson
                 return;
             }
 
-            if (Util.IsArrayOrList(valueType))
+            if (Util.IsArrayOrList(value))
             {
                 //数组或List
                 AppendJsonArray(valueType,value,depth);
@@ -204,7 +205,7 @@ namespace CatJson
             }
 
 
-            if (Util.IsDictionary(valueType))
+            if (Util.IsDictionary(value))
             {
                 //字典
                 AppendJsonDict(value, depth);
@@ -238,7 +239,7 @@ namespace CatJson
                     }
                     else
                     {
-                        AppendJsonValue(element.GetType(), element, depth + 1);
+                        AppendJsonValue(GetObjectType(element), element, depth + 1);
                     }
                    
 
@@ -259,7 +260,7 @@ namespace CatJson
                     }
                     else
                     {
-                        AppendJsonValue(element.GetType(), element, depth + 1);
+                        AppendJsonValue(GetObjectType(element), element, depth + 1);
                     }
                     Util.AppendLine(",");
                 }
@@ -295,7 +296,7 @@ namespace CatJson
                 }
                 else
                 {
-                    AppendJsonKeyValue(enumerator.Value.GetType(), enumerator.Key.ToString(), enumerator.Value, depth + 1);
+                    AppendJsonKeyValue(GetObjectType(enumerator.Value), enumerator.Key.ToString(), enumerator.Value, depth + 1);
                 }  
                 
                 
