@@ -20,26 +20,26 @@ namespace Trinity.Hotfix
             base.OnEnter(procedureOwner);
 
             Debug.Log("进入了热更新测试流程");
-           
-            TestJson1_Root data = new TestJson1_Root();
-            data.b = true;
-            data.num = 3.14f;
-            data.str = "to json";
-            data.intList = new List<int>() { 1, 2, 3, 4 };
-            data.intDict = new Dictionary<string, int>() { { "key1", 1 }, { "key2", 2 } };
 
-            TestJson1_Item item = new TestJson1_Item();
-            item.b = true;
-            item.num = 9.99f;
-            item.str = "item";
+            //TestJson1_Root data = new TestJson1_Root();
+            //data.b = true;
+            //data.num = 3.14f;
+            //data.str = "to json";
+            //data.intList = new List<int>() { 1, 2, 3, 4 };
+            //data.intDict = new Dictionary<string, int>() { { "key1", 1 }, { "key2", 2 } };
 
-            data.item = item;
-            data.itemList = new List<TestJson1_Item>() { item, item };
-            data.itemDict = new Dictionary<string, TestJson1_Item>() { { "key3", item }, { "key4", item } };
+            //TestJson1_Item item = new TestJson1_Item();
+            //item.b = true;
+            //item.num = 9.99f;
+            //item.str = "item";
 
-            string json = JsonParser.ToJson(data);
+            //data.item = item;
+            //data.itemList = new List<TestJson1_Item>() { item, item };
+            //data.itemDict = new Dictionary<string, TestJson1_Item>() { { "key3", item }, { "key4", item } };
 
-            Debug.Log(json);
+            //string json = JsonParser.ToJson(data);
+
+            //Debug.Log(json);
             //TestJson1_Root data2 = JsonMapper.ToObject<TestJson1_Root>(json);
             //TestJson1_Root data3 = JsonParser.ParseJson<TestJson1_Root>(json);
             //Debug.Log(data3.b);
@@ -62,6 +62,8 @@ namespace Trinity.Hotfix
             //{
             //    Debug.Log(dictItem);
             //}
+
+
         }
 
         protected internal override async void OnUpdate(IFsm procedureOwner, float elapseSeconds, float realElapseSeconds)

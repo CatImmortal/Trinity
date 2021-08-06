@@ -118,16 +118,16 @@ namespace CatJson
                     {
                         return double.Parse(str);
                     }
+                    if (type is ILRuntimeType ilrtType && ilrtType.ILType.IsEnum)
+                    {
+                        //热更层枚举 
+                        return int.Parse(str);
+                    }
                     if (type.IsEnum)
                     {
                         //枚举
                         int enumInt = int.Parse(str);
                         return Enum.ToObject(type, enumInt);
-                    }
-                    if (type is ILRuntimeType ilrtType && ilrtType.ILType.IsEnum)
-                    {
-                        //热更层枚举 
-                        return int.Parse(str);
                     }
                     break;
 
