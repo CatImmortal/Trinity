@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using CatJson;
 
-//[GenJsonCodeRoot]
+
 public class TestJson1_Root
 {
+    
     public bool b;
-    public double num;
+    public float num;
     public string str;
     public List<int> intList;
     public Dictionary<string, int> intDict;
@@ -19,7 +20,7 @@ public class TestJson1_Root
 public class TestJson1_Item
 {
     public bool b;
-    public double num;
+    public float num;
     public string str;
 
     public override string ToString()

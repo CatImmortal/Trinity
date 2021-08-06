@@ -140,7 +140,7 @@ namespace CatJson
                 {
                     PropertyInfo pi = pis[i];
 
-                    if (pi.GetCustomAttribute<JsonIgnoreAttribute>() != null)
+                    if (Attribute.IsDefined(pi, typeof(JsonIgnoreAttribute)))
                     {
                         //需要忽略
                         continue;
@@ -171,7 +171,8 @@ namespace CatJson
                 for (int i = 0; i < fis.Length; i++)
                 {
                     FieldInfo fi = fis[i];
-                    if (fi.GetCustomAttribute<JsonIgnoreAttribute>() != null)
+
+                    if (Attribute.IsDefined(fi,typeof(JsonIgnoreAttribute)))
                     {
                         //需要忽略
                         continue;

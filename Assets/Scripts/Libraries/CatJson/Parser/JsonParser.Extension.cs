@@ -32,8 +32,8 @@ namespace CatJson
                 Util.Append("\"");
             });
 
-            //添加需要忽略的非自定义类的字段/属性
 
+            //添加需要忽略的非自定义类的字段/属性
             IgnoreSet.Add(typeof(Quaternion), new HashSet<string>()
             {
                 nameof(Quaternion.eulerAngles),
