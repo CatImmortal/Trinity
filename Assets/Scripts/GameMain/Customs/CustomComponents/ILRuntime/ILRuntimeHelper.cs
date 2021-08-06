@@ -42,6 +42,12 @@ namespace Trinity
             appDomain.DelegateManager.RegisterMethodDelegate<IMessageAdaptor.Adaptor>();
 
 
+            //
+            appDomain.DelegateManager.RegisterFunctionDelegate<System.Object>();
+            appDomain.DelegateManager.RegisterMethodDelegate<System.Object>();
+
+
+
             //TODO:注册委托
             appDomain.DelegateManager.RegisterDelegateConvertor<UnityAction>((action) =>
             {

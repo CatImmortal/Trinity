@@ -33,12 +33,12 @@ namespace CatJson
         /// <summary>
         /// 扩展类型与其对应的解析方法
         /// </summary>
-        private static Dictionary<Type, Func<object>> extensionParseFuncDict = new Dictionary<Type, Func<object>>();
+        public static Dictionary<Type, Func<object>> ExtensionParseFuncDict = new Dictionary<Type, Func<object>>();
 
         /// <summary>
         /// 扩展类型与其对应的转换Json文本方法
         /// </summary>
-        private static Dictionary<Type, Action<object>> extensionToJsonFuncDict = new Dictionary<Type, Action<object>>();
+        public static Dictionary<Type, Action<object>> ExtensionToJsonFuncDict = new Dictionary<Type, Action<object>>();
 
         public static Dictionary<Type, HashSet<string>> IgnoreSet = new Dictionary<Type, HashSet<string>>();
 
@@ -282,6 +282,32 @@ namespace CatJson
             string result_of_this_method = ToJson(obj,type, reflection);
 
             return ILIntepreter.PushObject(__ret, mStack, result_of_this_method);
+        }
+
+        public static void Test(Type t)
+        {
+            UnityEngine.Debug.LogError(t);
+            UnityEngine.Debug.LogError(t.GetType());
+
+            foreach (var item in t.GetFields())
+            {
+                UnityEngine.Debug.LogError(item.GetType());
+                UnityEngine.Debug.LogError(item.FieldType);
+                UnityEngine.Debug.LogError(item.FieldType.GetType());
+            }
+
+            foreach (var item in t.GetProperties())
+            {
+                UnityEngine.Debug.LogError(item.GetType());
+                UnityEngine.Debug.LogError(item.PropertyType);
+                UnityEngine.Debug.LogError(item.PropertyType.GetType());
+            }
+        }
+
+        public static void Test(object obj)
+        {
+            UnityEngine.Debug.LogError(obj.GetType());
+            UnityEngine.Debug.LogError(obj.GetType().GetType());
         }
     }
 

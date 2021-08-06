@@ -58,6 +58,7 @@ namespace CatJson
             if (!propertyInfoDict.ContainsKey(type) && !fieldInfoDict.ContainsKey(type))
             {
                 //初始化反射信息
+                UnityEngine.Debug.LogError("初始化反射信息：" + type);
                 AddToReflectionMap(type);
             }
 
@@ -149,8 +150,23 @@ namespace CatJson
         /// </summary>
         private static void AppendJsonValue(Type valueType, object value, int depth)
         {
+           
+          
+            if (valueType is ILRuntimeWrapperType wt)
+            {
+                UnityEngine.Debug.LogError("转换前");
+                UnityEngine.Debug.LogError(valueType);
+                UnityEngine.Debug.LogError(valueType.GetType());
 
-            if (extensionToJsonFuncDict.TryGetValue(valueType, out Action<object> action))
+                UnityEngine.Debug.LogError("转换后");
+                valueType = wt.RealType;
+                UnityEngine.Debug.LogError(valueType);
+                UnityEngine.Debug.LogError(valueType.GetType());
+            }
+
+            
+
+            if (ExtensionToJsonFuncDict.TryGetValue(valueType, out Action<object> action))
             {
                 //自定义转换Json文本方法
                 action(value);

@@ -60,15 +60,15 @@ namespace CatJson
             if (nextTokenType == TokenType.String || nextTokenType == TokenType.Number || nextTokenType == TokenType.True || nextTokenType == TokenType.False)
             {
                 //下一个token是字符串或数字，bool时 如果type是热更层字段/属性的type 需要替换成 TypeForCLR
-                if (type is ILRuntimeWrapperType ilrtWrapperType)
+                if (type is ILRuntimeWrapperType wt)
                 {
-                    type = ilrtWrapperType.CLRType.TypeForCLR;
+                    type = wt.CLRType.TypeForCLR;
                 }
             }
 
 
 
-            if (extensionParseFuncDict.TryGetValue(type, out Func<object> func))
+            if (ExtensionParseFuncDict.TryGetValue(type, out Func<object> func))
             {
                 //自定义解析
                 return func();
