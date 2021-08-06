@@ -57,16 +57,24 @@ namespace CatJson
         /// </summary>
         public static object ParseJsonValueByType(TokenType nextTokenType, Type type)
         {
-            if (type is ILRuntimeWrapperType ilrtWrapperType)
+            if (nextTokenType == TokenType.String || nextTokenType == TokenType.Number || nextTokenType == TokenType.True || nextTokenType == TokenType.False)
             {
-                type = ilrtWrapperType.CLRType.TypeForCLR;
+                //下一个token是字符串或数字，bool时 如果type是热更层字段/属性的type 需要替换成 TypeForCLR
+                if (type is ILRuntimeWrapperType ilrtWrapperType)
+                {
+                    type = ilrtWrapperType.CLRType.TypeForCLR;
+                }
             }
+
+
 
             if (extensionParseFuncDict.TryGetValue(type, out Func<object> func))
             {
                 //自定义解析
                 return func();
             }
+
+
 
             switch (nextTokenType)
             {
@@ -118,7 +126,7 @@ namespace CatJson
                     }
                     if (type is ILRuntimeType ilrtType && ilrtType.ILType.IsEnum)
                     {
-                        //热更层枚举
+                        //热更层枚举 
                         return int.Parse(str);
                     }
                     break;
@@ -166,7 +174,7 @@ namespace CatJson
                             }
                         }
 
-                        return ParseJsonArrayByType(elementType, type);
+                        return ParseJsonArrayByType(type,elementType);
                     }
 
                     break;
@@ -176,7 +184,18 @@ namespace CatJson
                     if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
                     {
                         //字典
-                        return ParseJsonObjectByDict(type, type.GetGenericArguments()[1]);
+
+                        Type valueType;
+                        if (type is ILRuntimeWrapperType wt)
+                        {
+                            valueType = wt.CLRType.GenericArguments[1].Value.ReflectionType;
+                        }
+                        else
+                        {
+                            valueType = type.GetGenericArguments()[1];
+                        }
+
+                        return ParseJsonObjectByDict(type, valueType);
                     }
 
                     //类对象
@@ -236,7 +255,7 @@ namespace CatJson
         /// <summary>
         /// 解析Json数组为指定类型的Array或List<T>
         /// </summary>
-        private static object ParseJsonArrayByType(Type elementType, Type arrayType)
+        private static object ParseJsonArrayByType(Type arrayType,Type elementType)
         {
             IList list;
             if (arrayType.IsArray)

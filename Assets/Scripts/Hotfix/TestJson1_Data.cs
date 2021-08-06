@@ -21,4 +21,9 @@ public class TestJson1_Item
     public bool b;
     public double num;
     public string str;
+
+    public override string ToString()
+    {
+        return b + "," + num + "," + str;
+    }
 }

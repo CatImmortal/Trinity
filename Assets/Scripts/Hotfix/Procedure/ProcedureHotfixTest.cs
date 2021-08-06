@@ -23,14 +23,14 @@ namespace Trinity.Hotfix
            
             TestJson1_Root data = new TestJson1_Root();
             data.b = true;
-            data.num = 3.14f;
+            data.num = 3.14d;
             data.str = "to json";
             data.intList = new List<int>() { 1, 2, 3, 4 };
             data.intDict = new Dictionary<string, int>() { { "key1", 1 }, { "key2", 2 } };
 
             TestJson1_Item item = new TestJson1_Item();
             item.b = true;
-            item.num = 9.99f;
+            item.num = 9.99d;
             item.str = "item";
 
             data.item = item;
@@ -40,12 +40,28 @@ namespace Trinity.Hotfix
             string json = JsonParser.ToJson(data);
 
             Debug.Log(json);
-            TestJson1_Root data2 = JsonMapper.ToObject<TestJson1_Root>(json);
+            //TestJson1_Root data2 = JsonMapper.ToObject<TestJson1_Root>(json);
             TestJson1_Root data3 = JsonParser.ParseJson<TestJson1_Root>(json);
-            //Debug.Log(data2.b);
-            //Debug.Log(data2.num);
-            //Debug.Log(data2.str);
-
+            Debug.Log(data3.b);
+            Debug.Log(data3.num);
+            Debug.Log(data3.str);
+            Debug.Log(data3.item);
+            for (int i = 0; i < data3.intList.Count; i++)
+            {
+               Debug.Log(data3.intList[i]);
+            }
+            foreach (var dictItem in data3.intDict)
+            {
+                Debug.Log(dictItem);
+            }
+            for (int i = 0; i < data3.itemList.Count; i++)
+            {
+                Debug.Log(data3.itemList[i]);
+            }
+            foreach (var dictItem in data3.itemDict)
+            {
+                Debug.Log(dictItem);
+            }
         }
 
         protected internal override async void OnUpdate(IFsm procedureOwner, float elapseSeconds, float realElapseSeconds)
