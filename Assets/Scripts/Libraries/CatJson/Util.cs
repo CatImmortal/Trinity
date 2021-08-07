@@ -79,6 +79,14 @@ namespace CatJson
         }
 
         /// <summary>
+        /// type是否为字典的type
+        /// </summary>
+        public static bool IsDictionary(Type type)
+        {
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
+        }
+
+        /// <summary>
         /// 获取数组和List的元素类型
         /// </summary>
         public static Type GetArrayElementType(Type type)

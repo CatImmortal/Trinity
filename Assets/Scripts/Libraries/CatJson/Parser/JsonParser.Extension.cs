@@ -17,20 +17,20 @@ namespace CatJson
 
 
             //解析DateTime
-            //ExtensionParseFuncDict.Add(typeof(DateTime), () =>
-            //{
-            //    RangeString rs = Lexer.GetNextTokenByType(TokenType.String);
-            //    return DateTime.Parse(rs.ToString());
-            //});
+            ExtensionParseFuncDict.Add(typeof(DateTime), () =>
+            {
+                RangeString rs = Lexer.GetNextTokenByType(TokenType.String);
+                return DateTime.Parse(rs.ToString());
+            });
 
 
             //添加自定义扩展转换Json文本方法
-            //ExtensionToJsonFuncDict.Add(typeof(DateTime), (value) =>
-            //{
-            //    Util.Append("\"");
-            //    Util.Append(value.ToString());
-            //    Util.Append("\"");
-            //});
+            ExtensionToJsonFuncDict.Add(typeof(DateTime), (value) =>
+            {
+                Util.Append("\"");
+                Util.Append(value.ToString());
+                Util.Append("\"");
+            });
 
 
             //添加需要忽略的非自定义类的字段/属性

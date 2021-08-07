@@ -58,7 +58,6 @@ namespace CatJson
             if (!propertyInfoDict.ContainsKey(type) && !fieldInfoDict.ContainsKey(type))
             {
                 //初始化反射信息
-                UnityEngine.Debug.LogError("初始化反射信息：" + type);
                 AddToReflectionMap(type);
             }
 
@@ -150,21 +149,8 @@ namespace CatJson
         /// </summary>
         private static void AppendJsonValue(Type valueType, object value, int depth)
         {
-           
-          
-            if (valueType is ILRuntimeWrapperType wt)
-            {
-                UnityEngine.Debug.LogError("转换前");
-                UnityEngine.Debug.LogError(valueType);
-                UnityEngine.Debug.LogError(valueType.GetType());
 
-                UnityEngine.Debug.LogError("转换后");
-                valueType = wt.RealType;
-                UnityEngine.Debug.LogError(valueType);
-                UnityEngine.Debug.LogError(valueType.GetType());
-            }
-
-            
+            valueType = CheckType(valueType);
 
             if (ExtensionToJsonFuncDict.TryGetValue(valueType, out Action<object> action))
             {
@@ -255,7 +241,7 @@ namespace CatJson
                     }
                     else
                     {
-                        AppendJsonValue(GetObjectType(element), element, depth + 1);
+                        AppendJsonValue(GetType(element), element, depth + 1);
                     }
                    
 
@@ -276,7 +262,7 @@ namespace CatJson
                     }
                     else
                     {
-                        AppendJsonValue(GetObjectType(element), element, depth + 1);
+                        AppendJsonValue(GetType(element), element, depth + 1);
                     }
                     Util.AppendLine(",");
                 }
@@ -312,7 +298,7 @@ namespace CatJson
                 }
                 else
                 {
-                    AppendJsonKeyValue(GetObjectType(enumerator.Value), enumerator.Key.ToString(), enumerator.Value, depth + 1);
+                    AppendJsonKeyValue(GetType(enumerator.Value), enumerator.Key.ToString(), enumerator.Value, depth + 1);
                 }  
                 
                 

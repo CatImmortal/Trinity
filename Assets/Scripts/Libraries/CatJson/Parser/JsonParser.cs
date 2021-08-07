@@ -1,6 +1,8 @@
 ﻿using ILRuntime.CLR.Method;
+using ILRuntime.CLR.TypeSystem;
 using ILRuntime.CLR.Utils;
 using ILRuntime.Reflection;
+using ILRuntime.Runtime.Enviorment;
 using ILRuntime.Runtime.Intepreter;
 using ILRuntime.Runtime.Stack;
 using System;
@@ -40,6 +42,9 @@ namespace CatJson
         /// </summary>
         public static Dictionary<Type, Action<object>> ExtensionToJsonFuncDict = new Dictionary<Type, Action<object>>();
 
+        /// <summary>
+        /// 需要忽略的类型字段/属性名称
+        /// </summary>
         public static Dictionary<Type, HashSet<string>> IgnoreSet = new Dictionary<Type, HashSet<string>>();
 
         /// <summary>
@@ -192,25 +197,33 @@ namespace CatJson
         }
 
         /// <summary>
+        /// 检查Type,，如果是热更层的需要进行转换
+        /// </summary>
+        private static Type CheckType(Type type)
+        {
+            if (type is ILRuntimeWrapperType wt)
+            {
+                return wt.RealType;
+            }
+
+            return type;
+        }
+
+        /// <summary>
         /// 获取obj的Type
         /// </summary>
-        private static Type GetObjectType(object obj)
+        private static Type GetType(object obj)
         {
-            //处理obj是ILRuntime热更层的obj的情况
-            Type type;
-            if (obj is ILTypeInstance)
+            if (obj is ILTypeInstance ins)
             {
-                type = ((ILTypeInstance)obj).Type.ReflectionType;
+               return ins.Type.ReflectionType;
             }
-            else if (obj is ILRuntime.Runtime.Enviorment.CrossBindingAdaptorType)
+            if (obj is CrossBindingAdaptorType cross)
             {
-                type = ((ILRuntime.Runtime.Enviorment.CrossBindingAdaptorType)obj).ILInstance.Type.ReflectionType;
+                return cross.ILInstance.Type.ReflectionType;
             }
-            else
-            {
-                type = obj.GetType();
-            }
-            return type;
+
+            return obj.GetType();
         }
 
         /// <summary>
@@ -218,7 +231,6 @@ namespace CatJson
         /// </summary>
         private static object CreateInstance(Type type)
         {
-            //UnityEngine.Debug.LogError(type.GetType());
             if (type is ILRuntimeType ilrtType)
             {
                 return ilrtType.ILType.Instantiate();
@@ -284,31 +296,7 @@ namespace CatJson
             return ILIntepreter.PushObject(__ret, mStack, result_of_this_method);
         }
 
-        public static void Test(Type t)
-        {
-            UnityEngine.Debug.LogError(t);
-            UnityEngine.Debug.LogError(t.GetType());
-
-            foreach (var item in t.GetFields())
-            {
-                UnityEngine.Debug.LogError(item.GetType());
-                UnityEngine.Debug.LogError(item.FieldType);
-                UnityEngine.Debug.LogError(item.FieldType.GetType());
-            }
-
-            foreach (var item in t.GetProperties())
-            {
-                UnityEngine.Debug.LogError(item.GetType());
-                UnityEngine.Debug.LogError(item.PropertyType);
-                UnityEngine.Debug.LogError(item.PropertyType.GetType());
-            }
-        }
-
-        public static void Test(object obj)
-        {
-            UnityEngine.Debug.LogError(obj.GetType());
-            UnityEngine.Debug.LogError(obj.GetType().GetType());
-        }
+       
     }
 
 }

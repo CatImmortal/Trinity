@@ -57,30 +57,19 @@ namespace CatJson
         /// </summary>
         public static object ParseJsonValueByType(TokenType nextTokenType, Type type)
         {
-            if (nextTokenType == TokenType.String || nextTokenType == TokenType.Number || nextTokenType == TokenType.True || nextTokenType == TokenType.False)
-            {
-                //下一个token是字符串或数字，bool时 如果type是热更层字段/属性的type 需要替换成 TypeForCLR
-                if (type is ILRuntimeWrapperType wt)
-                {
-                    type = wt.CLRType.TypeForCLR;
-                }
-            }
+            Type realType = CheckType(type);
 
-
-
-            if (ExtensionParseFuncDict.TryGetValue(type, out Func<object> func))
+            if (ExtensionParseFuncDict.TryGetValue(realType, out Func<object> func))
             {
                 //自定义解析
                 return func();
             }
 
-
-
             switch (nextTokenType)
             {
                 case TokenType.Null:
                     Lexer.GetNextToken(out _);
-                    if (!type.IsValueType)
+                    if (!realType.IsValueType)
                     {
                         return null;
                     }
@@ -89,7 +78,7 @@ namespace CatJson
                 case TokenType.True:
                 case TokenType.False:
                     Lexer.GetNextToken(out _);
-                    if (type == typeof(bool))
+                    if (realType == typeof(bool))
                     {
                         return nextTokenType == TokenType.True;
                     }
@@ -98,23 +87,23 @@ namespace CatJson
                 case TokenType.Number:
                     RangeString token = Lexer.GetNextToken(out _);
                     string str = token.ToString();
-                    if (type == typeof(byte))
+                    if (realType == typeof(byte))
                     {
                         return byte.Parse(str);
                     }
-                    if (type == typeof(int))
+                    if (realType == typeof(int))
                     {
                         return int.Parse(str);
                     }
-                    if (type == typeof(long))
+                    if (realType == typeof(long))
                     {
                         return long.Parse(str);
                     }
-                    if (type == typeof(float))
+                    if (realType == typeof(float))
                     {
                         return float.Parse(str);
                     }
-                    if (type == typeof(double))
+                    if (realType == typeof(double))
                     {
                         return double.Parse(str);
                     }
@@ -123,21 +112,21 @@ namespace CatJson
                         //热更层枚举 
                         return int.Parse(str);
                     }
-                    if (type.IsEnum)
+                    if (realType.IsEnum)
                     {
                         //枚举
                         int enumInt = int.Parse(str);
-                        return Enum.ToObject(type, enumInt);
+                        return Enum.ToObject(realType, enumInt);
                     }
                     break;
 
                 case TokenType.String:
                     token = Lexer.GetNextToken(out _);
-                    if (type == typeof(string))
+                    if (realType == typeof(string))
                     {
                         return token.ToString();
                     }
-                    if (type == typeof(char))
+                    if (realType == typeof(char))
                     {
                         return char.Parse(token.ToString());
                     }
@@ -164,6 +153,7 @@ namespace CatJson
                         else
                         {
                             //List
+
                             if (type is ILRuntimeWrapperType wt)
                             {
                                 elementType = wt.CLRType.GenericArguments[0].Value.ReflectionType;
@@ -172,6 +162,7 @@ namespace CatJson
                             {
                                 elementType = type.GenericTypeArguments[0];
                             }
+
                         }
 
                         return ParseJsonArrayByType(type,elementType);
@@ -181,14 +172,14 @@ namespace CatJson
 
                 case TokenType.LeftBrace:
 
-                    if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+                    if (Util.IsDictionary(type))
                     {
                         //字典
 
                         Type valueType;
-                        if (type is ILRuntimeWrapperType wt)
+                        if (type is ILRuntimeWrapperType wt2)
                         {
-                            valueType = wt.CLRType.GenericArguments[1].Value.ReflectionType;
+                            valueType = wt2.CLRType.GenericArguments[1].Value.ReflectionType;
                         }
                         else
                         {
@@ -211,7 +202,6 @@ namespace CatJson
         /// </summary>
         public static object ParseJsonObjectByType(Type type)
         {
-            
             object obj = CreateInstance(type);
 
             if (!propertyInfoDict.ContainsKey(type) && !fieldInfoDict.ContainsKey(type))
