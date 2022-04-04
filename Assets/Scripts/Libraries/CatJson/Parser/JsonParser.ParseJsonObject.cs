@@ -73,7 +73,7 @@ namespace CatJson
         {
             JsonObject obj = new JsonObject();
 
-            ParseJsonObjectProcedure(obj, null, (userdata1, userdata2, key, nextTokenType) => {
+            ParseJsonObjectProcedure(obj, null,false, (userdata1, userdata2,isIntKey, key, nextTokenType) => {
                 JsonValue value = ParseJsonValue(nextTokenType);
                 JsonObject jo = (JsonObject)userdata1;
                 jo[key.ToString()] = value;

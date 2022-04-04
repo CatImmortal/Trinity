@@ -27,9 +27,9 @@ namespace CatJson
             //添加自定义扩展转换Json文本方法
             ExtensionToJsonFuncDict.Add(typeof(DateTime), (value) =>
             {
-                Util.Append("\"");
-                Util.Append(value.ToString());
-                Util.Append("\"");
+                TextUtil.Append("\"");
+                TextUtil.Append(value.ToString());
+                TextUtil.Append("\"");
             });
 
 

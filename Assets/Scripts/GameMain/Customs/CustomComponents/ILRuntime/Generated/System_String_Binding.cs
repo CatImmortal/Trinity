@@ -23,7 +23,7 @@ namespace ILRuntime.Runtime.Generated
             FieldInfo field;
             Type[] args;
             Type type = typeof(System.String);
-            args = new Type[]{typeof(System.Object[])};
+            args = new Type[]{typeof(System.String[])};
             method = type.GetMethod("Concat", flag, null, args, null);
             app.RegisterCLRMethodRedirection(method, Concat_0);
             args = new Type[]{typeof(System.String), typeof(System.String), typeof(System.String)};
@@ -46,6 +46,8 @@ namespace ILRuntime.Runtime.Generated
             app.RegisterCLRFieldGetter(field, get_Empty_0);
             app.RegisterCLRFieldBinding(field, CopyToStack_Empty_0, null);
 
+            app.RegisterCLRCreateArrayInstance(type, s => new System.String[s]);
+
 
         }
 
@@ -57,11 +59,11 @@ namespace ILRuntime.Runtime.Generated
             StackObject* __ret = ILIntepreter.Minus(__esp, 1);
 
             ptr_of_this_method = ILIntepreter.Minus(__esp, 1);
-            System.Object[] @args = (System.Object[])typeof(System.Object[]).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, __mStack), (CLR.Utils.Extensions.TypeFlags)0);
+            System.String[] @values = (System.String[])typeof(System.String[]).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, __mStack), (CLR.Utils.Extensions.TypeFlags)0);
             __intp.Free(ptr_of_this_method);
 
 
-            var result_of_this_method = System.String.Concat(@args);
+            var result_of_this_method = System.String.Concat(@values);
 
             return ILIntepreter.PushObject(__ret, __mStack, result_of_this_method);
         }

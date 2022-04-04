@@ -108,7 +108,7 @@ namespace CatJson
                 if (c != '\\')
                 {
                     //普通字符
-                    Util.CachedSB.Append(source[i]);
+                    TextUtil.CachedSB.Append(source[i]);
                     continue;
                 }
 
@@ -125,33 +125,33 @@ namespace CatJson
                 switch (c)
                 {
                     case '"':
-                        Util.CachedSB.Append('\"');
+                        TextUtil.CachedSB.Append('\"');
                         break;
                     case '\\':
-                        Util.CachedSB.Append('\\');
+                        TextUtil.CachedSB.Append('\\');
                         break;
                     case '/':
-                        Util.CachedSB.Append('/');
+                        TextUtil.CachedSB.Append('/');
                         break;
                     case 'b':
-                        Util.CachedSB.Append('\b');
+                        TextUtil.CachedSB.Append('\b');
                         break;
                     case 'f':
-                        Util.CachedSB.Append('\f');
+                        TextUtil.CachedSB.Append('\f');
                         break;
                     case 'n':
-                        Util.CachedSB.Append('\n');
+                        TextUtil.CachedSB.Append('\n');
                         break;
                     case 'r':
-                        Util.CachedSB.Append('\r');
+                        TextUtil.CachedSB.Append('\r');
                         break;
                     case 't':
-                        Util.CachedSB.Append('\t');
+                        TextUtil.CachedSB.Append('\t');
                         break;
                     case 'u':
                         //unicode字符
-                        char codePoint = Util.GetUnicodeCodePoint(source[i + 1], source[i + 2], source[i + 3], source[i + 4]);
-                        Util.CachedSB.Append(codePoint);
+                        char codePoint = TextUtil.GetUnicodeCodePoint(source[i + 1], source[i + 2], source[i + 3], source[i + 4]);
+                        TextUtil.CachedSB.Append(codePoint);
                         i += 4;
                         break;
                     default:
@@ -162,8 +162,8 @@ namespace CatJson
 
             }
 
-            string str = Util.CachedSB.ToString();
-            Util.CachedSB.Clear();
+            string str = TextUtil.CachedSB.ToString();
+            TextUtil.CachedSB.Clear();
 
             return str;
         }

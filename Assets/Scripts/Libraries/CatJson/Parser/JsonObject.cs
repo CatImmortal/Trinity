@@ -55,32 +55,31 @@ namespace CatJson
   
         public void ToJson(int depth)
         {
-            Util.AppendLine("{");
+            TextUtil.AppendLine("{");
 
             if (valueDict != null)
             {
+                int index = 0;
                 foreach (KeyValuePair<string, JsonValue> item in valueDict)
                 {
 
-                    Util.Append("\"", depth + 1);
-                    Util.Append(item.Key);
-                    Util.Append("\"");
+                    TextUtil.Append("\"", depth + 1);
+                    TextUtil.Append(item.Key);
+                    TextUtil.Append("\"");
 
-                    Util.Append(":");
+                    TextUtil.Append(":");
 
                     item.Value.ToJson(depth + 1);
 
-                    Util.AppendLine(",");
-                }
-
-                if (valueDict.Count > 0)
-                {
-                    //删掉最后的 , 字符
-                    Util.CachedSB.Remove(Util.CachedSB.Length - 3, 1);
+                    if (index<valueDict.Count-1)
+                    {
+                        TextUtil.AppendLine(",");
+                    }
+                    index++;
                 }
             }
 
-            Util.Append("}", depth);
+            TextUtil.Append("}", depth);
         }
     }
 }

@@ -16,7 +16,7 @@ namespace CatJson
         private TokenType nextTokenType;
         private RangeString nextToken;
 
-        public static StringBuilder sb = new StringBuilder();
+        private static StringBuilder cachedSB = new StringBuilder();
 
 
         /// <summary>
@@ -27,6 +27,11 @@ namespace CatJson
             this.json = json;
             curIndex = 0;
             hasNextTokenCache = false;
+        }
+
+        public int GetCurIndex()
+        {
+            return curIndex;
         }
 
         /// <summary>
@@ -212,7 +217,7 @@ namespace CatJson
         private string ScanNumber()
         {
             //第一个字符是0-9或者-
-            sb.Append(json[curIndex]);
+            cachedSB.Append(json[curIndex]);
             Next();
 
             while (
@@ -221,12 +226,12 @@ namespace CatJson
                 char.IsDigit(json[curIndex]) || json[curIndex] == '.' || json[curIndex] == '+'|| json[curIndex] == '-'|| json[curIndex] == 'e'|| json[curIndex] == 'E')
                 )
             {
-                sb.Append(json[curIndex]);
+                cachedSB.Append(json[curIndex]);
                 Next();
             }
 
-            string result = sb.ToString();
-            sb.Clear();
+            string result = cachedSB.ToString();
+            cachedSB.Clear();
 
             return result;
         }
@@ -247,7 +252,26 @@ namespace CatJson
                
                 Next();
             }
+            // 字符串中有转义\" 的需要继续
+            bool isNeedBack = false;
+            if (json[curIndex-1] == '\\')
+            {
+                int index = 2;
+                while (curIndex-index!=0 && json[curIndex-index]=='\\' )
+                {
+                    index++;
+                }
+                if (index%2==0)
+                {
+                    ScanString();
+                    isNeedBack = true;
+                }
+            }
 
+            if (isNeedBack)
+            {
+                Next(-1);
+            }
             int endIndex = curIndex - 1;
 
             if (curIndex >= json.Length)
@@ -263,6 +287,15 @@ namespace CatJson
             RangeString rs = new RangeString(json, startIndex, endIndex);
 
             return rs;
+        }
+
+        /// <summary>
+        /// 设置当前索引
+        /// </summary>
+        public void SetCurIndex(int index = 0, bool hasNext = false)
+        {
+            curIndex = index;
+            hasNextTokenCache = hasNext;
         }
     }
 
