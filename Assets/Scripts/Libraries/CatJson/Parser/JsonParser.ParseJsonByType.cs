@@ -218,30 +218,29 @@ namespace CatJson
         /// <summary>
         /// 解析json对象为指定类型的数据类实例
         /// </summary>
-        public static object ParseJsonObjectByType(Type type)
+        public static object ParseJsonObjectByType(Type realType)
         {
-            //保证了传入的type参数一定是真实类型，，所以可以直接使用它来创建对象实例以及使用它的反射信息
-            object obj = TypeUtil.CreateInstance(type);
+            object obj = TypeUtil.CreateInstance(realType);
 
-            if (!propertyInfoDict.ContainsKey(type) && !fieldInfoDict.ContainsKey(type))
+            if (!propertyInfoDict.ContainsKey(realType) && !fieldInfoDict.ContainsKey(realType))
             {
                 //初始化反射信息
-                AddToReflectionMap(type);
+                AddToReflectionMap(realType);
             }
 
-            ParseJsonObjectProcedure(obj, type, false, (userdata1, userdata2, isIntKey, key, nextTokenType) =>
+            ParseJsonObjectProcedure(obj, realType, false, (userdata1, userdata2, isIntKey, key, nextTokenType) =>
             {
-                object parentObj = userdata1;
-                Type parentType = (Type) userdata2;
+                object obj = userdata1;
+                Type realType = (Type) userdata2;
 
                 
-                if (propertyInfoDict[parentType].TryGetValue(key, out PropertyInfo pi))
+                if (propertyInfoDict[realType].TryGetValue(key, out PropertyInfo pi))
                 {
                     //先尝试获取名为key的属性信息
                     object value = ParseJsonValueByType(nextTokenType,pi.PropertyType);
-                    pi.SetValue(parentObj, value);
+                    pi.SetValue(obj, value);
                 }
-                else if (fieldInfoDict[parentType].TryGetValue(key, out FieldInfo fi))
+                else if (fieldInfoDict[realType].TryGetValue(key, out FieldInfo fi))
                 {
                     //属性没有 再试试字段
                     object value = ParseJsonValueByType(nextTokenType, fi.FieldType);
@@ -277,9 +276,10 @@ namespace CatJson
 
             ParseJsonArrayProcedure(list, elementType, (userdata1, userdata2, nextTokenType) =>
             {
-                
-                object value = ParseJsonValueByType(nextTokenType, (Type)userdata2);
-                ((IList)userdata1).Add(value);
+                IList list = (IList) userdata1;
+                Type elementType = (Type) userdata2;
+                object value = ParseJsonValueByType(nextTokenType, elementType);
+                list.Add(value);
             });
 
             //返回List<T>
@@ -310,16 +310,19 @@ namespace CatJson
         {
             IDictionary dict = (IDictionary)Activator.CreateInstance(dictType);
             Type keyType = dictType.GetGenericArguments()[0];
+            
             ParseJsonObjectProcedure(dict, valueType,keyType == typeof(int), (userdata1, userdata2,isIntKey, key, nextTokenType) => {
-                object value = ParseJsonValueByType(nextTokenType, (Type)userdata2);
+               IDictionary dict = (IDictionary)userdata1;
+               Type valueType = (Type) userdata2;
+                object value = ParseJsonValueByType(nextTokenType, valueType);
                 if (!isIntKey)
                 {
-                    ((IDictionary)userdata1).Add(key.ToString(), value);
+                    dict.Add(key.ToString(), value);
                 }
                 else
                 {
                     //处理字典key为int的情况
-                    ((IDictionary)userdata1).Add(int.Parse(key.ToString()), value);
+                    dict.Add(int.Parse(key.ToString()), value);
                 }
                
             });

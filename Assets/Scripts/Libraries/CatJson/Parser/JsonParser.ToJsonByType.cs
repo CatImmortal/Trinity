@@ -173,7 +173,6 @@ namespace CatJson
             }
 
             //序列化属性
-            
             foreach (KeyValuePair<RangeString, PropertyInfo> item in propertyInfoDict[realType])
             {
                 object value = item.Value.GetValue(obj);
