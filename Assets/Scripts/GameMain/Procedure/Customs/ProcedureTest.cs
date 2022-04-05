@@ -2,6 +2,7 @@
 using GameFramework.Procedure;
 using System.Collections;
 using System.Collections.Generic;
+using CatJson;
 using UnityEngine;
 using UnityGameFramework.Runtime;
 using ETModel;
@@ -15,6 +16,8 @@ namespace Trinity
             base.OnEnter(procedureOwner);
 
             Debug.Log("进入了测试流程");
+            
+            
         }
 
 

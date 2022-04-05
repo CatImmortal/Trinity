@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using CatJson;
@@ -22,7 +23,7 @@ public class TestJson1_Item
     public bool b;
     public double num;
     public string str;
-
+    public TestDataBase BaseA;
     public override string ToString()
     {
         return b + "," + num + "," + str;

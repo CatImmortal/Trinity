@@ -129,7 +129,6 @@ namespace ILRuntime.Runtime.Generated
             Trinity_SoundExtension_Binding.Register(app);
             UnityGameFramework_Runtime_VarInt_Binding.Register(app);
             System_Collections_Generic_List_1_Int32_Binding.Register(app);
-            System_Collections_Generic_Dictionary_2_String_Int32_Binding.Register(app);
             CatJson_JsonParser_Binding.Register(app);
             UnityEngine_Input_Binding.Register(app);
             UnityEngine_Profiling_Profiler_Binding.Register(app);

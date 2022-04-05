@@ -17,9 +17,18 @@ namespace CatJson
         /// <summary>
         /// 将指定类型的对象转换为Json文本
         /// </summary>
-        public static string ToJson(object obj, bool reflection = true)
+        public static string ToJson<T>(T obj, bool reflection = true)
         {
-            Type type = TypeUtil.GetType(obj);
+            string json = ToJson(obj, typeof(T), reflection);
+            return json;
+        }
+        
+        /// <summary>
+        /// 将指定类型的对象转换为Json文本
+        /// </summary>
+        public static string ToJson(object obj,Type type, bool reflection = true)
+        {
+            //这里的type可能有3种
             
             if (obj is IJsonParserCallbackReceiver receiver)
             {
@@ -44,12 +53,14 @@ namespace CatJson
                 else
                 {
                     //自定义类
-                    AppendJsonObject(obj, type, 0);
+                    Type realType = TypeUtil.GetType(obj);
+                    AppendJsonObject(obj, realType, 0, !type.Equals(realType));   //这里的type可能是ILRuntimeWrapperType，所以需要用Equals来比较
                 }
             }
             else
             {
-                if (GenJsonCodes.ToJsonCodeFuncDict.TryGetValue(type, out Action<object, int> action))
+                Type realType = TypeUtil.GetType(obj);
+                if (GenJsonCodes.ToJsonCodeFuncDict.TryGetValue(realType, out Action<object, int> action))
                 {
                     //使用预生成代码转换
                     action(obj, 0);
@@ -77,78 +88,76 @@ namespace CatJson
         /// <summary>
         /// 追加Json值文本
         /// </summary>
-        public static void AppendJsonValue(Type valueType, object value, int depth, bool isPolymorphic = false)
+        public static void AppendJsonValue(Type type, object obj, int depth)
         {
-            //保证了传入的valueType参数一定是真实类型
-
-            if (ExtensionToJsonFuncDict.TryGetValue(valueType, out Action<object> action))
+            Type realType = TypeUtil.GetType(obj);
+            if (ExtensionToJsonFuncDict.TryGetValue(realType, out Action<object> action))
             {
                 //自定义转换Json文本方法
-                action(value);
+                action(obj);
                 return;
             }
 
             //根据属性值的不同类型进行序列化
-            if (TypeUtil.IsNumber(value))
+            if (TypeUtil.IsNumber(obj))
             {
                 //数字
-                TextUtil.Append(value.ToString());
+                TextUtil.Append(obj.ToString());
                 return;
             }
 
-            if (value is string || value is char)
+            if (obj is string || obj is char)
             {
                 //字符串
-                AppendJsonValue(value.ToString());
+                AppendJsonValue(obj.ToString());
                 return;
             }
 
-            if (value is bool)
+            if (obj is bool)
             {
                 //bool值
-                bool b = (bool)value;
+                bool b = (bool)obj;
                 AppendJsonValue(b);
                 return;
             }
 
-            if (value is Enum)
+            if (obj is Enum)
             {
                 //枚举
-                int enumInt = (int)value;
+                int enumInt = (int)obj;
                 AppendJsonValue(enumInt);
                 return;
             }
 
-            if (TypeUtil.IsArrayOrList(value))
+            if (TypeUtil.IsArrayOrList(obj))
             {
                 //数组或List
-                AppendJsonArray(valueType, value, depth);
+                AppendJsonArray(type, obj, depth);
                 return;
             }
 
 
-            if (TypeUtil.IsDictionary(value))
+            if (TypeUtil.IsDictionary(obj))
             {
                 //字典
-                AppendJsonDict(valueType, value, depth);
+                AppendJsonDict(type, obj, depth);
                 return;
             }
 
             //自定义类对象
-            AppendJsonObject(value, valueType, depth, isPolymorphic);
+            AppendJsonObject(obj, realType, depth, !type.Equals(realType));
         }
         
         /// <summary>
         /// 追加Json数据类对象文本
         /// </summary>
-        private static void AppendJsonObject(object obj, Type type, int depth, bool isPolymorphic = false)
+        private static void AppendJsonObject(object obj, Type realType, int depth, bool isPolymorphic = false)
         {
-            //保证了传入的type参数一定是真实类型，所以可以直接使用它的反射信息
             
-            if (!propertyInfoDict.ContainsKey(type) && !fieldInfoDict.ContainsKey(type))
+            if (!propertyInfoDict.ContainsKey(realType) && !fieldInfoDict.ContainsKey(realType))
             {
                 //初始化反射信息
-                AddToReflectionMap(type);
+                AddToReflectionMap(realType);
             }
 
             //是否需要删除最后一个逗号
@@ -160,14 +169,14 @@ namespace CatJson
             if (isPolymorphic)
             {
                 AppendJsonKey(RealTypeKey, depth + 1);
-                AppendJsonValue(GetRealTypeJsonValue(type));
+                AppendJsonValue(GetRealTypeJsonValue(realType));
                 TextUtil.AppendLine(",");
                 needRemoveLastComma = true;
             }
 
             //序列化属性
             
-            foreach (KeyValuePair<RangeString, PropertyInfo> item in propertyInfoDict[type])
+            foreach (KeyValuePair<RangeString, PropertyInfo> item in propertyInfoDict[realType])
             {
                 object value = item.Value.GetValue(obj);
                 if (TypeUtil.IsDefaultValue(value))
@@ -181,7 +190,7 @@ namespace CatJson
             }
 
             //序列化字段
-            foreach (KeyValuePair<RangeString, FieldInfo> item in fieldInfoDict[type])
+            foreach (KeyValuePair<RangeString, FieldInfo> item in fieldInfoDict[realType])
             {
                 object value = item.Value.GetValue(obj);
                 if (TypeUtil.IsDefaultValue(value))
@@ -235,8 +244,7 @@ namespace CatJson
                     }
                     else
                     {
-                        Type elementRealType = TypeUtil.GetType(element);
-                        AppendJsonValue(elementRealType, element, depth + 1,elementType != elementRealType);
+                        AppendJsonValue(elementType, element, depth + 1);
                     }
                     if (i < array.Length-1)
                     {
@@ -258,8 +266,7 @@ namespace CatJson
                     }
                     else
                     {
-                        Type realElementType = TypeUtil.GetType(element);
-                        AppendJsonValue(realElementType, element, depth + 1,elementType != realElementType);
+                        AppendJsonValue(elementType, element, depth + 1);
                     }
 
                     if (i < list.Count-1)
@@ -285,21 +292,20 @@ namespace CatJson
             int index = 0;
             while (enumerator.MoveNext())
             {
+                AppendJsonKey(enumerator.Key.ToString(), depth + 1);
+                
                 if (enumerator.Value == null)
                 {
-                    AppendJsonKey(enumerator.Key.ToString(), depth + 1);
                     TextUtil.Append("null");
-                    TextUtil.AppendLine(",");
                 }
                 else
                 {
-                    Type realValueType = TypeUtil.GetType(enumerator.Value);
-                    AppendJsonKey(enumerator.Key.ToString(), depth + 1);
-                    AppendJsonValue(realValueType, enumerator.Value, depth + 1,valueType != realValueType);
-                    if (index < dict.Count-1)
-                    {
-                        TextUtil.AppendLine(",");
-                    }
+                    AppendJsonValue(valueType, enumerator.Value, depth + 1);
+                }
+                
+                if (index < dict.Count-1)
+                {
+                    TextUtil.AppendLine(",");
                 }
 
                 index++;
@@ -314,9 +320,8 @@ namespace CatJson
         /// </summary>
         private static void AppendMember(Type memberType,string memberName,object value,int depth)
         {
-            Type realType = TypeUtil.GetType(value);
             AppendJsonKey(memberName, depth + 1);
-            AppendJsonValue(realType, value, depth + 1, memberType != realType);
+            AppendJsonValue(memberType, value, depth + 1);
             TextUtil.AppendLine(",");
         }
         

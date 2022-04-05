@@ -204,28 +204,38 @@ namespace CatJson
         /// <summary>
         /// 获取用于多态序列化的真实类型的json value字符串
         /// </summary>
-        private static string GetRealTypeJsonValue(Type type)
+        private static string GetRealTypeJsonValue(Type realType)
         {
 #if FUCK_LUA
-            if (type is ILRuntimeType ilrtType)
+            if (realType is ILRuntimeType ilrtType)
             {
                  return $"{ilrtType.FullName}";
             }
 #endif
-            return $"{type.FullName},{type.Assembly.GetName().Name}";
+            return $"{realType.FullName},{realType.Assembly.GetName().Name}";
         }
         
 
         
 #if FUCK_LUA
+        
+         /// <summary>
+         /// CatJson的ILRuntime重定向，需要在初始化ILRuntime时调用此方法
+         /// </summary>
+         /// <param name="appdomain"></param>
          public unsafe static void RegisterILRuntimeCLRRedirection(ILRuntime.Runtime.Enviorment.AppDomain appdomain)
          {
             TypeUtil.AppDomain = appdomain;
+            
             foreach (MethodInfo mi in typeof(JsonParser).GetMethods())
             {
                 if (mi.Name == "ParseJson" && mi.IsGenericMethodDefinition)
                 {
                     appdomain.RegisterCLRMethodRedirection(mi, RedirectionParseJson);
+                }
+                else if (mi.Name == "ToJson" && mi.IsGenericMethodDefinition)
+                {
+                    appdomain.RegisterCLRMethodRedirection(mi, RedirectionToJson);
                 }
             }
         }
@@ -248,6 +258,21 @@ namespace CatJson
 
             object result_of_this_method = ParseJson(json, type);
 
+            return ILIntepreter.PushObject(__ret, mStack, result_of_this_method);
+        }
+
+        public unsafe static StackObject* RedirectionToJson(ILIntepreter intp, StackObject* esp, IList<object> mStack, CLRMethod method, bool isNewObj)
+        {
+            ILRuntime.Runtime.Enviorment.AppDomain __domain = intp.AppDomain;
+            StackObject* ptr_of_this_method;
+            StackObject* __ret = ILIntepreter.Minus(esp, 2);
+            ptr_of_this_method = ILIntepreter.Minus(esp, 1);
+            bool reflection = ptr_of_this_method->Value == 1;
+            ptr_of_this_method = ILIntepreter.Minus(esp, 2);
+            object obj = typeof(object).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, mStack), 0);
+            intp.Free(ptr_of_this_method);
+            Type type = method.GenericArguments[0].ReflectionType;
+            string result_of_this_method = ToJson(obj, type, reflection);
             return ILIntepreter.PushObject(__ret, mStack, result_of_this_method);
         }
 #endif
