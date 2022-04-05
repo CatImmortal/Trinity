@@ -46,12 +46,14 @@ namespace CatJson
                 else
                 {
                     //数据类
-                    result = ParseJsonObjectByType(type);
+                    Type realType = TryParseRealType(type);
+                    result = ParseJsonObjectByType(realType);
                 }
             }
             else
             {
-                if (GenJsonCodes.ParseJsonCodeFuncDict.TryGetValue(type, out Func<object> func))
+                Type realType = TryParseRealType(type);
+                if (GenJsonCodes.ParseJsonCodeFuncDict.TryGetValue(realType, out Func<object> func))
                 {
                     //使用预生成代码解析
                     result = func();
@@ -77,7 +79,8 @@ namespace CatJson
         /// </summary>
         public static object ParseJsonValueByType(TokenType nextTokenType, Type type)
         {
-            if (ExtensionParseFuncDict.TryGetValue(type, out Func<object> func))
+            Type realType = TryParseRealType(type);
+            if (ExtensionParseFuncDict.TryGetValue(realType, out Func<object> func))
             {
                 //自定义解析
                 return func();
@@ -96,6 +99,7 @@ namespace CatJson
                 case TokenType.True:
                 case TokenType.False:
                     Lexer.GetNextToken(out _);
+                    type = TypeUtil.CheckType(type);
                     if (type == typeof(bool))
                     {
                         return nextTokenType == TokenType.True;
@@ -105,6 +109,8 @@ namespace CatJson
                 case TokenType.Number:
                     RangeString token = Lexer.GetNextToken(out _);
                     string str = token.ToString();
+                    
+                    type = TypeUtil.CheckType(type);
                     if (type == typeof(byte))
                     {
                         return byte.Parse(str);
@@ -169,6 +175,8 @@ namespace CatJson
 
                 case TokenType.String:
                     token = Lexer.GetNextToken(out _);
+                    
+                    type = TypeUtil.CheckType(type);
                     if (type == typeof(string))
                     {
                         return token.ToString();
@@ -200,7 +208,7 @@ namespace CatJson
                     }
 
                     //类对象
-                    return ParseJsonObjectByType(type);
+                    return ParseJsonObjectByType(realType);
 
             }
 
@@ -226,29 +234,23 @@ namespace CatJson
                 object parentObj = userdata1;
                 Type parentType = (Type) userdata2;
 
-                propertyInfoDict.TryGetValue(parentType, out Dictionary<RangeString, PropertyInfo> dict1);
-                if (dict1 != null && dict1.TryGetValue(key, out PropertyInfo pi))
+                
+                if (propertyInfoDict[parentType].TryGetValue(key, out PropertyInfo pi))
                 {
-                    //先尝试获取名为key的属性
-                    Type realType = TryParseRealType(pi.PropertyType);
-                    object value = ParseJsonValueByType(nextTokenType,realType);
+                    //先尝试获取名为key的属性信息
+                    object value = ParseJsonValueByType(nextTokenType,pi.PropertyType);
                     pi.SetValue(parentObj, value);
+                }
+                else if (fieldInfoDict[parentType].TryGetValue(key, out FieldInfo fi))
+                {
+                    //属性没有 再试试字段
+                    object value = ParseJsonValueByType(nextTokenType, fi.FieldType);
+                    fi.SetValue(userdata1, value);
                 }
                 else
                 {
-                    //属性没有 再试试字段
-                    fieldInfoDict.TryGetValue(parentType, out Dictionary<RangeString, FieldInfo> dict2);
-                    if (dict2 != null && dict2.TryGetValue(key, out FieldInfo fi))
-                    {
-                        Type realType = TryParseRealType(fi.FieldType);
-                        object value = ParseJsonValueByType(nextTokenType, realType);
-                        fi.SetValue(userdata1, value);
-                    }
-                    else
-                    {
-                        //这个json key既不是数据类的字段也不是属性，跳过
-                        ParseJsonValue(nextTokenType);
-                    }
+                    //这个json key既不是数据类的字段也不是属性，跳过
+                    ParseJsonValue(nextTokenType);
                 }
             });
 
@@ -276,7 +278,7 @@ namespace CatJson
             ParseJsonArrayProcedure(list, elementType, (userdata1, userdata2, nextTokenType) =>
             {
                 
-                object value = ParseJsonValueByType(nextTokenType, TryParseRealType((Type)userdata2));
+                object value = ParseJsonValueByType(nextTokenType, (Type)userdata2);
                 ((IList)userdata1).Add(value);
             });
 
@@ -309,7 +311,7 @@ namespace CatJson
             IDictionary dict = (IDictionary)Activator.CreateInstance(dictType);
             Type keyType = dictType.GetGenericArguments()[0];
             ParseJsonObjectProcedure(dict, valueType,keyType == typeof(int), (userdata1, userdata2,isIntKey, key, nextTokenType) => {
-                object value = ParseJsonValueByType(nextTokenType, TryParseRealType((Type)userdata2));
+                object value = ParseJsonValueByType(nextTokenType, (Type)userdata2);
                 if (!isIntKey)
                 {
                     ((IDictionary)userdata1).Add(key.ToString(), value);
@@ -329,9 +331,9 @@ namespace CatJson
         /// <summary>
         /// 尝试解析真实类型
         /// </summary>
-        private static Type TryParseRealType(Type memberType)
+        private static Type TryParseRealType(Type type)
         {
-            Type realType = memberType;
+            Type realType  = type;
             
             if (Lexer.LookNextTokenType() == TokenType.LeftBrace)
             {
@@ -344,7 +346,7 @@ namespace CatJson
                     Lexer.GetNextTokenByType(TokenType.Colon); // :
                     
                     rs = Lexer.GetNextTokenByType(TokenType.String); //RealType Value
-                    realType = TypeUtil.GetRealType(memberType, rs.ToString());  //获取真实类型
+                    realType = TypeUtil.GetRealType(type, rs.ToString());  //获取真实类型
                 }
 
                 Lexer.SetCurIndex(curIndex - 1); //回退到前一个{的位置上，并将缓存置空，因为被look过所以需要-1

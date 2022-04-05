@@ -28,8 +28,6 @@ namespace CatJson
         /// </summary>
         public static string ToJson(object obj,Type type, bool reflection = true)
         {
-            //这里的type可能有3种
-            
             if (obj is IJsonParserCallbackReceiver receiver)
             {
                 //触发转换开始回调
@@ -54,7 +52,7 @@ namespace CatJson
                 {
                     //自定义类
                     Type realType = TypeUtil.GetType(obj);
-                    AppendJsonObject(obj, realType, 0, !type.Equals(realType));   //这里的type可能是ILRuntimeWrapperType，所以需要用Equals来比较
+                    AppendJsonObject(obj, realType, 0, !TypeUtil.TypeEquals(type,realType));
                 }
             }
             else
@@ -145,7 +143,7 @@ namespace CatJson
             }
 
             //自定义类对象
-            AppendJsonObject(obj, realType, depth, !type.Equals(realType));
+            AppendJsonObject(obj, realType, depth, !TypeUtil.TypeEquals(type,realType));
         }
         
         /// <summary>

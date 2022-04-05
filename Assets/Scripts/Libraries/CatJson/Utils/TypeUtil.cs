@@ -22,7 +22,7 @@ namespace CatJson
 #endif
         
         /// <summary>
-        /// 检查Type,如果是ILRuntimeWrapperType需要返回正确的RealType
+        /// 检查Type,如果是ILRuntimeWrapperType需要返回其所包装的主工程Type
         /// </summary>
         public static Type CheckType(Type type)
         {
@@ -33,6 +33,18 @@ namespace CatJson
             }
 #endif
             return type;
+        }
+
+        /// <summary>
+        /// 对比Type是否为同一类型的Type
+        /// </summary>
+        public static bool TypeEquals(Type t1, Type t2)
+        {
+#if FUCK_LUA
+            t1 = CheckType(t1);
+            t2 = CheckType(t2);
+#endif
+            return t1 == t2;
         }
         
         /// <summary>
