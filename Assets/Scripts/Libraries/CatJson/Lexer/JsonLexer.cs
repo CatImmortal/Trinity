@@ -59,7 +59,16 @@ namespace CatJson
             RangeString token = GetNextToken(out TokenType resultType);
             if (type != resultType)
             {
-                throw new Exception($"NextTokenOfType调用失败，需求{type}但获取到的是{resultType}");
+                if (resultType == TokenType.Number || resultType == TokenType.String)
+                {
+                    throw new Exception($"NextTokenOfType调用失败，需求{type}但获取到的是类型为{resultType}的{token}");
+                }
+                else
+                {
+                    throw new Exception($"NextTokenOfType调用失败，需求{type}但获取到的是{resultType}");
+                }
+                
+                
             }
             return token;
         }

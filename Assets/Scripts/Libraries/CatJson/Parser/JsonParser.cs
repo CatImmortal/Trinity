@@ -1,280 +1,231 @@
-
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
-#if FUCK_LUA
-using ILRuntime.CLR.Method;
-using ILRuntime.CLR.TypeSystem;
-using ILRuntime.CLR.Utils;
-using ILRuntime.Reflection;
-using ILRuntime.Runtime.Enviorment;
-using ILRuntime.Runtime.Intepreter;
-using ILRuntime.Runtime.Stack;
-#endif
+using System;
+
 namespace CatJson
 {
     /// <summary>
-    /// json解析器
+    /// Json解析器
     /// </summary>
-    public static partial class JsonParser
+    public static class JsonParser
     {
+#if FUCK_LUA
+        static JsonParser()
+        {
+            if (TypeUtil.AppDomain == null)
+            {
+                throw new Exception("请先调用CatJson.ILRuntimeHelper.RegisterILRuntimeCLRRedirection(appDomain)进行CatJson重定向");
+            }
+        }
+#endif
+        
         /// <summary>
         /// Json词法分析器
         /// </summary>
-        public static JsonLexer Lexer = new JsonLexer();
-
-        /// <summary>
-        /// 类型与其对应的属性信息
-        /// </summary>
-        private static Dictionary<Type, Dictionary<RangeString, PropertyInfo>> propertyInfoDict = new Dictionary<Type, Dictionary<RangeString, PropertyInfo>>();
-        
-        /// <summary>
-        /// 类型与其对应的字段信息
-        /// </summary>
-        private static Dictionary<Type, Dictionary<RangeString, FieldInfo>> fieldInfoDict = new Dictionary<Type, Dictionary<RangeString, FieldInfo>>();
-
-        /// <summary>
-        /// 扩展类型与其对应的解析方法
-        /// </summary>
-        public static Dictionary<Type, Func<object>> ExtensionParseFuncDict = new Dictionary<Type, Func<object>>();
-
-        /// <summary>
-        /// 扩展类型与其对应的转换Json文本方法
-        /// </summary>
-        public static Dictionary<Type, Action<object>> ExtensionToJsonFuncDict = new Dictionary<Type, Action<object>>();
-
-        /// <summary>
-        /// 需要忽略的类型字段/属性名称
-        /// </summary>
-        public static Dictionary<Type, HashSet<string>> IgnoreSet = new Dictionary<Type, HashSet<string>>();
+        public static readonly JsonLexer Lexer = new JsonLexer();
 
         /// <summary>
         /// 序列化时是否开启格式化
         /// </summary>
         public static bool IsFormat { get; set; } = true;
 
+        private static readonly NullFormatter nullFormatter = new NullFormatter();
+        private static readonly ArrayFormatter arrayFormatter = new ArrayFormatter();
+        private static readonly DefaultFormatter defaultFormatter = new DefaultFormatter();
+        private static readonly PolymorphicFormatter polymorphicFormatter = new PolymorphicFormatter();
+        
         /// <summary>
-        /// 真实类型key
+        /// Json格式化器字典
         /// </summary>
-        private const string RealTypeKey = "<>RealType";
-
-
-        /// <summary>
-        /// 将type的公有实例字段和属性都放入字典中缓存
-        /// </summary>
-        private static void AddToReflectionMap(Type type)
+        private static readonly Dictionary<Type, IJsonFormatter> formatterDict = new Dictionary<Type, IJsonFormatter>()
         {
-            IgnoreSet.TryGetValue(type, out HashSet<string> set);
-
-            PropertyInfo[] pis = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-            Dictionary<RangeString, PropertyInfo>  dict1 = new Dictionary<RangeString, PropertyInfo>(pis.Length);
-            for (int i = 0; i < pis.Length; i++)
-            {
-                PropertyInfo pi = pis[i];
-
-                if (Attribute.IsDefined(pi, typeof(JsonIgnoreAttribute)))
-                {
-                    //需要忽略
-                    continue;
-                }
-
-                if (set != null && set.Contains(pi.Name))
-                {
-                    //需要忽略
-                    continue;
-                }
-
-                if (pi.SetMethod != null && pi.GetMethod != null && pi.Name != "Item")
-                {
-                    //属性必须同时具有get set 并且不能是索引器item
-                    dict1.Add(new RangeString(pi.Name), pi);
-                }
-                    
-            }
-            propertyInfoDict.Add(type, dict1);
-
-            FieldInfo[] fis = type.GetFields(BindingFlags.Instance | BindingFlags.Public);
-            Dictionary<RangeString, FieldInfo> dict2 = new Dictionary<RangeString, FieldInfo>(fis.Length);
-            for (int i = 0; i < fis.Length; i++)
-            {
-                FieldInfo fi = fis[i];
-
-                if (Attribute.IsDefined(fi,typeof(JsonIgnoreAttribute)))
-                {
-                    //需要忽略
-                    continue;
-                }
-
-                if (set != null && set.Contains(fi.Name))
-                {
-                    //需要忽略
-                    continue;
-                }
-
-                dict2.Add(new RangeString(fi.Name), fi);
-            }
-            fieldInfoDict.Add(type, dict2);
-        }
-        
-        /// <summary>
-        /// 解析Json对象的通用流程
-        /// </summary>
-        public static void ParseJsonObjectProcedure(object userdata1,object userdata2,bool isIntKey,Action<object,object,bool,RangeString, TokenType> action)
-        {
-
-            //跳过 {
-            Lexer.GetNextTokenByType(TokenType.LeftBrace);
-
-            while (Lexer.LookNextTokenType() != TokenType.RightBrace)
-            {
-                //提取key
-                RangeString key = Lexer.GetNextTokenByType(TokenType.String);
-
-                //跳过 :
-                Lexer.GetNextTokenByType(TokenType.Colon);
-
-                //提取value
-                //array和json obj需要完整的[]和{}，所以只能look
-                //此时curIndex停留在value后的第一个字符上
-                TokenType nextTokenType = Lexer.LookNextTokenType();
-
-                action(userdata1,userdata2,isIntKey,key, nextTokenType);
-
-                //有逗号就跳过逗号
-                if (Lexer.LookNextTokenType() == TokenType.Comma)
-                {
-                    Lexer.GetNextTokenByType(TokenType.Comma);
-
-                    if (Lexer.LookNextTokenType() == TokenType.RightBracket)
-                    {
-                        throw new Exception("Json对象不能以逗号结尾");
-                    }
-                }
-                else
-                {
-                    //没有逗号就说明结束了
-                    break;
-                }
-
-            }
-
-            //跳过 }
-            Lexer.GetNextTokenByType(TokenType.RightBrace);
-        }
-
-        /// <summary>
-        /// 解析Json数组的通用流程
-        /// </summary>
-        public static void ParseJsonArrayProcedure(object userdata1,object userdata2, Action<object,object,TokenType> action)
-        {
-            //跳过[
-            Lexer.GetNextTokenByType(TokenType.LeftBracket);
-
-            while (Lexer.LookNextTokenType() != TokenType.RightBracket)
-            {
-                //提取value
-                //array和json obj需要完整的[]和{}，所以只能look
-                TokenType nextTokenType = Lexer.LookNextTokenType();
-
-                action(userdata1,userdata2,nextTokenType);
-
-                //有逗号就跳过
-                if (Lexer.LookNextTokenType() == TokenType.Comma)
-                {
-                    Lexer.GetNextTokenByType(TokenType.Comma);
-
-                    if (Lexer.LookNextTokenType() == TokenType.RightBracket)
-                    {
-                        throw new Exception("数组不能以逗号结尾");
-                    }
-                }
-                else
-                {
-                    //没有逗号就说明结束了
-                    break;
-                }
-            }
-
-            //跳过]
-            Lexer.GetNextTokenByType(TokenType.RightBracket);
-        }
-        
-
-        /// <summary>
-        /// 获取用于多态序列化的真实类型的json value字符串
-        /// </summary>
-        private static string GetRealTypeJsonValue(Type realType)
-        {
-#if FUCK_LUA
-            if (realType is ILRuntimeType ilrtType)
-            {
-                 return $"{ilrtType.FullName}";
-            }
-#endif
-            return $"{realType.FullName},{realType.Assembly.GetName().Name}";
-        }
-        
-
-        
-#if FUCK_LUA
-        
-         /// <summary>
-         /// CatJson的ILRuntime重定向，需要在初始化ILRuntime时调用此方法
-         /// </summary>
-         /// <param name="appdomain"></param>
-         public unsafe static void RegisterILRuntimeCLRRedirection(ILRuntime.Runtime.Enviorment.AppDomain appdomain)
-         {
-            TypeUtil.AppDomain = appdomain;
+            //基元类型
+            {typeof(bool), new BooleanFormatter()},
+            {typeof(int), new Int32Formatter()},
+            {typeof(float), new SingleFormatter()},
+            {typeof(double), new DoubleFormatter()},
+            {typeof(string), new StringFormatter()},
             
-            foreach (MethodInfo mi in typeof(JsonParser).GetMethods())
+            //容器类型
+            {typeof(List<>), new ListFormatter()},
+            {typeof(Dictionary<,>), new DictionaryFormatter()},
+            
+            //特殊类型
+            {typeof(JsonObject), new JsonObjectFormatter()},
+            {typeof(JsonValue), new JsonValueFormatter()},
+        };
+
+        /// <summary>
+        /// 注册Json格式化器
+        /// </summary>
+        public static void RegisterFormatter(Type type, IJsonFormatter formatter)
+        {
+            formatterDict[type] = formatter;
+        }
+
+
+        /// <summary>
+        /// 将指定类型的对象序列化为Json文本
+        /// </summary>
+        public static string ToJson<T>(T obj)
+        {
+            InternalToJson<T>(obj);
+
+            string json = TextUtil.CachedSB.ToString();
+            TextUtil.CachedSB.Clear();
+
+            return json;
+        }
+
+        /// <summary>
+        /// 将指定类型的对象序列化为Json文本
+        /// </summary>
+        public static string ToJson(object obj, Type type)
+        {
+            InternalToJson(obj, type);
+
+            string json = TextUtil.CachedSB.ToString();
+            TextUtil.CachedSB.Clear();
+
+            return json;
+        }
+        
+        /// <summary>
+        /// 将Json文本反序列化为指定类型的对象
+        /// </summary>
+        public static T ParseJson<T>(string json)
+        {
+            Lexer.SetJsonText(json);
+            return InternalParseJson<T>();
+        }
+
+        /// <summary>
+        /// 将Json文本反序列化为指定类型的对象
+        /// </summary>
+        public static object ParseJson(string json, Type type)
+        {
+            Lexer.SetJsonText(json);
+            return InternalParseJson(type);
+        }
+
+        /// <summary>
+        /// 将指定类型的对象序列化为Json文本
+        /// </summary>
+        internal static void InternalToJson<T>(T obj, int depth = 0)
+        {
+            InternalToJson(obj, typeof(T),null, depth);
+        }
+        
+        /// <summary>
+        /// 将Json文本反序列化为指定类型的对象
+        /// </summary>
+        internal static T InternalParseJson<T>()
+        {
+            return (T) InternalParseJson(typeof(T));
+        }
+
+        /// <summary>
+        /// 将指定类型的对象序列化为Json文本
+        /// </summary>
+        internal static void InternalToJson(object obj, Type type, Type realType = null, int depth = 0,bool checkPolymorphic = true)
+        {
+            if (obj is null)
             {
-                if (mi.Name == "ParseJson" && mi.IsGenericMethodDefinition)
-                {
-                    appdomain.RegisterCLRMethodRedirection(mi, RedirectionParseJson);
-                }
-                else if (mi.Name == "ToJson" && mi.IsGenericMethodDefinition)
-                {
-                    appdomain.RegisterCLRMethodRedirection(mi, RedirectionToJson);
-                }
+                nullFormatter.ToJson(null,type,null, depth);
+                return;
             }
-        }
 
-        public unsafe static StackObject* RedirectionParseJson(ILIntepreter intp, StackObject* esp, IList<object> mStack, CLRMethod method, bool isNewObj)
+            if (realType == null)
+            {
+                realType = TypeUtil.GetType(obj,type);
+            }
+            
+            if (checkPolymorphic && !TypeUtil.TypeEquals(type,realType))
+            {
+                //开启了多态序列化检测
+                //只要定义类型和真实类型不一致，就要进行多态序列化
+                polymorphicFormatter.ToJson(obj,type,realType,depth);
+                return;;
+            }
+            
+            if (formatterDict.TryGetValue(realType, out IJsonFormatter formatter))
+            {
+                formatter.ToJson(obj,type,realType, depth);
+                return;
+            }
+
+            if (realType.IsGenericType && formatterDict.TryGetValue(realType.GetGenericTypeDefinition(), out formatter))
+            {
+                //特殊处理泛型类型
+                formatter.ToJson(obj,type,realType,depth);
+                return;
+            }
+            
+            if (obj is Array array)
+            {
+                //特殊处理数组
+                arrayFormatter.ToJson(array,type,realType, depth);
+                return;
+            }
+            
+            //使用处理自定义类的formatter
+            defaultFormatter.ToJson(obj,type,realType,depth);
+        }
+        
+        /// <summary>
+        /// 将Json文本反序列化为指定类型的对象
+        /// </summary>
+        internal static object InternalParseJson(Type type,Type realType = null,bool checkPolymorphic = true)
         {
-            ILRuntime.Runtime.Enviorment.AppDomain __domain = intp.AppDomain;
-            StackObject* ptr_of_this_method;
-            StackObject* __ret = ILIntepreter.Minus(esp, 2);
+            if (Lexer.LookNextTokenType() == TokenType.Null)
+            {
+                return nullFormatter.ParseJson(type,null);
+            }
 
-            ptr_of_this_method = ILIntepreter.Minus(esp, 1);
-            bool reflection = ptr_of_this_method->Value == 1;
+            object result;
 
-            ptr_of_this_method = ILIntepreter.Minus(esp, 2);
-            string json = (string)typeof(string).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, mStack));
+            if (realType == null && !ParserHelper.TryParseRealType(type,out realType))
+            {
+                //未传入realType并且读取不到realType，就把type作为realType使用
+                //这里不能直接赋值type，因为type有可能是一个包装了主工程类型的ILRuntimeWrapperType
+                //直接赋值type会导致无法从formatterDict拿到正确的formatter从而进入到defaultFormatter的处理中
+                //realType = type;  
+                realType = TypeUtil.CheckType(type);
+            }
 
-            intp.Free(ptr_of_this_method);
+            if (checkPolymorphic && !TypeUtil.TypeEquals(type,realType))
+            {
+                //开启了多态检查并且type和realType不一致
+                //进行多态处理
+                result = polymorphicFormatter.ParseJson(type, realType);
+                return result;
+            }
 
-            Type type = method.GenericArguments[0].ReflectionType;
-
-            object result_of_this_method = ParseJson(json, type);
-
-            return ILIntepreter.PushObject(__ret, mStack, result_of_this_method);
+            if (formatterDict.TryGetValue(realType, out IJsonFormatter formatter))
+            {
+               result = formatter.ParseJson(type,realType);
+               return result;
+            }
+            
+            if (realType.IsGenericType &&  formatterDict.TryGetValue(realType.GetGenericTypeDefinition(), out formatter))
+            {
+                //特殊处理泛型类型
+                result = formatter.ParseJson(type,realType);
+                return result;
+            }
+            
+            if (realType.IsArray)
+            {
+                //特殊处理数组
+                result = arrayFormatter.ParseJson(type,realType);
+                return result;
+ 
+            }
+            
+            //使用处理自定义类的formatter
+            result = defaultFormatter.ParseJson(type,realType);
+            return result;
         }
 
-        public unsafe static StackObject* RedirectionToJson(ILIntepreter intp, StackObject* esp, IList<object> mStack, CLRMethod method, bool isNewObj)
-        {
-            ILRuntime.Runtime.Enviorment.AppDomain __domain = intp.AppDomain;
-            StackObject* ptr_of_this_method;
-            StackObject* __ret = ILIntepreter.Minus(esp, 2);
-            ptr_of_this_method = ILIntepreter.Minus(esp, 1);
-            bool reflection = ptr_of_this_method->Value == 1;
-            ptr_of_this_method = ILIntepreter.Minus(esp, 2);
-            object obj = typeof(object).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, mStack), 0);
-            intp.Free(ptr_of_this_method);
-            Type type = method.GenericArguments[0].ReflectionType;
-            string result_of_this_method = ToJson(obj, type, reflection);
-            return ILIntepreter.PushObject(__ret, mStack, result_of_this_method);
-        }
-#endif
     }
+
 }

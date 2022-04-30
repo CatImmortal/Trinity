@@ -17,7 +17,38 @@ namespace Trinity
 
             Debug.Log("进入了测试流程");
             
+            TestDataRoot root = new TestDataRoot()
+            {
+                Base = new TestDataBase() {BaseA = 1},
+                Data1 = new TestData1(){A1 = 2,BaseA = 3},
+                Data2 = new TestData2(){A2 = 4,BaseA = 5},
+                Datas = new TestDataBase[]
+                {
+                    new TestDataBase() {BaseA = 6},
+                    new TestData1(){A1 = 7,BaseA = 8},
+                    new TestData2(){A2 = 9,BaseA = 10},
+                },
+                DataList = new List<TestDataBase>()
+                {
+                    new TestDataBase() {BaseA = 11},
+                    new TestData1(){A1 = 12,BaseA = 13},
+                    new TestData2(){A2 = 14,BaseA = 15},
+                },
+                DataDict = new Dictionary<string, TestDataBase>()
+                {
+                    {"key1",new TestDataBase(){BaseA =  16}},
+                    {"key2",new TestData1(){A1 = 17,BaseA = 18}},
+                    {"key3",new TestData2(){A2 = 19,BaseA = 20}},
+                },
+            };
             
+            string json = JsonParser.ToJson(root);
+            Debug.Log(json);
+            
+            TestDataRoot root2 = JsonParser.ParseJson<TestDataRoot>(json);
+            Debug.Log(JsonParser.ToJson(root2));
+            
+            Debug.Log(JsonParser.ToJson(root) == JsonParser.ToJson(root2));
         }
 
 

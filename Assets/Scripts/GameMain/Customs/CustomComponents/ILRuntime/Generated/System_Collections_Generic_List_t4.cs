@@ -14,15 +14,15 @@ using ILRuntime.CLR.Utils;
 
 namespace ILRuntime.Runtime.Generated
 {
-    unsafe class System_Collections_Generic_List_1_Int32_Binding
+    unsafe class System_Collections_Generic_List_1_TestDataBase_Binding
     {
         public static void Register(ILRuntime.Runtime.Enviorment.AppDomain app)
         {
             BindingFlags flag = BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
             MethodBase method;
             Type[] args;
-            Type type = typeof(System.Collections.Generic.List<System.Int32>);
-            args = new Type[]{typeof(System.Int32)};
+            Type type = typeof(System.Collections.Generic.List<global::TestDataBase>);
+            args = new Type[]{typeof(global::TestDataBase)};
             method = type.GetMethod("Add", flag, null, args, null);
             app.RegisterCLRMethodRedirection(method, Add_0);
 
@@ -40,10 +40,11 @@ namespace ILRuntime.Runtime.Generated
             StackObject* __ret = ILIntepreter.Minus(__esp, 2);
 
             ptr_of_this_method = ILIntepreter.Minus(__esp, 1);
-            System.Int32 @item = ptr_of_this_method->Value;
+            global::TestDataBase @item = (global::TestDataBase)typeof(global::TestDataBase).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, __mStack), (CLR.Utils.Extensions.TypeFlags)0);
+            __intp.Free(ptr_of_this_method);
 
             ptr_of_this_method = ILIntepreter.Minus(__esp, 2);
-            System.Collections.Generic.List<System.Int32> instance_of_this_method = (System.Collections.Generic.List<System.Int32>)typeof(System.Collections.Generic.List<System.Int32>).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, __mStack), (CLR.Utils.Extensions.TypeFlags)0);
+            System.Collections.Generic.List<global::TestDataBase> instance_of_this_method = (System.Collections.Generic.List<global::TestDataBase>)typeof(System.Collections.Generic.List<global::TestDataBase>).CheckCLRTypes(StackObject.ToObject(ptr_of_this_method, __domain, __mStack), (CLR.Utils.Extensions.TypeFlags)0);
             __intp.Free(ptr_of_this_method);
 
             instance_of_this_method.Add(@item);
@@ -57,7 +58,7 @@ namespace ILRuntime.Runtime.Generated
             ILRuntime.Runtime.Enviorment.AppDomain __domain = __intp.AppDomain;
             StackObject* __ret = ILIntepreter.Minus(__esp, 0);
 
-            var result_of_this_method = new System.Collections.Generic.List<System.Int32>();
+            var result_of_this_method = new System.Collections.Generic.List<global::TestDataBase>();
 
             return ILIntepreter.PushObject(__ret, __mStack, result_of_this_method);
         }

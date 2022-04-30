@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 
 #if FUCK_LUA
-using ILRuntime.CLR.Utils;
 using ILRuntime.Reflection;
 using ILRuntime.Runtime.Enviorment;
 using ILRuntime.Runtime.Intepreter;
@@ -16,7 +15,7 @@ namespace CatJson
     /// </summary>
     public static class TypeUtil
     {
-                
+        
 #if FUCK_LUA
         public static ILRuntime.Runtime.Enviorment.AppDomain AppDomain;
 #endif
@@ -50,12 +49,17 @@ namespace CatJson
         /// <summary>
         /// 获取obj的Type
         /// </summary>
-        public static Type GetType(object obj)
+        public static Type GetType(object obj,Type type)
         {
 #if FUCK_LUA
             if (obj is ILTypeInstance ins)
             {
                return ins.Type.ReflectionType;
+            }
+
+            if (obj is ILTypeInstance[] insArray)
+            {
+                return CheckType(type);
             }
             if (obj is CrossBindingAdaptorType cross)
             {
@@ -93,17 +97,7 @@ namespace CatJson
 #endif
             return Activator.CreateInstance(type);
         }
-        
 
-        
-        /// <summary>
-        /// type是否为内置基础类型 (string char bool 数字)
-        /// </summary>
-        public static bool IsBaseType(Type type)
-        {
-            return type == typeof(string) || type == typeof(char) || type == typeof(bool) || IsNumberType(type);
-        }
-        
         /// <summary>
         /// obj是否为数字
         /// </summary>
@@ -241,11 +235,11 @@ namespace CatJson
             }
             if (value is float f)
             {
-                return Math.Abs(f - default(float)) < 1e-6f;
+                return Math.Abs(f - default(float)) < float.Epsilon;
             }
             if (value is double d)
             {
-                return Math.Abs(d - default(double)) < 1e-15;
+                return Math.Abs(d - default(double)) < double.Epsilon;
             }
 
             if (value is bool boolean)

@@ -25,9 +25,6 @@ namespace ILRuntime.Runtime.Generated
         /// </summary>
         public static void Initialize(ILRuntime.Runtime.Enviorment.AppDomain app)
         {
-            System_String_Binding.Register(app);
-            System_Boolean_Binding.Register(app);
-            System_Double_Binding.Register(app);
             System_Text_StringBuilder_Binding.Register(app);
             System_Object_Binding.Register(app);
             System_Collections_IEnumerable_Binding.Register(app);
@@ -38,6 +35,7 @@ namespace ILRuntime.Runtime.Generated
             ETModel_ByteHelper_Binding.Register(app);
             System_Array_Binding.Register(app);
             System_Reflection_MemberInfo_Binding.Register(app);
+            System_String_Binding.Register(app);
             System_Reflection_PropertyInfo_Binding.Register(app);
             System_Reflection_MethodBase_Binding.Register(app);
             UnityEngine_Debug_Binding.Register(app);
@@ -128,11 +126,13 @@ namespace ILRuntime.Runtime.Generated
             System_Action_Binding.Register(app);
             Trinity_SoundExtension_Binding.Register(app);
             UnityGameFramework_Runtime_VarInt_Binding.Register(app);
-            System_Collections_Generic_List_1_Int32_Binding.Register(app);
+            TestDataRoot_Binding.Register(app);
+            TestDataBase_Binding.Register(app);
+            TestData1_Binding.Register(app);
+            TestData2_Binding.Register(app);
+            System_Collections_Generic_List_1_TestDataBase_Binding.Register(app);
+            System_Collections_Generic_Dictionary_2_String_TestDataBase_Binding.Register(app);
             CatJson_JsonParser_Binding.Register(app);
-            UnityEngine_Input_Binding.Register(app);
-            UnityEngine_Profiling_Profiler_Binding.Register(app);
-            LitJson_JsonMapper_Binding.Register(app);
             System_Collections_Generic_ICollection_1_KeyValuePair_2_String_ILTypeInstance_Binding.Register(app);
             System_Collections_Generic_IEnumerable_1_KeyValuePair_2_String_ILTypeInstance_Binding.Register(app);
             System_Collections_Generic_IEnumerator_1_KeyValuePair_2_String_ILTypeInstance_Binding.Register(app);
